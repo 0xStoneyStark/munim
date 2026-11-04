@@ -1,12 +1,12 @@
 [
   {
-    "id": "jio-recharge",
-    "intent": "Keep the household Jio prepaid topped up: buy the cheapest Jio India TALKTIME top-up (not a data add-on — data packs need an active base plan and get refunded).",
-    "maxInr": 30,
+    "id": "jio-monthly-plan",
+    "intent": "Renew the household Jio prepaid every 28 days: buy the cheapest Jio India 28-day unlimited-calls plan (about ₹239-299). If no 28-day plan fits, buy the cheapest talktime top-up instead.",
+    "maxInr": 300,
     "productType": "phone_refill",
     "phone": "$TOPUP_PHONE",
     "trigger": {
-      "every": "24h"
+      "every": "672h"
     }
   },
   {
@@ -23,7 +23,9 @@
     "intent": "When an international trip shows up in my Google Calendar or a booking email, propose an eSIM for the destination; buy only after I approve.",
     "maxInr": 1000,
     "productType": "esim",
-    "trigger": { "calendar": "gcal+gmail" }
+    "trigger": {
+      "calendar": "gcal+gmail"
+    }
   },
   {
     "id": "treat-for-mom",
