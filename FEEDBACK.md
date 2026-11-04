@@ -14,7 +14,11 @@ Team of one human + Claude (Fable 5.1 driving the build, Sonnet 5.5 inside the a
 
 ## Bitrefill side
 
-- (filled in as we go; see the bottom of this file)
+- **Store credit currency ≠ primary balance.** We bought $10 of "USD Store Credit" with ETH; the website showed $10 USD, but `GET /accounts/balance` returned `{"balance":0,"currency":"BTC"}` and every `POST /invoices` with `payment_method: balance` failed with `Balance too low`, because **Bitcoin was the *primary* store credit** and the API only pays from the primary one. Cost us ~30 minutes. Suggestions: let `payment_method: balance` take a `currency`, or have `/accounts/balance` return all store credits with the primary flagged, or say "Balance too low in BTC (primary); you have $10 USD" in the error.
+- **`price` in `packages[]` is in minor units of the primary balance currency** (satoshis for BTC), while the docs describe `payment_price` in USD. The live product details use `id`/`value`/`amount`/`price`, not the documented `package_id`/`value`/`payment_price`. We coded to the docs first and had to re-type against the live response.
+- **A line with both `package_id` and `value` is a 400** with a generic message. Either ignore `value` when `package_id` is present, or say so in the error.
+- **Error envelope:** 4xx responses put the human message at top-level `message`, not under `error.message`, and `meta` echoes the full request back — including the phone number. We had to strip `meta` so a phone number never reaches logs or the model.
+- **Good:** `/products/search` with `country=IN&type=phone_refill` is fast and exact; the Jio catalog had a ₹10 talktime pack, perfect for a cheap real demo. Invoice creation with `auto_pay: true` is one call.
 
 ## Tooling
 
