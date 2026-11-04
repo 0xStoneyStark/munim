@@ -14,7 +14,6 @@ const phoneScenes = [
   { scene: 6,  start: P('s_app_open', 7.5),         end: P('s_rules_start', 0),           caption: 'The deposit is on the timeline, decrypted by the purse.' },
   { scene: 8,  start: P('fire_topup', -14),         end: P('fire_topup', 6),              caption: 'Fire now. The agent goes to work.' },
   { scene: 9,  start: P('s_timeline_wait', 5.0),    end: P('pass_done', 5.5),             caption: 'Bought on Bitrefill, delivered.' },
-  { scene: 10, start: P('s_approvals', -0.5),       end: P('s_wallets', 0.2),             caption: 'A calendar trip became an eSIM proposal by itself.' },
   { scene: 11, start: P('s_wallets', 0.2),            end: P('s_more', -0.5),               caption: 'Swiggy Money: redeemed automatically into the household balance.' },
   { scene: 13, start: P('s_connections', -0.3),     end: P('enable_push', 5),             caption: 'Every connection, and push notifications.' },
   { scene: 14, start: P('enable_push', 16.5), end: P('enable_push', 23), caption: 'Allow it once.' },
@@ -22,7 +21,7 @@ const phoneScenes = [
   { scene: 16, start: P('shade_open', 2.0),         end: P('shade_open', 4.1),         caption: 'Delivered — next to Swiggy’s own credit message.' },
 ];
 const scenes = [...lap.scenes.map(s => ({ ...s, scene: LAP_MAP[s.scene] })), ...phoneScenes.map(s => ({ ...s, ctx: 'phone' }))].sort((a, b) => a.scene - b.scene);
-const NEW_ID = {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "19": 7, "20": 8, "8": 9, "9": 10, "10": 11, "11": 12, "21": 13, "12": 14, "13": 15, "14": 16, "15": 17, "16": 18, "17": 19, "18": 20};
+const NEW_ID = {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "19": 7, "20": 8, "8": 9, "9": 10, "12": 11, "17": 12, "21": 13, "11": 14, "13": 15, "14": 16, "15": 17, "16": 18, "18": 19};
 scenes.forEach(s => { s.scene = NEW_ID[String(s.scene)]; }); scenes.sort((a, b) => a.scene - b.scene);
 fs.writeFileSync(ROOT + '/timeline.json', JSON.stringify({ videos: { lap: lap.videos.lap, phone: PHONE }, scenes }, null, 2));
 fs.mkdirSync(ROOT + '/verify', { recursive: true });

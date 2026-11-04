@@ -26,16 +26,15 @@ const META = [
   { n: 8,  kind: 'lap',   eyebrow: 'NEW RULE',           head: 'PLAIN WORDS → EXACT RULE',      sub: '“every Sunday at 9, weekly groceries, max ₹1500”' },
   { n: 9,  kind: 'phone', eyebrow: 'TOPUP RULE',         head: 'FIRE NOW →',                    sub: '₹250 Swiggy Money, when I say so' },
   { n: 10, kind: 'phone', eyebrow: '30 SECONDS LATER',   head: 'BOUGHT. DELIVERED.',            sub: 'Bitrefill invoice · ₹139 left under the cap' },
-  { n: 11, kind: 'lap',   eyebrow: 'RECEIPTS',           head: 'ENCRYPTED MEMO → VERIFIED',     sub: 'a hash of the code, never the code' },
-  { n: 12, kind: 'lap',   eyebrow: 'PRIVACY NOTE',       head: 'WHO SEES WHAT',                 sub: 'and what nobody can' },
+  { n: 11, kind: 'lap',   eyebrow: 'RECEIPTS',           head: 'ENCRYPTED MEMO → VERIFIED',     sub: 'a hash of the code, never the code', zoom: { s: 1.55, x: 28, y: 22 } },
+  { n: 12, kind: 'lap',   eyebrow: 'PRIVACY NOTE',       head: 'WHO SEES WHAT',                 sub: 'and what nobody can', zoom: { s: 1.5, x: 30, y: 18 } },
   { n: 13, kind: 'lap',   eyebrow: 'CALENDAR → PROPOSAL', head: 'DUBAI eSIM, BY ITSELF',        sub: 'a flight in Google Calendar became a proposal on the next pass' },
-  { n: 14, kind: 'phone', eyebrow: 'APPROVALS',          head: 'ONE TAP TO APPROVE',            sub: 'buys only after approval, only inside the cap' },
-  { n: 15, kind: 'phone', eyebrow: 'WALLETS',            head: 'SWIGGY MONEY, AUTO-REDEEMED',   sub: 'the same balance paid this evening’s Instamart order' },
-  { n: 16, kind: 'phone', eyebrow: 'CONNECTIONS',        head: 'EVERY LINK, LIVE',              sub: 'Swiggy MCP · Bitrefill · Calendar · wallets' },
-  { n: 17, kind: 'phone', eyebrow: 'PUSH',               head: 'ALLOW ONCE',                    sub: '' },
-  { n: 18, kind: 'phone', eyebrow: 'PUSH',               head: 'ONE TAP',                       sub: '' },
-  { n: 19, kind: 'wide',  eyebrow: 'DELIVERED',          head: 'NEXT TO SWIGGY’S OWN SMS',      sub: 'the ₹250 credit, confirmed by Swiggy' },
-  { n: 20, kind: 'end' },
+  { n: 14, kind: 'phone', eyebrow: 'WALLETS',            head: 'SWIGGY MONEY, AUTO-REDEEMED',   sub: 'the same balance paid this evening’s Instamart order' },
+  { n: 15, kind: 'phone', eyebrow: 'CONNECTIONS',        head: 'EVERY LINK, LIVE',              sub: 'Swiggy MCP · Bitrefill · Calendar · wallets' },
+  { n: 16, kind: 'phone', eyebrow: 'PUSH',               head: 'ALLOW ONCE',                    sub: '' },
+  { n: 17, kind: 'phone', eyebrow: 'PUSH',               head: 'ONE TAP',                       sub: '' },
+  { n: 18, kind: 'wide',  eyebrow: 'DELIVERED',          head: 'NEXT TO SWIGGY’S OWN SMS',      sub: 'the ₹250 credit, confirmed by Swiggy' },
+  { n: 19, kind: 'end' },
 ];
 
 const HTML = `<!doctype html><html><head><meta charset="utf-8"><style>
@@ -82,7 +81,9 @@ html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:var(--b
 .widecopy .head{font-size:64px}
 .widecopy .copyin{display:inline-flex;flex-direction:column;align-items:center;gap:14px}
 .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;text-align:center}
-.logo{width:150px;height:150px;border-radius:36px;background:var(--gold);color:#111;font-weight:800;font-size:96px;display:flex;align-items:center;justify-content:center;opacity:0;animation:pop2 .7s cubic-bezier(.16,1,.3,1) forwards;box-shadow:0 30px 80px rgba(244,183,40,.25)}
+.logo{width:150px;height:150px;background:transparent;display:flex;align-items:center;justify-content:center;opacity:0;animation:pop2 .7s cubic-bezier(.16,1,.3,1) forwards}
+.logo svg{display:block;width:100%;height:100%;border-radius:50%}
+.logo.sm{width:40px;height:40px}
 @keyframes pop2{from{opacity:0;transform:scale(.6) rotate(-8deg)}to{opacity:1;transform:none}}
 .big{font-weight:800;font-size:150px;line-height:1;letter-spacing:-4px;overflow:hidden}
 .big span{display:inline-block;opacity:0;transform:translateY(110%);animation:rise .7s .25s cubic-bezier(.16,1,.3,1) forwards}
@@ -97,16 +98,20 @@ html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:var(--b
 <div id="stage"></div>
 </body></html>`;
 
+// the app's header mark (apps/munim/src/dashboard.html, .logo-mark svg)
+const LOGO_SVG = `<svg viewBox="0 0 38 38" aria-hidden="true"><defs><clipPath id="munimRingTop"><rect x="0" y="0" width="38" height="19"/></clipPath></defs><circle cx="19" cy="19" r="19" fill="#111214"/><g fill="none" stroke-width="2.6"><circle cx="14.5" cy="19" r="7.2" stroke="#F4B728"/><circle cx="23.5" cy="19" r="7.2" stroke="#FFFFFF"/><g clip-path="url(#munimRingTop)"><circle cx="14.5" cy="19" r="7.2" stroke="#F4B728"/></g></g></svg>`;
+
 const words = (t) => t.split(' ').map((w, i) => `<span style="animation-delay:${(0.12 + i * 0.07).toFixed(2)}s">${w}</span>`).join(' ');
 
 function sceneHtml(m, src) {
   const vid = (cls) => `<video class="${cls}" src="${src}" muted playsinline preload="auto"></video>`;
-  if (m.kind === 'title') return `<div class="center"><div class="logo">M</div><div class="big">${words('MUNIM')}</div><div class="tag">Fund it <b>privately</b>. It shops while you sleep.</div><div class="tiny">SHIELDED ZCASH PURSE · BITREFILL · SWIGGY MCP</div></div>`;
-  if (m.kind === 'end') return `<div class="endwin">${vid('')}</div><div class="center"><div class="big" style="font-size:118px">${words('FUND IT PRIVATELY.')}</div><div class="big" style="font-size:118px">${words('IT SHOPS WHILE YOU SLEEP.')}</div><div class="tag" style="animation-delay:1.2s">github.com/0xStoneyStark/munim · <b>open source, MIT</b></div><div class="tiny" style="animation-delay:1.5s">FREE SOCIETY HACK · MUMBAI · 4 NOV 2026</div></div>`;
+  if (m.kind === 'title') return `<div class="center"><div class="logo">${LOGO_SVG}</div><div class="big">${words('MUNIM')}</div><div class="tag">Fund it <b>privately</b>. It shops while you sleep.</div><div class="tiny">SHIELDED ZCASH PURSE · BITREFILL · SWIGGY MCP</div></div>`;
+  if (m.kind === 'end') return `<div class="endwin">${vid('')}</div><div class="center"><div class="logo sm">${LOGO_SVG}</div><div class="big" style="font-size:118px">${words('FUND IT PRIVATELY.')}</div><div class="big" style="font-size:118px">${words('IT SHOPS WHILE YOU SLEEP.')}</div><div class="tag" style="animation-delay:1.2s">github.com/0xStoneyStark/munim · <b>open source, MIT</b></div><div class="tiny" style="animation-delay:1.5s">FREE SOCIETY HACK · MUMBAI · 4 NOV 2026</div></div>`;
   const copy = `<div class="eyebrow">${m.eyebrow}</div><div class="bar"></div><div class="head">${words(m.head)}</div>${m.sub ? `<div class="sub">${m.sub}</div>` : ''}`;
-  if (m.kind === 'phone') return `<div class="copy">${copy}</div><div class="phone">${vid('')}</div><div class="pill">LIVE · munim.heneryshop.com</div>`;
+  if (m.kind === 'phone') return `<div class="copy">${copy}</div><div class="phone">${vid('')}</div>`;
   if (m.kind === 'wide') return `<div class="widecopy"><div class="copyin">${copy}</div></div><div class="wide" style="top:60%">${vid('')}</div>`;
-  return `<div class="win"><div class="chrome"><i></i><i></i><i></i></div>${vid('')}</div><div class="lapcopy"><div class="l"><div class="eyebrow">${m.eyebrow}</div><div class="bar"></div><div class="head">${words(m.head)}</div></div>${m.sub ? `<div class="sub">${m.sub}</div>` : ''}</div>`;
+  const zoom = m.zoom ? ` style="transform:scale(${m.zoom.s});transform-origin:${m.zoom.x}% ${m.zoom.y}%"` : '';
+  return `<div class="win"><div class="chrome"><i></i><i></i><i></i></div><video src="${src}" muted playsinline preload="auto"${zoom}></video></div><div class="lapcopy"><div class="l"><div class="eyebrow">${m.eyebrow}</div><div class="bar"></div><div class="head">${words(m.head)}</div></div>${m.sub ? `<div class="sub">${m.sub}</div>` : ''}</div>`;
 }
 
 // portrait cuts for the phone scenes (the stitched segs are pillarboxed)

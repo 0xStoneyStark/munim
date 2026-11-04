@@ -41,11 +41,11 @@
   },
   {
     "n": 11,
-    "text": "A Dubai trip in my calendar became an eSIM proposal by itself. It buys only after I approve."
+    "text": "Every purchase sends a receipt back to the funder as an encrypted memo, with a hash of the gift-card code, never the code itself. Paste a receipt into the verifier and it checks the invoice against Bitrefill."
   },
   {
     "n": 12,
-    "text": "The purse page shows the cap, the spend and every deposit. And the Swiggy Money card: the top-up was redeemed into the household balance automatically, the same balance that paid for this evening's Instamart order."
+    "text": "The privacy page says what each party can see, and what they cannot."
   },
   {
     "n": 13,
@@ -53,7 +53,7 @@
   },
   {
     "n": 14,
-    "text": "Same proposal on the phone. One tap approves it, nothing more."
+    "text": "The purse page shows the cap, the spend and every deposit. And the Swiggy Money card: the top-up was redeemed into the household balance automatically, the same balance that paid for this evening's Instamart order."
   },
   {
     "n": 15,
@@ -73,10 +73,6 @@
   },
   {
     "n": 19,
-    "text": "The privacy page says what each party can see, and what they cannot."
-  },
-  {
-    "n": 20,
     "text": "Munim is open source under MIT, built for the Free Society Hack. Fund it privately. It shops while you sleep."
   }
 ]
