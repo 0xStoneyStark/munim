@@ -2,6 +2,7 @@
 # rebuild.sh — re-pace to the current VO clips, re-stitch, re-render the stage, mix audio, upload.
 set -e
 cd "$(dirname "$0")"
+node merge-timeline.cjs > /dev/null
 python -I - <<'PY'
 import json, subprocess
 tl=json.load(open("timeline.json",encoding="utf-8"))
@@ -14,7 +15,6 @@ for s in tl["scenes"]:
 c=json.load(open("config.json",encoding="utf-8")); c["speed"]=speed; json.dump(c,open("config.json","w",encoding="utf-8"),indent=2)
 print("speeds set")
 PY
-node merge-timeline.cjs > /dev/null
 node stitch.cjs | grep FINAL
 node director.cjs | tail -1
 node finalize-audio.cjs

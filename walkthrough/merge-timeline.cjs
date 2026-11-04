@@ -3,7 +3,7 @@
 const fs = require('fs'); const { execSync } = require('child_process');
 const ROOT = __dirname;
 const lap = JSON.parse(fs.readFileSync(ROOT + '/timeline-lap.json', 'utf8'));
-const LAP_MAP = { 1: 1, 2: 2, 3: 3, 12: 12, 17: 17, 18: 18 };
+const LAP_MAP = { 1: 1, 2: 2, 3: 3, 12: 12, 17: 17, 18: 18, 19: 19, 20: 20, 21: 21 };
 const marks = Object.fromEntries(fs.readFileSync(ROOT + '/phone-marks.txt', 'utf8').trim().split(/\r?\n/).map(l => l.split(' ')).map(([k, v]) => [k, Number(v)]));
 const T0 = marks.rec_start - 200;          // scrcpy's first frame landed ~0.2 s before the mark
 const P = (k, off = 0) => marks[k] - T0 + off * 1000;
@@ -12,7 +12,6 @@ const phoneScenes = [
   { scene: 4,  start: P('install_tapped', -2),      end: P('install_confirm_shown', 2.5), caption: 'Install it like any app.' },
   { scene: 5,  start: P('install_confirmed', -1),   end: P('s_app_open', 7.5),            caption: 'No app store, no terminal.' },
   { scene: 6,  start: P('s_app_open', 7.5),         end: P('s_rules_start', 0),           caption: 'The deposit is on the timeline, decrypted by the purse.' },
-  { scene: 7,  start: P('s_rules_start', 0),        end: P('s_rules_start', 5.5),         caption: 'Rules: what to buy, and when.' },
   { scene: 8,  start: P('fire_topup', -14),         end: P('fire_topup', 6),              caption: 'Fire now. The agent goes to work.' },
   { scene: 9,  start: P('s_timeline_wait', 5.0),    end: P('pass_done', 5.5),             caption: 'Bought on Bitrefill, delivered.' },
   { scene: 10, start: P('s_approvals', -0.5),       end: P('s_wallets', 0.2),             caption: 'A calendar trip became an eSIM proposal by itself.' },
@@ -23,7 +22,7 @@ const phoneScenes = [
   { scene: 16, start: P('shade_open', 2.0),         end: P('shade_open', 4.1),         caption: 'Delivered — next to Swiggy’s own credit message.' },
 ];
 const scenes = [...lap.scenes.map(s => ({ ...s, scene: LAP_MAP[s.scene] })), ...phoneScenes.map(s => ({ ...s, ctx: 'phone' }))].sort((a, b) => a.scene - b.scene);
-const NEW_ID = {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "12": 10, "17": 11, "10": 12, "11": 13, "13": 14, "14": 15, "15": 16, "16": 17, "18": 18};
+const NEW_ID = {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "19": 7, "20": 8, "8": 9, "9": 10, "10": 11, "11": 12, "21": 13, "12": 14, "13": 15, "14": 16, "15": 17, "16": 18, "17": 19, "18": 20};
 scenes.forEach(s => { s.scene = NEW_ID[String(s.scene)]; }); scenes.sort((a, b) => a.scene - b.scene);
 fs.writeFileSync(ROOT + '/timeline.json', JSON.stringify({ videos: { lap: lap.videos.lap, phone: PHONE }, scenes }, null, 2));
 fs.mkdirSync(ROOT + '/verify', { recursive: true });

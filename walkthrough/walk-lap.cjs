@@ -126,6 +126,44 @@ html,body{margin:0;height:100%;background:#0b0b0d;color:#e6e6e6;font:22px/1.5 "C
     await page.mouse.wheel(0, 700); await L.hold(page, 3500);
   });
 
+  // 19 · triggers, desktop rules page (live)
+  await scene(19, 'Rules carry their own triggers.', async () => {
+    await page.goto(L.FRONTEND + '/rules', { waitUntil: 'networkidle' }).catch(() => {});
+    await L.injectOverlay(page);
+    await L.hold(page, 1500);
+    const cells = page.locator('#rules td');
+    const n = await cells.count();
+    for (const i of [1, 5, 9, 13, 17]) { if (i < n) { await L.moveTo(page, cells.nth(i)); await L.hold(page, 1100); } }
+    await page.mouse.wheel(0, 420); await L.hold(page, 2500);
+    await page.mouse.wheel(0, 420); await L.hold(page, 2500);
+  });
+
+  // 20 · a rule in plain words (local instance, nothing fires)
+  await scene(20, 'New rules are plain words.', async () => {
+    await page.goto('http://localhost:8788/rules', { waitUntil: 'networkidle' }).catch(() => {});
+    await L.injectOverlay(page);
+    await page.locator('#ruleText').scrollIntoViewIfNeeded();
+    await L.hold(page, 600);
+    await L.typeInto(page, '#ruleText', 'Every Sunday at 9 am, order the weekly groceries on Instamart, never more than ₹1500.');
+    await L.hold(page, 400);
+    await L.clickEl(page, '#proposeBtn', { settle: 500 });
+    await page.waitForSelector('#proposeOut:not([hidden])', { timeout: 40000 }).catch(() => {});
+    await page.locator('#proposeOut').scrollIntoViewIfNeeded().catch(() => {});
+    await L.hold(page, 3500);
+    await L.clickEl(page, '#proposeOut [data-do=commit]', { settle: 800 }).catch(() => {});
+    await L.hold(page, 2500);
+  });
+
+  // 21 · the Dubai proposal, desktop approvals (live)
+  await scene(21, 'A calendar trip became an eSIM proposal by itself.', async () => {
+    await page.goto(L.FRONTEND + '/approvals', { waitUntil: 'networkidle' }).catch(() => {});
+    await L.injectOverlay(page);
+    await L.hold(page, 1200);
+    const card = page.locator('#view-approvals article, #view-approvals .pcard, #view-approvals .card').first();
+    await L.moveTo(page, card).catch(() => {});
+    await L.hold(page, 4500);
+  });
+
   const out = await rec.finish(ROOT + '/clips/lap.mp4');
   fs.writeFileSync(ROOT + '/timeline-lap.json', JSON.stringify({ videos: { lap: out.mp4 }, scenes: timeline }, null, 2));
   console.log('lap video:', out.mp4, out.frames, 'frames');

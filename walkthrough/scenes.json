@@ -25,50 +25,58 @@
   },
   {
     "n": 7,
-    "text": "Rules say what to buy, and when."
+    "text": "Rules carry their own triggers. Every twenty-eight days, the Jio plan. Every month, the medicines. Daily at seven-oh-five, Diet Coke on Instamart. On a signal, a treat. And the calendar rule watches for trips."
   },
   {
     "n": 8,
-    "text": "This one buys a two-fifty Swiggy Money card when I say top-up. Fire now, and the agent goes to work."
+    "text": "New rules are plain words. Every Sunday at nine, order the weekly groceries on Instamart, never more than fifteen hundred. Munim reads it back as an exact rule, and nothing is saved until I confirm."
   },
   {
     "n": 9,
-    "text": "Thirty seconds later the card is bought on Bitrefill and delivered. Available drops to one thirty-nine."
+    "text": "This one buys a two-fifty Swiggy Money card when I say top-up. Fire now, and the agent goes to work."
   },
   {
     "n": 10,
-    "text": "Every purchase sends a receipt back to the funder as an encrypted memo, with a hash of the gift-card code, never the code itself. Paste a receipt into the verifier and it checks the invoice against Bitrefill."
+    "text": "Thirty seconds later the card is bought on Bitrefill and delivered. Available drops to one thirty-nine."
   },
   {
     "n": 11,
-    "text": "The privacy page says what each party can see, and what they cannot."
-  },
-  {
-    "n": 12,
     "text": "A Dubai trip in my calendar became an eSIM proposal by itself. It buys only after I approve."
   },
   {
-    "n": 13,
+    "n": 12,
     "text": "The purse page shows the cap, the spend and every deposit. And the Swiggy Money card: the top-up was redeemed into the household balance automatically, the same balance that paid for this evening's Instamart order."
   },
   {
+    "n": 13,
+    "text": "Fifteen minutes before this take, a Dubai flight went into my Google Calendar. The next pass turned it into an eSIM proposal: U A E, five days, three dollars seventy-seven. Nothing is bought until I approve, and even then only inside the cap."
+  },
+  {
     "n": 14,
-    "text": "Connections shows every link Munim has: Swiggy's official MCP, Bitrefill, Google Calendar, the wallets. And push notifications, straight to the phone."
+    "text": "Same proposal on the phone. One tap approves it, nothing more."
   },
   {
     "n": 15,
-    "text": "Allow it once."
+    "text": "Connections shows every link Munim has: Swiggy's official MCP, Bitrefill, Google Calendar, the wallets. And push notifications, straight to the phone."
   },
   {
     "n": 16,
-    "text": "One tap sends a test."
+    "text": "Allow it once."
   },
   {
     "n": 17,
-    "text": "There it is, right next to Swiggy's own message confirming the two-fifty credit."
+    "text": "One tap sends a test."
   },
   {
     "n": 18,
+    "text": "There it is, right next to Swiggy's own message confirming the two-fifty credit."
+  },
+  {
+    "n": 19,
+    "text": "The privacy page says what each party can see, and what they cannot."
+  },
+  {
+    "n": 20,
     "text": "Munim is open source under MIT, built for the Free Society Hack. Fund it privately. It shops while you sleep."
   }
 ]
