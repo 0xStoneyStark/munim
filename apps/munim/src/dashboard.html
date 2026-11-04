@@ -3,130 +3,758 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>Munim purse</title>
 <style>
   :root {
     --bg: #f6f1e7; --ink: #1d1a14; --muted: #6f6656; --line: #d9cfbc;
     --card: #fffdf8; --accent: #c8521c; --ok: #1f7a4d; --warn: #a3700e; --bad: #b3261e;
+    --on-accent: #fff;
+    --wash: color-mix(in srgb, var(--ink) 5%, transparent);
+    --shadow: 0 1px 0 rgba(29, 26, 20, .05), 0 12px 28px -18px rgba(70, 45, 10, .38);
+    --font: "Bahnschrift", "Segoe UI", system-ui, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { --bg: #16140f; --ink: #efe8da; --muted: #a79d8a; --line: #3a3528; --card: #1f1c15; --accent: #f08a4b; }
+    :root:not([data-theme="light"]) {
+      --bg: #16140f; --ink: #efe8da; --muted: #a79d8a; --line: #3a3528; --card: #1f1c15; --accent: #f08a4b;
+      --ok: #58c08a; --warn: #e2ab43; --bad: #f07f76; --on-accent: #1a1208;
+      --shadow: 0 1px 0 rgba(0, 0, 0, .45), 0 16px 32px -16px rgba(0, 0, 0, .75);
+    }
   }
+  :root[data-theme="dark"] {
+    --bg: #16140f; --ink: #efe8da; --muted: #a79d8a; --line: #3a3528; --card: #1f1c15; --accent: #f08a4b;
+    --ok: #58c08a; --warn: #e2ab43; --bad: #f07f76; --on-accent: #1a1208;
+    --shadow: 0 1px 0 rgba(0, 0, 0, .45), 0 16px 32px -16px rgba(0, 0, 0, .75);
+  }
+
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 "Bahnschrift", "Segoe UI", system-ui, sans-serif; padding: 24px 16px 64px; }
-  main { max-width: 1040px; margin: 0 auto; }
-  h1 { font-size: 34px; letter-spacing: -0.02em; margin: 0 0 4px; }
-  h1 small { font-size: 14px; color: var(--muted); font-weight: 400; letter-spacing: 0; margin-left: 10px; }
-  .sub { color: var(--muted); margin: 0 0 24px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 24px; }
-  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
-  .stat .k { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
-  .stat .v { font-size: 30px; font-weight: 700; margin-top: 4px; }
-  .stat .v.accent { color: var(--accent); }
-  .bar { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; margin-top: 10px; }
-  .bar i { display: block; height: 100%; background: var(--accent); }
-  section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 18px; }
-  section h2 { font-size: 16px; margin: 0 0 12px; display: flex; justify-content: space-between; align-items: baseline; }
-  section h2 span { font-weight: 400; color: var(--muted); font-size: 13px; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th, td { text-align: left; padding: 8px 6px; border-top: 1px solid var(--line); vertical-align: top; }
-  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; border-top: 0; }
-  code { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; word-break: break-all; }
-  .addr { background: var(--bg); border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; }
-  .pill { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 12px; font-weight: 600; background: var(--line); }
-  .pill.delivered, .pill.complete { background: color-mix(in srgb, var(--ok) 18%, transparent); color: var(--ok); }
-  .pill.failed { background: color-mix(in srgb, var(--bad) 18%, transparent); color: var(--bad); }
-  .pill.reserved, .pill.pending, .pill.unpaid { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
-  a { color: var(--accent); }
-  button { font: inherit; background: var(--accent); color: #fff; border: 0; border-radius: 10px; padding: 8px 14px; cursor: pointer; }
-  button:hover { filter: brightness(1.08); }
-  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-  .empty { color: var(--muted); font-style: italic; }
-  .trust { font-size: 13.5px; color: var(--muted); }
-  .trust b { color: var(--ink); }
+  [hidden] { display: none !important; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font); padding: 24px 16px 72px; -webkit-font-smoothing: antialiased; }
+  main { max-width: 1120px; margin: 0 auto; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:hover { text-decoration-thickness: 2px; }
+  a:focus-visible, .seg:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .empty { color: var(--muted); font-style: italic; margin: 0; }
+  .mono { font-family: var(--mono); font-size: 12.5px; overflow-wrap: anywhere; }
+  .idpill { background: var(--wash); padding: 1px 6px; border-radius: 5px; border: 1px solid var(--line); }
+  a.idpill { text-decoration: none; }
+  a.idpill:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .lbl { font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+
+  /* controls */
+  .btn { font: inherit; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); cursor: pointer; text-decoration: none; transition: background .15s, border-color .15s, transform .1s, filter .15s; }
+  .btn:hover { filter: brightness(1.08); text-decoration: none; }
+  .btn:active { transform: translateY(1px); }
+  .btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .btn[disabled] { opacity: .5; cursor: not-allowed; filter: none; transform: none; }
+  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn.ghost:hover { border-color: var(--ink); background: var(--wash); filter: none; }
+  .btn.danger { background: transparent; color: var(--bad); border-color: var(--line); }
+  .btn.danger:hover { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 10%, transparent); filter: none; }
+  .btn.danger.armed { background: var(--bad); color: #fff; border-color: var(--bad); }
+  .btn.sm { min-height: 32px; padding: 4px 11px; font-size: 13px; }
+  .in { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-height: 40px; width: 100%; }
+  .in:hover { border-color: var(--muted); }
+  .in:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  textarea.in { resize: vertical; min-height: 84px; }
+  .field { display: grid; gap: 4px; min-width: 0; }
+
+  /* chips */
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px 2px 8px; border-radius: 99px; font-size: 11.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; color: var(--c); background: color-mix(in srgb, var(--c) 15%, transparent); }
+  .chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .chip.ok { --c: var(--ok); } .chip.warn { --c: var(--warn); } .chip.bad { --c: var(--bad); } .chip.neutral { --c: var(--muted); }
+
+  /* header */
+  .top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px 24px; padding-bottom: 16px; border-bottom: 3px double var(--ink); }
+  .brand h1 { margin: 0; font-size: clamp(42px, 10vw, 64px); line-height: .92; letter-spacing: -.04em; font-weight: 700; font-variation-settings: "wdth" 92; }
+  .brand h1 .dot { color: var(--accent); }
+  .brand h1 small { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 600; color: var(--muted); margin-left: 12px; vertical-align: .9em; font-variation-settings: normal; }
+  .tagline { margin: 10px 0 0; color: var(--muted); max-width: 54ch; }
+  .top-actions { display: flex; align-items: center; gap: 14px; }
+  .live { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .live.on::before { background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 25%, transparent); }
+  .live.off { color: var(--bad); } .live.off::before { background: var(--bad); }
+  .mockflag { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--warn); border: 1px dashed var(--warn); border-radius: 6px; padding: 1px 7px; }
+
+  /* hero */
+  .hero { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 26px 0 40px; }
+  .tile { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px 16px; box-shadow: var(--shadow); min-width: 0; }
+  .num { font-size: clamp(30px, 8vw, 44px); font-weight: 700; line-height: 1.05; letter-spacing: -.02em; margin-top: 6px; font-variant-numeric: tabular-nums; font-variation-settings: "wdth" 90; overflow-wrap: anywhere; }
+  .num.spent { color: var(--accent); }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .gauge { display: flex; gap: 3px; height: 10px; margin-top: 12px; }
+  .seg { position: relative; background: var(--line); border-radius: 3px; overflow: hidden; min-width: 6px; cursor: help; }
+  .seg i { position: absolute; inset: 0 auto 0 0; background: var(--accent); }
+  .seg:hover { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .tile-appr { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--ink); text-decoration: none; transition: border-color .15s, transform .1s; }
+  .tile-appr:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .tile-appr:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .badge { min-width: 38px; height: 38px; padding: 0 8px; border-radius: 99px; display: grid; place-items: center; font-size: 18px; font-weight: 700; background: var(--line); color: var(--ink); font-variant-numeric: tabular-nums; }
+  .tile-appr.has .badge { background: var(--accent); color: var(--on-accent); }
+  @media (min-width: 900px) {
+    .hero { grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(150px, .7fr); }
+    .tile-appr { grid-column: auto; flex-direction: column; align-items: flex-start; justify-content: space-between; }
+  }
+
+  /* layout */
+  .cols { display: grid; gap: 40px; grid-template-columns: minmax(0, 1fr); }
+  .stack { display: grid; gap: 40px; min-width: 0; }
+  @media (min-width: 960px) { .cols { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 40px; align-items: start; } }
+  .sec-h { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px; margin: 0 0 14px; }
+  .sec-h h2 { margin: 0; font-size: 22px; letter-spacing: -.015em; line-height: 1.2; }
+  .sec-h .meta { color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+  #inboxSec { scroll-margin-top: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); min-width: 0; }
+  .more { margin-top: 12px; }
+
+  /* timeline */
+  .tl-card { padding: 8px 18px; }
+  .tl { list-style: none; margin: 0; padding: 0; position: relative; }
+  .tl::before { content: ""; position: absolute; left: 19px; top: 10px; bottom: 10px; width: 2px; background: var(--line); }
+  .tl.is-empty::before { display: none; }
+  .tl .empty { padding: 14px 0; }
+  .day { padding: 12px 0 2px 52px; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .ev { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; padding: 9px 0; position: relative; --k: var(--muted); }
+  .ev .glyph { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 17px; line-height: 1; border: 2px solid var(--k); background: color-mix(in srgb, var(--k) 12%, var(--card)); position: relative; z-index: 1; }
+  .k-deposit { --k: var(--ok); } .k-trigger { --k: var(--warn); } .k-decision { --k: var(--muted); } .k-purchase { --k: var(--accent); }
+  .k-receipt { --k: var(--ok); } .k-refusal { --k: var(--bad); } .k-proposal { --k: var(--warn); } .k-redeem { --k: var(--accent); }
+  .ev-body { min-width: 0; padding-top: 1px; }
+  .ev-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .ev-title { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+  .k-refusal .ev-title { color: var(--bad); }
+  .ev time { color: var(--muted); font-size: 12.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .ev-detail { color: var(--muted); font-size: 14px; margin-top: 2px; overflow-wrap: anywhere; }
+  .ev-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 7px; }
+
+  /* proposals, merchants, privacy */
+  .plist, .mlist { display: grid; gap: 12px; }
+  .pcard { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--warn); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
+  .p-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
+  .p-title { font-weight: 700; font-size: 16px; line-height: 1.3; overflow-wrap: anywhere; }
+  .p-sub { color: var(--muted); font-size: 14px; margin-top: 2px; overflow-wrap: anywhere; }
+  .price { font-size: 26px; font-weight: 700; line-height: 1.1; white-space: nowrap; font-variant-numeric: tabular-nums; font-variation-settings: "wdth" 90; }
+  .p-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .p-actions .btn { flex: 1; }
+  .resolved { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; }
+  .resolved li { display: flex; justify-content: space-between; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; padding: 6px 2px; border-top: 1px dashed var(--line); }
+  .resolved li span:first-child { min-width: 0; overflow-wrap: anywhere; }
+  .mcard { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; box-shadow: var(--shadow); }
+  .m-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .m-label { font-weight: 700; }
+  .m-detail { color: var(--muted); font-size: 14px; margin-top: 3px; overflow-wrap: anywhere; }
+  .m-act { margin-top: 10px; }
+  .priv-card { padding: 2px 18px; }
+  .priv { margin: 0; }
+  .priv > div { padding: 13px 0; border-top: 1px solid var(--line); }
+  .priv > div:first-child { border-top: 0; }
+  .priv dt { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+  .priv dd { margin: 3px 0 0; }
+  .priv dd::first-letter { text-transform: uppercase; }
+
+  /* rules */
+  .rules-sec { margin-top: 48px; }
+  .rt-card { padding: 4px 18px; }
+  .rt { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .rt th { text-align: left; padding: 12px 10px 8px 0; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .rt td { padding: 12px 10px 12px 0; border-top: 1px solid var(--line); vertical-align: top; }
+  .rt tbody tr:first-child td { border-top: 1px solid var(--ink); }
+  .rt td:last-child, .rt th:last-child { padding-right: 0; }
+  .cv { min-width: 0; overflow-wrap: anywhere; }
+  .ttype { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-right: 6px; }
+  .money { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tag { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 5px; padding: 0 6px; }
+  .acts-in { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  @media (max-width: 720px) {
+    .rt thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .rt, .rt tbody, .rt tr, .rt td { display: block; }
+    .rt tr { padding: 12px 0; border-top: 1px solid var(--line); }
+    .rt tbody tr:first-child { border-top: 0; }
+    .rt td, .rt tbody tr:first-child td { display: flex; gap: 12px; padding: 3px 0; border: 0; }
+    .rt td::before { content: attr(data-l); flex: 0 0 62px; padding-top: 3px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .rt td.acts::before { display: none; }
+    .rt td.acts { padding-top: 8px; }
+    .acts-in { justify-content: flex-start; }
+    .cv { flex: 1; }
+  }
+  .add { margin-top: 18px; padding: 18px; }
+  .add h3 { margin: 0 0 4px; font-size: 17px; }
+  .add .hint { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+  .add-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 12px; }
+  .msg { color: var(--bad); font-size: 14px; }
+  .prop { margin-top: 18px; padding-top: 18px; border-top: 1px dashed var(--line); }
+  .readback { margin: 6px 0 12px; font-size: 19px; line-height: 1.35; font-weight: 600; letter-spacing: -.01em; padding-left: 14px; border-left: 4px solid var(--accent); }
+  .warns { margin: 0 0 14px; padding: 0; list-style: none; display: grid; gap: 6px; }
+  .warns li { font-size: 14px; color: var(--warn); padding-left: 22px; position: relative; }
+  .warns li::before { content: "!"; position: absolute; left: 0; top: 1px; width: 15px; height: 15px; border-radius: 50%; background: var(--warn); color: var(--card); font-size: 11px; font-weight: 800; display: grid; place-items: center; }
+  .fields { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+  .fields .wide { grid-column: 1 / -1; }
+  @media (min-width: 640px) { .fields { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+  /* footer */
+  .foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 24px; margin-top: 48px; padding-top: 18px; border-top: 3px double var(--ink); color: var(--muted); font-size: 14px; }
+  .foot .csv { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+
+  /* modal */
+  dialog { border: 1px solid var(--line); border-radius: 14px; background: var(--card); color: var(--ink); padding: 0; width: min(540px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow: auto; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .55); }
+  dialog::backdrop { background: rgba(18, 13, 5, .6); }
+  .dlg-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 3px double var(--ink); }
+  .dlg-h h2 { margin: 0; font-size: 22px; letter-spacing: -.015em; }
+  .dlg-b { padding: 18px 20px 22px; display: grid; gap: 22px; }
+  .dlg-b h3 { margin: 0 0 8px; }
+  .addr { display: flex; align-items: flex-start; gap: 10px; background: var(--bg); border: 1px dashed var(--muted); border-radius: 10px; padding: 10px 12px; }
+  .addr code { flex: 1; min-width: 0; font-family: var(--mono); font-size: 12.5px; word-break: break-all; }
+  .recipe { display: block; margin-top: 6px; padding: 8px 10px; border-radius: 8px; background: var(--wash); border: 1px solid var(--line); font-family: var(--mono); font-size: 12.5px; overflow-wrap: anywhere; }
+  .dlg-b p { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+  .noir-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+  .noir-row .field { width: 100px; }
+  #noirStatus { margin-top: 10px; color: var(--muted); font-size: 14px; display: block; overflow-wrap: anywhere; }
+
+  /* toast */
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translate(-50%, 16px); opacity: 0; pointer-events: none; z-index: 60; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; max-width: calc(100% - 32px); font-size: 14px; box-shadow: var(--shadow); transition: opacity .2s, transform .2s; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast.bad { background: var(--bad); color: #fff; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { transition: none !important; }
+  }
 </style>
 </head>
 <body>
 <main>
-  <h1>Munim <small>a capped purse for a household agent · Zcash testnet</small></h1>
-  <p class="sub">Fund it privately, it shops on Bitrefill when a rule fires, receipts come back as encrypted memos.</p>
 
-  <div class="grid">
-    <div class="stat"><div class="k">Authorised cap</div><div class="v" id="cap">—</div></div>
-    <div class="stat"><div class="k">Spent</div><div class="v accent" id="spent">—</div><div class="bar"><i id="bar" style="width:0"></i></div></div>
-    <div class="stat"><div class="k">Remaining</div><div class="v" id="remaining">—</div></div>
-    <div class="stat"><div class="k">Purchases</div><div class="v" id="count">—</div></div>
+  <header class="top">
+    <div class="brand">
+      <h1>Munim<span class="dot">.</span><small>Zcash testnet</small></h1>
+      <p class="tagline">A capped purse for a household agent. Fund it in shielded Zcash, it shops when a rule fires.</p>
+    </div>
+    <div class="top-actions">
+      <span id="mockFlag" class="mockflag" hidden>mock data</span>
+      <span id="live" class="live" role="status">connecting</span>
+      <button id="fundBtn" class="btn sm" type="button">Fund</button>
+    </div>
+  </header>
+
+  <section class="hero" aria-label="Purse summary">
+    <div class="tile">
+      <div class="lbl">Authorised cap</div>
+      <div class="num" id="cap">—</div>
+      <div class="sub" id="capNote">&nbsp;</div>
+    </div>
+    <div class="tile">
+      <div class="lbl">Spent</div>
+      <div class="num spent" id="spent">—</div>
+      <div class="gauge" id="gauge" aria-label="Spend against each deposit's cap"></div>
+      <div class="sub" id="gaugeNote">&nbsp;</div>
+    </div>
+    <div class="tile">
+      <div class="lbl">Remaining</div>
+      <div class="num" id="remaining">—</div>
+      <div class="sub" id="remNote">&nbsp;</div>
+    </div>
+    <div class="tile">
+      <div class="lbl">Purchases</div>
+      <div class="num" id="count">—</div>
+      <div class="sub" id="countNote">&nbsp;</div>
+    </div>
+    <a class="tile tile-appr" id="apprTile" href="#inboxSec" aria-label="Approvals waiting, jump to inbox">
+      <div>
+        <div class="lbl">Approvals</div>
+        <div class="sub" id="apprNote">none waiting</div>
+      </div>
+      <span class="badge" id="apprBadge">0</span>
+    </a>
+  </section>
+
+  <div class="cols">
+    <section aria-labelledby="h-tl">
+      <div class="sec-h"><h2 id="h-tl">Timeline</h2><span class="meta">newest first</span></div>
+      <div class="card tl-card"><ol class="tl is-empty" id="timeline"></ol></div>
+      <button id="tlMore" class="btn ghost sm more" type="button" hidden>Show older</button>
+    </section>
+
+    <div class="stack">
+      <section id="inboxSec" aria-labelledby="h-inbox">
+        <div class="sec-h"><h2 id="h-inbox">Approvals</h2><span class="meta" id="inboxMeta"></span></div>
+        <div class="plist" id="inbox"></div>
+      </section>
+
+      <section aria-labelledby="h-mw">
+        <div class="sec-h"><h2 id="h-mw">Merchant wallets</h2><span class="meta">where the codes get spent</span></div>
+        <div class="mlist" id="merchants"></div>
+      </section>
+
+      <section aria-labelledby="h-priv">
+        <div class="sec-h"><h2 id="h-priv">Privacy</h2><span class="meta">who sees what</span></div>
+        <div class="card priv-card"><dl class="priv" id="privacy"></dl></div>
+      </section>
+    </div>
   </div>
 
-  <section>
-    <h2>Fund the purse <span>send shielded TAZ with this memo</span></h2>
-    <div class="addr"><code id="address">—</code></div>
-    <p style="margin:10px 0 0">Memo: <code>fund cap=100 INR reply=&lt;your utest1 address&gt;</code> — the cap is the most the agent may ever spend from this deposit; <code>reply</code> is where receipts go.</p>
-    <div class="row" style="margin-top:12px">
-      <label>Cap ₹ <input id="noirCap" type="number" value="50" min="1" style="width:80px;font:inherit;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"></label>
-      <label>TAZ <input id="noirAmt" type="text" value="0.05" style="width:80px;font:inherit;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"></label>
-      <button id="noirBtn" type="button">Fund with Noir Wallet</button>
-      <span id="noirStatus" class="empty">Noir Wallet (testnet build) signs the shielded deposit; the memo is written for you.</span>
+  <section class="rules-sec" aria-labelledby="h-rules">
+    <div class="sec-h"><h2 id="h-rules">Rules</h2><span class="meta" id="rulesMeta">what starts a purchase, no prompt needed</span></div>
+    <div class="card rt-card">
+      <table class="rt">
+        <thead><tr><th>Rule</th><th>Trigger</th><th>Max</th><th>Intent</th><th><span class="sr">Actions</span></th></tr></thead>
+        <tbody id="rules"></tbody>
+      </table>
+    </div>
+
+    <div class="card add">
+      <h3>Add a rule in plain words</h3>
+      <p class="hint">Say what should be bought and when. You review the exact rule before anything is saved.</p>
+      <label class="field">
+        <span class="lbl">Describe the rule</span>
+        <textarea id="ruleText" class="in" rows="3" placeholder="Every month on the 1st, top up Mum's Airtel number with ₹299, never more than ₹300."></textarea>
+      </label>
+      <div class="add-row">
+        <button id="proposeBtn" class="btn" type="button">Propose</button>
+        <span id="proposeMsg" class="msg" role="alert"></span>
+      </div>
+      <div id="proposeOut" class="prop" hidden></div>
     </div>
   </section>
 
-  <section>
-    <h2>Spend what was bought <span>close the loop on Swiggy</span></h2>
-    <p>A Swiggy Money card bought through Bitrefill is redeemed once by you in the Swiggy app; after that Munim orders on <b>Instamart</b> through Swiggy's official MCP server and pays from that balance.</p>
-    <div class="row"><a href="/swiggy/login"><button type="button">Link Swiggy account</button></a><span id="swiggyStatus" class="empty">not linked</span></div>
-  </section>
-
-  <section>
-    <h2>Rules <span>what starts a purchase, no prompt needed</span></h2>
-    <table><thead><tr><th>Rule</th><th>Trigger</th><th>Max</th><th>Intent</th><th></th></tr></thead><tbody id="rules"></tbody></table>
-  </section>
-
-  <section>
-    <h2>Deposits <span>seen through the viewing key</span></h2>
-    <table><thead><tr><th>Tx</th><th>TAZ</th><th>Cap</th><th>Memo</th></tr></thead><tbody id="deposits"></tbody></table>
-  </section>
-
-  <section>
-    <h2>Purchases <span>real Bitrefill invoices · codes never stored, only their hash</span></h2>
-    <table><thead><tr><th>When</th><th>Rule</th><th>Item</th><th>₹</th><th>Cost</th><th>Invoice</th><th>Status</th><th>Receipt tx</th></tr></thead><tbody id="spends"></tbody></table>
-  </section>
-
-  <section>
-    <h2>Agent log <span>what Munim decided</span></h2>
-    <div id="runs"></div>
-  </section>
-
-  <section>
-    <h2>Accountant export <span>read-only, from the viewing key — no spend key on this server</span></h2>
-    <div class="row"><a href="/export.csv"><button>Download CSV of all purse transactions</button></a></div>
-  </section>
-
-  <section class="trust">
-    <h2>What this reveals</h2>
-    <b>On-chain:</b> amounts, sender and receiver of every deposit and receipt are shielded. <b>This server:</b> holds the purse's spend key (bounded by the cap you funded), the ledger, and your reply address. <b>Bitrefill:</b> sees the phone number for top-ups and the operator's account. <b>Light-wallet server (zec.rocks):</b> sees this server's IP and sync pattern. <b>Anthropic:</b> sees the shopping intent and catalog results, never keys or codes. Full note in PRIVACY.md.
-  </section>
+  <footer class="foot">
+    <div class="csv">
+      <a class="btn ghost sm" href="/export.csv">Download accountant CSV</a>
+      <span>Read-only, built from the viewing key. No spend key is on this server.</span>
+    </div>
+    <a href="https://github.com/0xStoneyStark/munim" target="_blank" rel="noopener noreferrer">github.com/0xStoneyStark/munim</a>
+  </footer>
 </main>
+
+<dialog id="fundDlg" aria-labelledby="fundTitle">
+  <div class="dlg-h">
+    <h2 id="fundTitle">Fund the purse</h2>
+    <button id="fundClose" class="btn ghost sm" type="button" aria-label="Close">Close</button>
+  </div>
+  <div class="dlg-b">
+    <div>
+      <div class="lbl">Purse address (shielded)</div>
+      <div class="addr" style="margin-top:6px"><code id="address">—</code><button id="copyAddr" class="btn ghost sm" type="button">Copy</button></div>
+    </div>
+    <div>
+      <div class="lbl">Memo recipe</div>
+      <code class="recipe">fund cap=100 INR reply=&lt;your utest1 address&gt;</code>
+      <p>The cap is the most the agent may ever spend from this deposit. <code class="mono">reply</code> is where encrypted receipts are sent.</p>
+    </div>
+    <div>
+      <div class="lbl">Or fund from the Noir Wallet extension</div>
+      <div class="noir-row" style="margin-top:8px">
+        <label class="field"><span class="lbl">Cap ₹</span><input id="noirCap" class="in" type="number" value="50" min="1"></label>
+        <label class="field"><span class="lbl">TAZ</span><input id="noirAmt" class="in" type="text" value="0.05"></label>
+        <button id="noirBtn" class="btn" type="button">Fund with Noir Wallet</button>
+      </div>
+      <span id="noirStatus">Noir Wallet (testnet build) signs the shielded deposit; the memo is written for you.</span>
+    </div>
+  </div>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
 <script>
 const $ = (id) => document.getElementById(id);
-const inr = (n) => "₹" + Number(n).toLocaleString("en-IN");
-const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const short = (h) => h ? h.slice(0, 10) + "…" + h.slice(-6) : "";
-async function load() {
-  const d = await (await fetch("/api")).json();
-  $("address").textContent = d.address || "(agent not started yet)";
-  $("cap").textContent = inr(d.budget.capInr);
-  $("spent").textContent = inr(d.budget.spentInr);
-  $("remaining").textContent = inr(d.budget.remainingInr);
-  $("bar").style.width = d.budget.capInr ? Math.min(100, 100 * d.budget.spentInr / d.budget.capInr) + "%" : "0";
-  $("count").textContent = d.spends.filter((s) => s.status === "delivered").length;
-  $("rules").innerHTML = d.rules.map((r) => `<tr><td><code>${esc(r.id)}</code></td><td>${r.trigger.every ? "every " + esc(r.trigger.every) : "signal <code>" + esc(r.trigger.signal) + "</code>"}</td><td>${inr(r.maxInr)}</td><td>${esc(r.intent)}</td><td>${r.trigger.signal ? `<button onclick="signal('${esc(r.trigger.signal)}')">Fire now</button>` : ""}</td></tr>`).join("") || `<tr><td colspan="5" class="empty">no rules</td></tr>`;
-  $("deposits").innerHTML = d.deposits.map((x) => `<tr><td><a href="${d.explorer}${x.txid}" target="_blank"><code>${short(x.txid)}</code></a></td><td>${(x.zatoshis / 1e8).toFixed(4)}</td><td>${x.capInr != null ? inr(x.capInr) : "<span class=empty>none</span>"}</td><td><code>${esc(x.memo)}</code></td></tr>`).join("") || `<tr><td colspan="4" class="empty">waiting for the first shielded deposit</td></tr>`;
-  $("spends").innerHTML = d.spends.map((s) => `<tr><td>${new Date(s.at).toLocaleTimeString()}</td><td><code>${esc(s.ruleId)}</code></td><td>${esc(s.productName)}</td><td>${s.valueInr}</td><td>${s.cost} ${esc(s.costCurrency)}</td><td><code>${esc(s.invoiceId)}</code></td><td><span class="pill ${esc(s.status)}">${esc(s.status)}</span></td><td>${s.receiptTxid ? `<a href="${d.explorer}${s.receiptTxid}" target="_blank"><code>${short(s.receiptTxid)}</code></a>` : "—"}</td></tr>`).join("") || `<tr><td colspan="8" class="empty">nothing bought yet</td></tr>`;
-  $("swiggyStatus").textContent = d.swiggyLinked ? "linked — the agent can order on Instamart" : "not linked";
-  $("runs").innerHTML = d.runs.slice().reverse().map((r) => `<p><b>${new Date(r.at).toLocaleTimeString()}</b> · <code>${esc(r.ruleId)}</code> (${esc(r.reason)})<br>${esc(r.summary)}</p>`).join("") || `<p class="empty">no runs yet</p>`;
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const arr = (x) => (Array.isArray(x) ? x : []);
+const num = (n) => (Number.isFinite(Number(n)) ? Number(n) : 0);
+const inr = (n) => "₹" + num(n).toLocaleString("en-IN");
+const HEX64 = /^[0-9a-f]{64}$/i;
+const short = (h) => (h && String(h).length > 18 ? String(h).slice(0, 8) + "…" + String(h).slice(-6) : h || "");
+const MOCK = new URLSearchParams(location.search).get("mock") === "1";
+
+const GLYPH = { deposit: "🔒", trigger: "⏰", decision: "🧠", purchase: "🧾", receipt: "↩", refusal: "⛔", proposal: "✈", redeem: "💳" };
+const TONE_OK = new Set(["delivered", "complete", "completed", "paid", "linked", "active", "approved", "bought", "sent", "confirmed", "ok", "alive"]);
+const TONE_WARN = new Set(["pending", "reserved", "unpaid", "proposed", "processing", "queued"]);
+const TONE_BAD = new Set(["failed", "refused", "error", "expired", "rejected"]);
+const PRIV_ROWS = [
+  ["onchain", "On-chain", "amounts, sender and receiver of every deposit and receipt are shielded"],
+  ["bitrefill", "Bitrefill sees", "the phone number for top-ups and the operator's account"],
+  ["lightwallet", "Light-wallet server sees", "this server's IP and sync pattern (zec.rocks)"],
+  ["anthropic", "Anthropic sees", "shopping intents and catalog results — never keys or codes"],
+];
+
+let data = null;
+let explorer = "";
+let tlLimit = 30;
+let armed = null;
+let armTimer = null;
+let pendingRule = null;
+
+/* ---------- helpers ---------- */
+const tone = (s) => { s = String(s || "").toLowerCase(); return TONE_OK.has(s) ? "ok" : TONE_WARN.has(s) ? "warn" : TONE_BAD.has(s) ? "bad" : "neutral"; };
+const chip = (s) => (s ? `<span class="chip ${tone(s)}">${esc(String(s).replace(/_/g, " "))}</span>` : "");
+const when = (v) => { const d = new Date(v); return isNaN(d) ? null : d; };
+const fmtTime = (d) => d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+function dayLabel(d) {
+  const t = new Date(); const y = new Date(t); y.setDate(t.getDate() - 1);
+  if (d.toDateString() === t.toDateString()) return "Today";
+  if (d.toDateString() === y.toDateString()) return "Yesterday";
+  return d.toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" });
 }
-async function signal(name) { await fetch("/signal/" + name, { method: "POST" }); alert("Signal '" + name + "' queued; the agent picks it up on its next pass."); }
-load(); setInterval(load, 10000);
+const safeHref = (u) => (typeof u === "string" && /^(https?:\/\/|\/(?!\/))/i.test(u) ? u : null);
+function aTag(href, inner, cls) {
+  const h = safeHref(href);
+  if (!h) return inner;
+  const ext = /^https?:/i.test(h) ? ' target="_blank" rel="noopener noreferrer"' : "";
+  return `<a${cls ? ` class="${cls}"` : ""} href="${esc(h)}"${ext}>${inner}</a>`;
+}
+const txHref = (txid) => (explorer && HEX64.test(txid || "") ? explorer + txid : null);
+function resolveLink(link, mono) {
+  if (safeHref(link)) return link;
+  return txHref(link) || txHref(mono);
+}
+const trig = (t) => (t && t.every ? ["every", t.every] : t && t.signal ? ["signal", t.signal] : t && t.calendar ? ["calendar", t.calendar] : ["trigger", ""]);
+
+let toastTimer = null;
+function toast(msg, bad) {
+  const t = $("toast");
+  t.textContent = msg; t.className = "toast show" + (bad ? " bad" : "");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = "toast"; }, 4200);
+}
+
+/* ---------- data layer (live or mock) ---------- */
+async function api(path, opts) {
+  if (MOCK) return mockApi(path, opts);
+  const r = await fetch(path, opts);
+  let body = null;
+  try { body = await r.json(); } catch (e) { body = null; }
+  if (!r.ok) throw new Error((body && body.error) || r.statusText || "request failed");
+  return body;
+}
+const post = (path, body) => api(path, body === undefined ? { method: "POST" } : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+
+/* ---------- renderers ---------- */
+function renderHero(d) {
+  const b = d.budget || {};
+  const deps = arr(d.deposits).filter((x) => x.capInr != null && num(x.capInr) > 0);
+  const spends = arr(d.spends);
+  const delivered = spends.filter((s) => s.status === "delivered").length;
+  $("cap").textContent = inr(b.capInr);
+  $("capNote").textContent = deps.length ? `from ${deps.length} deposit${deps.length === 1 ? "" : "s"}` : "no capped deposit yet";
+  $("spent").textContent = inr(b.spentInr);
+  $("remaining").textContent = inr(b.remainingInr);
+  $("remNote").textContent = num(b.capInr) > 0 ? `${Math.max(0, Math.round(100 * num(b.remainingInr) / num(b.capInr)))}% of the cap left` : " ";
+  $("count").textContent = String(delivered);
+  const failed = spends.filter((s) => s.status === "failed").length;
+  $("countNote").textContent = `${spends.length} invoice${spends.length === 1 ? "" : "s"}${failed ? `, ${failed} failed` : ""}`;
+
+  let left = num(b.spentInr);
+  $("gauge").innerHTML = deps.length
+    ? deps.map((x) => {
+        const cap = num(x.capInr); const used = Math.min(cap, Math.max(0, left)); left -= used;
+        const label = `Cap ${inr(cap)} · ${short(x.txid)} · ${inr(used)} spent`;
+        return `<span class="seg" tabindex="0" role="img" style="flex:${cap} 1 0%" title="${esc(label)}" aria-label="${esc(label)}"><i style="width:${(100 * used / cap).toFixed(1)}%"></i></span>`;
+      }).join("")
+    : `<span class="seg" title="No cap-bearing deposits yet"></span>`;
+  $("gaugeNote").textContent = deps.length ? `one segment per capped deposit` : "waiting for a funded deposit";
+
+  const open = arr(d.proposals).filter((p) => p.status === "proposed").length;
+  $("apprBadge").textContent = String(open);
+  $("apprNote").textContent = open ? `${open} waiting for you` : "none waiting";
+  $("apprTile").classList.toggle("has", open > 0);
+}
+
+function buildTimeline(d) {
+  return [
+    ...arr(d.deposits).map((x) => ({ at: x.seenAt, kind: "deposit", title: `Deposit · ${(num(x.zatoshis) / 1e8).toFixed(4)} TAZ`, detail: x.capInr != null ? `Cap ${inr(x.capInr)}` : "No cap in the memo", mono: x.txid })),
+    ...arr(d.spends).map((s) => ({ at: s.at, kind: "purchase", title: `${s.productName} · ${inr(s.valueInr)}`, detail: `Rule ${s.ruleId}`, status: s.status, mono: s.invoiceId })),
+    ...arr(d.spends).filter((s) => s.receiptTxid).map((s) => ({ at: s.at, kind: "receipt", title: "Receipt sent to funder", mono: s.receiptTxid })),
+    ...arr(d.runs).map((r) => ({ at: r.at, kind: "decision", title: r.summary, detail: `${r.ruleId} (${r.reason})` })),
+  ];
+}
+
+function eventHtml(x) {
+  const kind = GLYPH[x.kind] ? x.kind : "other";
+  const href = resolveLink(x.link, x.mono);
+  const monoTxt = x.mono ? (HEX64.test(x.mono) ? short(x.mono) : String(x.mono)) : "";
+  const monoHtml = monoTxt
+    ? (href ? aTag(href, esc(monoTxt) + " ↗", "mono idpill") : `<span class="mono idpill">${esc(monoTxt)}</span>`)
+    : (href ? aTag(href, "open ↗", "mono") : "");
+  const meta = [chip(x.status), monoHtml].filter(Boolean).join("");
+  const iso = x._d ? x._d.toISOString() : "";
+  return `<li class="ev k-${kind}"><span class="glyph" aria-hidden="true">${GLYPH[x.kind] || "•"}</span>`
+    + `<div class="ev-body"><div class="ev-head"><span class="ev-title"><span class="sr">${esc(x.kind)}: </span>${esc(x.title)}</span>`
+    + `<time datetime="${esc(iso)}" title="${esc(x._d ? x._d.toLocaleString() : "")}">${x._d ? fmtTime(x._d) : "—"}</time></div>`
+    + (x.detail ? `<div class="ev-detail">${esc(x.detail)}</div>` : "")
+    + (meta ? `<div class="ev-meta">${meta}</div>` : "") + `</div></li>`;
+}
+
+function renderTimeline(d) {
+  const items = (Array.isArray(d.timeline) ? d.timeline : buildTimeline(d))
+    .map((x) => ({ ...x, _d: when(x.at) }))
+    .sort((a, b) => (b._d ? b._d.getTime() : 0) - (a._d ? a._d.getTime() : 0));
+  let html = "", last = null;
+  for (const x of items.slice(0, tlLimit)) {
+    const key = x._d ? x._d.toDateString() : "undated";
+    if (key !== last) { html += `<li class="day">${esc(x._d ? dayLabel(x._d) : "Earlier")}</li>`; last = key; }
+    html += eventHtml(x);
+  }
+  const tl = $("timeline");
+  tl.classList.toggle("is-empty", !html);
+  tl.innerHTML = html || `<li class="empty">Nothing has happened yet. The first shielded deposit starts the ledger.</li>`;
+  $("tlMore").hidden = items.length <= tlLimit;
+}
+
+function renderInbox(d) {
+  const ps = arr(d.proposals).slice().sort((a, b) => (when(b.createdAt) || 0) - (when(a.createdAt) || 0));
+  const open = ps.filter((p) => p.status === "proposed");
+  const done = ps.filter((p) => p.status !== "proposed").slice(0, 5);
+  $("inboxMeta").textContent = open.length ? `${open.length} waiting` : "all clear";
+  const cards = open.map((p) => `<article class="pcard"><div class="p-top"><div style="min-width:0"><div class="lbl">${esc(p.kind === "esim" ? "eSIM" : p.kind || "purchase")}</div><div class="p-title">${esc(p.title)}</div><div class="p-sub">${esc(p.subtitle)}</div></div><div class="price">${esc(p.price)}</div></div>`
+    + `<div class="p-actions"><button class="btn" type="button" data-act="approve" data-id="${esc(p.id)}">Approve</button><button class="btn ghost" type="button" data-act="decline" data-id="${esc(p.id)}">Decline</button></div></article>`).join("");
+  const resolved = done.length
+    ? `<ul class="resolved" aria-label="Recently resolved">${done.map((p) => `<li><span>${esc(p.title)} · ${esc(p.price)}</span>${chip(p.status)}</li>`).join("")}</ul>` : "";
+  $("inbox").innerHTML = (cards || `<p class="empty">Nothing is waiting. Bigger buys, like eSIMs, land here for your yes or no.</p>`) + resolved;
+}
+
+function renderMerchants(d) {
+  let ms = arr(d.merchants);
+  if (!ms.length && typeof d.swiggyLinked === "boolean") {
+    ms = [{ id: "swiggy", label: "Swiggy Instamart", status: d.swiggyLinked ? "linked" : "not_linked",
+      detail: d.swiggyLinked ? "Linked: the agent can order on Instamart." : "Redeem a Swiggy Money card once in the Swiggy app, then link the account.",
+      action: d.swiggyLinked ? undefined : { label: "Link Swiggy account", href: "/swiggy/login" } }];
+  }
+  $("merchants").innerHTML = ms.map((m) => `<article class="mcard"><div class="m-top"><span class="m-label">${esc(m.label)}</span>${chip(m.status)}</div>`
+    + (m.detail ? `<div class="m-detail">${esc(m.detail)}</div>` : "")
+    + (m.action && safeHref(m.action.href) ? `<div class="m-act">${aTag(m.action.href, esc(m.action.label || "Open"), "btn ghost sm")}</div>` : "")
+    + `</article>`).join("") || `<p class="empty">No merchant wallets yet.</p>`;
+}
+
+function renderPrivacy(d) {
+  const p = d.privacy || {};
+  $("privacy").innerHTML = PRIV_ROWS.map(([k, label, fallback]) => `<div><dt>${esc(label)}</dt><dd>${esc(p[k] || fallback)}</dd></div>`).join("");
+}
+
+function renderRules(d) {
+  const rs = arr(d.rules);
+  $("rulesMeta").textContent = rs.length ? `${rs.length} rule${rs.length === 1 ? "" : "s"} · no prompt needed to fire` : "what starts a purchase, no prompt needed";
+  $("rules").innerHTML = rs.map((r) => {
+    const [t, v] = trig(r.trigger);
+    const isArmed = armed === r.id;
+    return `<tr><td data-l="Rule"><div class="cv"><span class="mono idpill">${esc(r.id)}</span></div></td>`
+      + `<td data-l="Trigger"><div class="cv"><span class="ttype">${esc(t)}</span><span${t === "every" ? "" : ' class="mono"'}>${esc(v)}</span></div></td>`
+      + `<td data-l="Max"><div class="cv money">${inr(r.maxInr)}</div></td>`
+      + `<td data-l="Intent"><div class="cv">${esc(r.intent)}${r.productType ? `<span class="tag">${esc(r.productType)}</span>` : ""}</div></td>`
+      + `<td class="acts"><div class="cv acts-in">${r.trigger && r.trigger.signal ? `<button class="btn sm ghost" type="button" data-fire="${esc(r.trigger.signal)}">Fire now</button>` : ""}`
+      + `<button class="btn sm danger${isArmed ? " armed" : ""}" type="button" data-del="${esc(r.id)}">${isArmed ? "Confirm delete" : "Delete"}</button></div></td></tr>`;
+  }).join("") || `<tr><td colspan="5" class="empty" style="padding:16px 0">No rules yet. Describe one below.</td></tr>`;
+}
+
+function render(d) {
+  explorer = typeof d.explorer === "string" ? d.explorer : "";
+  $("address").textContent = d.address || "(agent not started yet)";
+  renderHero(d); renderTimeline(d); renderInbox(d); renderMerchants(d); renderPrivacy(d); renderRules(d);
+}
+
+/* ---------- loading ---------- */
+function setLive(ok) {
+  const el = $("live");
+  el.className = "live " + (ok ? "on" : "off");
+  el.textContent = ok ? "live · " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "offline · retrying";
+}
+async function load() {
+  let d;
+  try { d = await api("/api"); } catch (e) { setLive(false); return; }
+  data = d; setLive(true);
+  try { render(d); } catch (e) { console.error("render failed", e); }
+}
+
+/* ---------- actions ---------- */
+async function guard(btn, fn, okMsg) {
+  btn.disabled = true;
+  try { await fn(); if (okMsg) toast(okMsg); } catch (e) { toast(e.message || "Request failed", true); }
+  finally { btn.disabled = false; }
+}
+
+$("inbox").addEventListener("click", (ev) => {
+  const b = ev.target.closest("button[data-act]");
+  if (!b) return;
+  const verb = b.dataset.act;
+  guard(b, async () => { await post(`/proposals/${encodeURIComponent(b.dataset.id)}/${verb}`); await load(); }, verb === "approve" ? "Approved. The agent will buy it on its next pass." : "Declined.");
+});
+
+$("rules").addEventListener("click", (ev) => {
+  const fire = ev.target.closest("button[data-fire]");
+  if (fire) {
+    const name = fire.dataset.fire;
+    guard(fire, async () => { await post("/signal/" + encodeURIComponent(name)); await load(); }, `Signal "${name}" queued. The agent picks it up on its next pass.`);
+    return;
+  }
+  const del = ev.target.closest("button[data-del]");
+  if (!del) return;
+  const id = del.dataset.del;
+  if (armed !== id) {
+    armed = id; renderRules(data || {});
+    clearTimeout(armTimer);
+    armTimer = setTimeout(() => { armed = null; renderRules(data || {}); }, 3500);
+    return;
+  }
+  clearTimeout(armTimer); armed = null;
+  guard(del, async () => { const r = await post("/rules/delete", { id }); if (data && r && r.rules) { data.rules = r.rules; renderRules(data); } await load(); }, `Rule "${id}" deleted.`);
+});
+
+$("tlMore").addEventListener("click", () => { tlLimit += 30; if (data) renderTimeline(data); });
+
+/* rule proposal */
+function proposalHtml(r) {
+  const rule = r.rule || {};
+  const [t, v] = trig(rule.trigger);
+  const opts = ["every", "signal", "calendar"].map((o) => `<option value="${o}"${o === t ? " selected" : ""}>${o}</option>`).join("");
+  const warns = arr(r.warnings);
+  return `<div class="lbl">The agent understood</div><p class="readback">${esc(r.readback)}</p>`
+    + (warns.length ? `<ul class="warns">${warns.map((w) => `<li>${esc(w)}</li>`).join("")}</ul>` : "")
+    + `<div class="fields">`
+    + `<label class="field"><span class="lbl">Rule id</span><input class="in mono" data-f="id" value="${esc(rule.id)}"></label>`
+    + `<label class="field"><span class="lbl">Trigger type</span><select class="in" data-f="ttype">${opts}</select></label>`
+    + `<label class="field"><span class="lbl">Trigger value</span><input class="in mono" data-f="tval" value="${esc(v)}"></label>`
+    + `<label class="field"><span class="lbl">Max ₹</span><input class="in" type="number" min="1" data-f="maxInr" value="${esc(rule.maxInr)}"></label>`
+    + `<label class="field"><span class="lbl">Product type</span><input class="in" data-f="productType" value="${esc(rule.productType)}"></label>`
+    + `<label class="field wide"><span class="lbl">Intent</span><textarea class="in" rows="2" data-f="intent">${esc(rule.intent)}</textarea></label></div>`
+    + `<div class="add-row"><button class="btn" type="button" data-do="commit">Confirm &amp; save</button><button class="btn ghost" type="button" data-do="discard">Discard</button><span class="msg" data-msg role="alert"></span></div>`;
+}
+function closeProposal() { pendingRule = null; $("proposeOut").hidden = true; $("proposeOut").innerHTML = ""; }
+
+$("proposeBtn").addEventListener("click", async () => {
+  const btn = $("proposeBtn"); const text = $("ruleText").value.trim();
+  $("proposeMsg").textContent = "";
+  if (!text) { $("proposeMsg").textContent = "Describe the rule first."; return; }
+  btn.disabled = true; btn.textContent = "Reading…";
+  try {
+    const r = await post("/rules/propose", { text });
+    pendingRule = r; $("proposeOut").innerHTML = proposalHtml(r); $("proposeOut").hidden = false;
+  } catch (e) { $("proposeMsg").textContent = e.message || "Could not read that rule."; }
+  finally { btn.disabled = false; btn.textContent = "Propose"; }
+});
+
+$("proposeOut").addEventListener("click", async (ev) => {
+  const b = ev.target.closest("button[data-do]");
+  if (!b) return;
+  if (b.dataset.do === "discard") { closeProposal(); return; }
+  const out = $("proposeOut"); const msg = out.querySelector("[data-msg]");
+  const f = (k) => out.querySelector(`[data-f="${k}"]`).value.trim();
+  const rule = { id: f("id"), intent: f("intent"), maxInr: Number(f("maxInr")), trigger: { [f("ttype")]: f("tval") } };
+  if (f("productType")) rule.productType = f("productType");
+  msg.textContent = "";
+  if (!rule.id || !rule.intent || !f("tval") || !(rule.maxInr > 0)) { msg.textContent = "Id, trigger value, intent and a positive max are required."; return; }
+  b.disabled = true;
+  try {
+    const r = await post("/rules/commit", { rule });
+    if (data && r && r.rules) { data.rules = r.rules; renderRules(data); }
+    closeProposal(); $("ruleText").value = ""; toast(`Rule "${rule.id}" saved.`); load();
+  } catch (e) { msg.textContent = e.message || "Could not save the rule."; }
+  finally { b.disabled = false; }
+});
+
+/* fund modal */
+const dlg = $("fundDlg");
+$("fundBtn").addEventListener("click", () => { if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", ""); });
+$("fundClose").addEventListener("click", () => dlg.close());
+dlg.addEventListener("click", (ev) => { if (ev.target === dlg) dlg.close(); });
+$("copyAddr").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText($("address").textContent.trim()); toast("Address copied."); }
+  catch (e) { toast("Copy failed. Select the address and copy it by hand.", true); }
+});
+
+/* ---------- mock mode (?mock=1) ---------- */
+const MOCK_DATA = (() => {
+  const ago = (min) => new Date(Date.now() - min * 60000).toISOString();
+  const tx = (c) => c.repeat(64);
+  return {
+    address: "utest1mockpurse7q4x9d2h5v8kzr3w6n0ylcjgfa8e5u2t4p7s9m3b6v1xqzd0hkw8c4j2n5r7y3f6a9e0l1u8t4",
+    explorer: "https://explorer.example/tx/",
+    budget: { capInr: 150, spentInr: 70, remainingInr: 80 },
+    deposits: [
+      { txid: tx("a1"), zatoshis: 5000000, capInr: 50, memo: "fund cap=50 INR reply=utest1funder", seenAt: ago(320) },
+      { txid: tx("b2"), zatoshis: 10000000, capInr: 100, memo: "fund cap=100 INR reply=utest1funder", seenAt: ago(200) },
+    ],
+    spends: [
+      { id: "s1", at: ago(150), ruleId: "weekly-airtel", productName: "Airtel Prepaid ₹50", valueInr: 50, cost: 0.62, costCurrency: "USDC", invoiceId: "inv_8f3a21", status: "delivered", receiptTxid: tx("c3") },
+      { id: "s2", at: ago(60), ruleId: "low-data", productName: "Jio Data Pack ₹20", valueInr: 20, cost: 0.25, costCurrency: "USDC", invoiceId: "inv_52b9e0", status: "pending", receiptTxid: null },
+      { id: "s3", at: ago(30), ruleId: "festival", productName: "Amazon Pay Gift Card ₹30", valueInr: 30, cost: 0.37, costCurrency: "USDC", invoiceId: "inv_77d1c4", status: "failed", receiptTxid: null },
+    ],
+    rules: [
+      { id: "weekly-airtel", intent: "Keep Mum's Airtel number topped up", maxInr: 50, productType: "topup", trigger: { every: "7d" } },
+      { id: "low-data", intent: "Buy a data pack when the data-low signal fires", maxInr: 100, productType: "topup", trigger: { signal: "data-low" } },
+      { id: "diwali-gift", intent: "Send a gift card to the family group before Diwali", maxInr: 500, productType: "giftcard", trigger: { calendar: "diwali -3d" } },
+    ],
+    runs: [],
+    timeline: [
+      { at: ago(320), kind: "deposit", title: "Deposit received · 0.0500 TAZ", detail: "Cap ₹50, receipts go to the reply address", mono: tx("a1"), link: "https://explorer.example/tx/" + tx("a1") },
+      { at: ago(160), kind: "trigger", title: "Rule weekly-airtel fired", detail: "every 7d" },
+      { at: ago(155), kind: "decision", title: "Picked Airtel Prepaid ₹50", detail: "Cheapest delivered option inside the rule's ₹50 max." },
+      { at: ago(150), kind: "purchase", title: "Bought Airtel Prepaid ₹50", status: "delivered", mono: "inv_8f3a21" },
+      { at: ago(148), kind: "receipt", title: "Receipt sent to funder", detail: "Encrypted memo to the reply address", mono: tx("c3") },
+      { at: ago(95), kind: "refusal", title: "Refused: Jio Postpaid ₹300", detail: "Above the rule max of ₹100 and the remaining cap.", status: "refused" },
+      { at: ago(40), kind: "proposal", title: "Proposed: Airalo Singapore eSIM", detail: "Waiting for your approval", status: "proposed" },
+      { at: ago(5), kind: "redeem", title: "Swiggy Money card redeemed", detail: "₹500 balance now usable on Instamart" },
+    ],
+    proposals: [
+      { id: "p1", kind: "esim", title: "Airalo Singapore eSIM, 5 GB / 30 days", subtitle: "For the March trip, delivered as a QR code to the funder", price: "₹1,150", status: "proposed", createdAt: ago(40) },
+      { id: "p2", kind: "other", title: "Amazon Pay Gift Card", subtitle: "Birthday gift for the family group", price: "₹500", status: "bought", createdAt: ago(900) },
+    ],
+    merchants: [
+      { id: "bitrefill", label: "Bitrefill", status: "active", detail: "3 invoices this month, all paid from the purse." },
+      { id: "swiggy", label: "Swiggy Instamart", status: "not_linked", detail: "Redeem the Swiggy Money card once in the Swiggy app, then link.", action: { label: "Link Swiggy account", href: "/swiggy/login" } },
+      { id: "zepto", label: "Zepto", status: "unknown", detail: "Balance can't be read yet." },
+    ],
+    privacy: {
+      onchain: "amounts, sender and receiver of every deposit and receipt are shielded",
+      bitrefill: "the phone number for top-ups and the operator's account",
+      lightwallet: "this server's IP and sync pattern (zec.rocks)",
+      anthropic: "shopping intents and catalog results — never keys or codes",
+    },
+    swiggyLinked: false,
+  };
+})();
+
+async function mockApi(path, opts) {
+  await new Promise((r) => setTimeout(r, 120));
+  const body = opts && opts.body ? JSON.parse(opts.body) : {};
+  if (path === "/api") return JSON.parse(JSON.stringify(MOCK_DATA));
+  if (path.startsWith("/signal/")) {
+    MOCK_DATA.timeline.push({ at: new Date().toISOString(), kind: "trigger", title: `Signal ${decodeURIComponent(path.slice(8))} fired`, detail: "mock" });
+    return { ok: true };
+  }
+  const pm = path.match(/^\/proposals\/([^/]+)\/(approve|decline)$/);
+  if (pm) {
+    const p = MOCK_DATA.proposals.find((x) => x.id === decodeURIComponent(pm[1]));
+    if (!p) throw new Error("No such proposal");
+    p.status = pm[2] === "approve" ? "approved" : "declined";
+    return { ok: true, proposal: p };
+  }
+  if (path === "/rules/propose") {
+    return {
+      rule: { id: "monthly-airtel", intent: String(body.text || "").slice(0, 140), maxInr: 300, productType: "topup", trigger: { calendar: "monthly 1st" } },
+      readback: "On the 1st of every month, buy an Airtel top-up of up to ₹300 for the saved number.",
+      warnings: ["Mock mode: this is a canned reading, not the real agent.", "₹300 is above your remaining cap of ₹80, so the purchase would be refused until you fund again."],
+    };
+  }
+  if (path === "/rules/commit") {
+    const r = body.rule || {};
+    if (!r.id) throw new Error("rule.id is required");
+    if (!(r.maxInr > 0)) throw new Error("maxInr must be a positive number");
+    if (MOCK_DATA.rules.some((x) => x.id === r.id)) throw new Error(`a rule with id "${r.id}" already exists`);
+    MOCK_DATA.rules.push(r);
+    return { ok: true, rules: JSON.parse(JSON.stringify(MOCK_DATA.rules)) };
+  }
+  if (path === "/rules/delete") {
+    MOCK_DATA.rules = MOCK_DATA.rules.filter((x) => x.id !== body.id);
+    return { ok: true, rules: JSON.parse(JSON.stringify(MOCK_DATA.rules)) };
+  }
+  throw new Error("mock: no route for " + path);
+}
+
+/* ---------- boot ---------- */
+if (MOCK) $("mockFlag").hidden = false;
+load();
+setInterval(() => { if (!document.hidden) load(); }, 10000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
 </script>
 <script type="module">
 // Fund the purse from the Noir Wallet browser extension (testnet build). The dApp
