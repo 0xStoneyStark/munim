@@ -15,6 +15,17 @@
 
 *Munim* (मुनीम) is the family accountant in an Indian trading house: trusted with a purse, never with the vault.
 
+## Why this one, in one screen
+
+Thirty teams built "shielded payment in, Bitrefill product out". Munim is the one where the loop is closed and the household is already using it:
+
+- **Past Bitrefill, not just to it.** The agent buys a Swiggy Money card, redeems it into the household's Swiggy balance by itself (no app, no copy-paste), and spends that balance on a real Instamart order through Swiggy's official MCP server. Order `252768923926074`, 4 Nov 19:05 IST, nobody at the keyboard. Video 1:17 and 1:58.
+- **No prompt required.** Rules carry their own triggers: every 28 days (Jio plan), monthly (medicines), daily at 19:05 (Diet Coke), on a word (`treat`, `topup`), on a trip in Google Calendar (eSIM proposal, approval first). New rules are typed in plain words and read back as an exact rule before anything is saved. Video 0:42 and 0:57.
+- **A product, not a terminal.** Installable web app on the phone with push notifications, pages for approvals, rules, wallets, privacy and connections. Hosted at https://munim.heneryshop.com and running for the builder's own family.
+- **Receipts that prove themselves.** Every purchase returns to the funder as an encrypted memo carrying the invoice id and a hash of the gift-card code, never the code; [`/verify`](https://munim.heneryshop.com/verify) checks any receipt against Bitrefill. View-only export from the viewing key for the accountant. Video 1:24.
+- **The guardrail is code, and it refused us on camera.** Over-cap spends are rejected before an invoice exists; the only way to raise the cap is a new shielded deposit with a new `cap=` memo. What it does not yet do (cap enforced in software, not by keys) is in [PRIVACY.md](PRIVACY.md) and first in [NEXT.md](NEXT.md).
+- **Two upstream issues filed during the hack**, with PRs offered: [zcash/zcash-devtool#272](https://github.com/zcash/zcash-devtool/issues/272), [bitrefill/agents#19](https://github.com/bitrefill/agents/issues/19).
+
 ---
 
 ## 1. The problem and who it's for
