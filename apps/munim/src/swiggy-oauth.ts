@@ -11,7 +11,9 @@ const DATA = path.resolve("data");
 const CLIENT_FILE = path.join(DATA, "swiggy-client.json");
 const PKCE_FILE = path.join(DATA, "swiggy-pkce.json");
 const TOKEN_FILE = path.join(DATA, "swiggy-tokens.json");
-export const REDIRECT_URI = `http://localhost:${process.env.DASHBOARD_PORT ?? "8788"}/oauth/swiggy/callback`;
+// PUBLIC_BASE_URL (e.g. https://munim.henryshop.com) is set when the dashboard is hosted behind a domain.
+const BASE_URL = (process.env.PUBLIC_BASE_URL || `http://localhost:${process.env.DASHBOARD_PORT ?? "8788"}`).replace(/\/+$/, "");
+export const REDIRECT_URI = `${BASE_URL}/oauth/swiggy/callback`;
 const SCOPE = "mcp:tools mcp:resources mcp:prompts";
 
 interface Tokens {
