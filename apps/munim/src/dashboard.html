@@ -1251,14 +1251,19 @@ function renderAgent() { $("agentPill").hidden = !agentRunning; }
 function renderBusy() { renderAgent(); if (data) { renderRules(data); renderInbox(data); renderSwiggy(data); } }
 function syncAgent(d) {
   const running = d.agentRunning === true;
-  if (wasRunning && !running) { announceDone(d); firing = null; probeSwiggy(); }
+  if (wasRunning && !running) {
+    // the lock clears a moment before the pass's files are fully written: announce from a fresh fetch, not this poll
+    firing = null; probeSwiggy();
+    const before = topBeforeRun;
+    setTimeout(async () => { let fresh = d; try { fresh = await api("/api"); } catch (e) {} if (fresh && fresh.timeline) { data = fresh; try { render(fresh); } catch (e) {} } announceDone(fresh, before); }, 2500);
+  }
   if (!running) topBeforeRun = topKey(d);
   wasRunning = running; agentRunning = running;
   renderAgent();
 }
-function announceDone(d) {
+function announceDone(d, before = topBeforeRun) {
   const t = newestItem(d);
-  if (!t || topKey(d) === topBeforeRun) { toast("Agent pass finished. Nothing new on the timeline.", false, TOAST_DONE_MS); return; }
+  if (!t || topKey(d) === before) { toast("Agent pass finished. Nothing new on the timeline.", false, TOAST_DONE_MS); return; }
   toast(clipText(t.detail ? `${t.title} · ${t.detail}` : t.title, TOAST_CHARS), false, TOAST_DONE_MS);
 }
 function markStarted() { agentRunning = true; wasRunning = true; renderBusy(); schedulePoll(); }
