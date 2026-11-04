@@ -7,121 +7,208 @@
 <title>Munim purse</title>
 <style>
   :root {
-    --bg: #f6f1e7; --ink: #1d1a14; --muted: #6f6656; --line: #d9cfbc;
-    --card: #fffdf8; --accent: #c8521c; --ok: #1f7a4d; --warn: #a3700e; --bad: #b3261e;
-    --on-accent: #fff;
+    --page: #EEF0F3; --shell: #FFFFFF; --card: #FFFFFF; --well: #F5F6F8; --line: #E6E8EC;
+    --ink: #111214; --muted: #6B7280;
+    --gold: #F4B728; --gold-deep: #D99A0B; --teal: #0E7C7B;
+    --ok: #16A34A; --warn: #D97706; --bad: #DC2626;
+    --solid: #111214; --on-solid: #FFFFFF;
+    --feature: #111214; --on-feature: #F3F4F6;
+    --focus: #D99A0B; --tile: #F2F3F5;
+    --hatch-a: #C9CDD4; --hatch-b: #EEF0F3;
     --wash: color-mix(in srgb, var(--ink) 5%, transparent);
-    --shadow: 0 1px 0 rgba(29, 26, 20, .05), 0 12px 28px -18px rgba(70, 45, 10, .38);
     --font: "Bahnschrift", "Segoe UI", system-ui, sans-serif;
     --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #16140f; --ink: #efe8da; --muted: #a79d8a; --line: #3a3528; --card: #1f1c15; --accent: #f08a4b;
-      --ok: #58c08a; --warn: #e2ab43; --bad: #f07f76; --on-accent: #1a1208;
-      --shadow: 0 1px 0 rgba(0, 0, 0, .45), 0 16px 32px -16px rgba(0, 0, 0, .75);
+      --page: #0F1012; --shell: #131417; --card: #17181B; --well: #1E2024; --line: #26282D;
+      --ink: #F3F4F6; --muted: #9CA3AF; --teal: #34C3C0;
+      --ok: #4ADE80; --warn: #FBBF24; --bad: #F87171;
+      --solid: #F3F4F6; --on-solid: #111214; --feature: #08090A; --focus: #F4B728; --tile: #E9EAEE;
+      --hatch-a: #3A3D44; --hatch-b: #17181B;
     }
   }
   :root[data-theme="dark"] {
-    --bg: #16140f; --ink: #efe8da; --muted: #a79d8a; --line: #3a3528; --card: #1f1c15; --accent: #f08a4b;
-    --ok: #58c08a; --warn: #e2ab43; --bad: #f07f76; --on-accent: #1a1208;
-    --shadow: 0 1px 0 rgba(0, 0, 0, .45), 0 16px 32px -16px rgba(0, 0, 0, .75);
+    --page: #0F1012; --shell: #131417; --card: #17181B; --well: #1E2024; --line: #26282D;
+    --ink: #F3F4F6; --muted: #9CA3AF; --teal: #34C3C0;
+    --ok: #4ADE80; --warn: #FBBF24; --bad: #F87171;
+    --solid: #F3F4F6; --on-solid: #111214; --feature: #08090A; --focus: #F4B728; --tile: #E9EAEE;
+    --hatch-a: #3A3D44; --hatch-b: #17181B;
   }
 
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
   html { scroll-behavior: smooth; }
-  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font); padding: 24px 16px 72px; -webkit-font-smoothing: antialiased; }
-  main { max-width: 1120px; margin: 0 auto; }
-  a { color: var(--accent); text-underline-offset: 3px; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.5 var(--font); padding: 24px; -webkit-font-smoothing: antialiased; }
+  a { color: var(--teal); text-underline-offset: 3px; }
   a:hover { text-decoration-thickness: 2px; }
-  a:focus-visible, .seg:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  :where(a, button, input, textarea, select, summary, .seg):focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .empty { color: var(--muted); font-style: italic; margin: 0; }
   .mono { font-family: var(--mono); font-size: 12.5px; overflow-wrap: anywhere; }
-  .idpill { background: var(--wash); padding: 1px 6px; border-radius: 5px; border: 1px solid var(--line); }
-  a.idpill { text-decoration: none; }
-  a.idpill:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
-  .lbl { font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .idpill { background: var(--well); padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); }
+  a.idpill { text-decoration: none; color: var(--ink); }
+  a.idpill:hover { border-color: var(--ink); }
+  .lbl { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
 
-  /* controls */
-  .btn { font: inherit; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); cursor: pointer; text-decoration: none; transition: background .15s, border-color .15s, transform .1s, filter .15s; }
-  .btn:hover { filter: brightness(1.08); text-decoration: none; }
-  .btn:active { transform: translateY(1px); }
-  .btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-  .btn[disabled] { opacity: .5; cursor: not-allowed; filter: none; transform: none; }
-  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
-  .btn.ghost:hover { border-color: var(--ink); background: var(--wash); filter: none; }
+  /* shell: the one big white device container */
+  .shell { max-width: 1400px; margin: 0 auto; background: var(--shell); border-radius: 28px; padding: 32px; }
+
+  /* pills and controls */
+  .pill, .btn { font: inherit; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; text-decoration: none; line-height: 1.2; transition: background .15s, border-color .15s, color .15s, transform .1s; }
+  .pill:hover { border-color: var(--ink); text-decoration: none; }
+  .pill:active, .btn:active { transform: translateY(1px); }
+  .pill.solid, .btn { background: var(--solid); border-color: var(--solid); color: var(--on-solid); }
+  .pill.solid:hover, .btn:hover { background: var(--gold); border-color: var(--gold); color: #111214; text-decoration: none; }
+  .pill.solid:active, .btn:active { background: var(--gold-deep); border-color: var(--gold-deep); }
+  .pill.big { padding: 13px 22px; font-size: 15px; }
+  .pill.sm, .btn.sm { padding: 6px 13px; font-size: 13px; }
+  .pill svg, .rbtn svg, .search svg { flex: none; }
+  .btn[disabled] { opacity: .5; cursor: not-allowed; transform: none; }
+  .btn.ghost { background: var(--card); color: var(--ink); border-color: var(--line); }
+  .btn.ghost:hover { background: var(--card); color: var(--ink); border-color: var(--ink); }
   .btn.danger { background: transparent; color: var(--bad); border-color: var(--line); }
-  .btn.danger:hover { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 10%, transparent); filter: none; }
+  .btn.danger:hover { background: color-mix(in srgb, var(--bad) 10%, transparent); color: var(--bad); border-color: var(--bad); }
   .btn.danger.armed { background: var(--bad); color: #fff; border-color: var(--bad); }
-  .btn.sm { min-height: 32px; padding: 4px 11px; font-size: 13px; }
-  .in { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-height: 40px; width: 100%; }
+  .rbtn { width: 38px; height: 38px; flex: none; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--ink); display: inline-grid; place-items: center; cursor: pointer; text-decoration: none; position: relative; font: inherit; font-size: 18px; line-height: 1; padding: 0; transition: border-color .15s; }
+  .rbtn:hover { border-color: var(--ink); }
+  .rbtn.avatar { background: var(--feature); border-color: var(--feature); color: var(--gold); font-weight: 700; font-size: 15px; cursor: default; }
+  .rbtn.bell.has::after { content: ""; position: absolute; top: 7px; right: 8px; width: 9px; height: 9px; border-radius: 50%; background: var(--gold); border: 2px solid var(--card); box-sizing: content-box; }
+  .in { font: inherit; color: var(--ink); background: var(--well); border: 1px solid var(--line); border-radius: 14px; padding: 8px 12px; min-height: 42px; width: 100%; }
   .in:hover { border-color: var(--muted); }
-  .in:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
   textarea.in { resize: vertical; min-height: 84px; }
   .field { display: grid; gap: 4px; min-width: 0; }
 
   /* chips */
-  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px 2px 8px; border-radius: 99px; font-size: 11.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; color: var(--c); background: color-mix(in srgb, var(--c) 15%, transparent); }
-  .chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .chip { --c: var(--muted); display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; color: color-mix(in srgb, var(--c) 78%, var(--ink)); background: color-mix(in srgb, var(--c) 14%, transparent); }
+  .chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--c); }
   .chip.ok { --c: var(--ok); } .chip.warn { --c: var(--warn); } .chip.bad { --c: var(--bad); } .chip.neutral { --c: var(--muted); }
 
-  /* header */
-  .top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px 24px; padding-bottom: 16px; border-bottom: 3px double var(--ink); }
-  .brand h1 { margin: 0; font-size: clamp(42px, 10vw, 64px); line-height: .92; letter-spacing: -.04em; font-weight: 700; font-variation-settings: "wdth" 92; }
-  .brand h1 .dot { color: var(--accent); }
-  .brand h1 small { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 600; color: var(--muted); margin-left: 12px; vertical-align: .9em; font-variation-settings: normal; }
-  .tagline { margin: 10px 0 0; color: var(--muted); max-width: 54ch; }
-  .top-actions { display: flex; align-items: center; gap: 14px; }
-  .live { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  /* top nav pill */
+  .nav { display: flex; align-items: center; gap: 10px 14px; padding: 7px 9px 7px 8px; background: var(--card); border: 1px solid var(--line); border-radius: 999px; position: sticky; top: 12px; z-index: 30; }
+  .logo-mark { display: flex; align-items: center; gap: 9px; color: var(--ink); text-decoration: none; font-weight: 700; letter-spacing: -.01em; font-size: 16px; padding-right: 6px; }
+  .logo-mark svg { display: block; width: 38px; height: 38px; border-radius: 50%; }
+  .tabs { flex: 1; display: flex; justify-content: center; gap: 6px; min-width: 0; }
+  .tab { padding: 8px 17px; border-radius: 999px; background: var(--well); color: var(--ink); font-weight: 600; font-size: 14px; text-decoration: none; white-space: nowrap; border: 1px solid transparent; transition: background .15s, border-color .15s; }
+  .tab:hover { border-color: var(--ink); text-decoration: none; }
+  .tab[aria-current="true"] { background: var(--solid); color: var(--on-solid); }
+  .nav-r { display: flex; align-items: center; gap: 8px; flex: none; }
+  .live { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-right: 6px; white-space: nowrap; }
   .live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
   .live.on::before { background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 25%, transparent); }
   .live.off { color: var(--bad); } .live.off::before { background: var(--bad); }
-  .mockflag { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--warn); border: 1px dashed var(--warn); border-radius: 6px; padding: 1px 7px; }
+  .mockflag { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--warn); border: 1px dashed var(--warn); border-radius: 999px; padding: 1px 9px; }
 
-  /* hero */
-  .hero { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 26px 0 40px; }
-  .tile { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px 16px; box-shadow: var(--shadow); min-width: 0; }
-  .num { font-size: clamp(30px, 8vw, 44px); font-weight: 700; line-height: 1.05; letter-spacing: -.02em; margin-top: 6px; font-variant-numeric: tabular-nums; font-variation-settings: "wdth" 90; overflow-wrap: anywhere; }
-  .num.spent { color: var(--accent); }
-  .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
-  .gauge { display: flex; gap: 3px; height: 10px; margin-top: 12px; }
-  .seg { position: relative; background: var(--line); border-radius: 3px; overflow: hidden; min-width: 6px; cursor: help; }
-  .seg i { position: absolute; inset: 0 auto 0 0; background: var(--accent); }
-  .seg:hover { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .tile-appr { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--ink); text-decoration: none; transition: border-color .15s, transform .1s; }
-  .tile-appr:hover { border-color: var(--accent); transform: translateY(-1px); }
-  .tile-appr:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .badge { min-width: 38px; height: 38px; padding: 0 8px; border-radius: 99px; display: grid; place-items: center; font-size: 18px; font-weight: 700; background: var(--line); color: var(--ink); font-variant-numeric: tabular-nums; }
-  .tile-appr.has .badge { background: var(--accent); color: var(--on-accent); }
-  @media (min-width: 900px) {
-    .hero { grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(150px, .7fr); }
-    .tile-appr { grid-column: auto; flex-direction: column; align-items: flex-start; justify-content: space-between; }
+  /* greeting + toolbar */
+  .hello { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px; margin: 38px 0 22px; }
+  .hello-l { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; min-width: 0; }
+  .hello h1 { margin: 0; font-size: clamp(32px, 6vw, 44px); line-height: 1.08; font-weight: 300; letter-spacing: -.035em; }
+  .addr-chip { background: var(--well); border: 1px solid var(--line); border-radius: 999px; padding: 5px 13px; color: var(--muted); white-space: nowrap; }
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 22px; }
+  .tb-l, .tb-r { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .search { display: flex; align-items: center; gap: 9px; min-width: 0; width: 260px; max-width: 100%; padding: 0 16px; height: 42px; border: 1px solid var(--line); border-radius: 999px; background: var(--well); color: var(--muted); }
+  .search:hover { border-color: var(--muted); }
+  .search:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; border-color: var(--ink); }
+  .search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; font-size: 14px; color: var(--ink); height: 100%; }
+  .search input::placeholder { color: var(--muted); }
+
+  /* card grid */
+  .grid { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); }
+  .rcol { display: grid; gap: 20px; align-content: start; min-width: 0; grid-template-columns: minmax(0, 1fr); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 24px; padding: 24px; min-width: 0; scroll-margin-top: 92px; }
+  .card-h { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; margin: 0 0 16px; min-height: 30px; }
+  .card-h h2 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -.015em; line-height: 1.2; display: flex; align-items: center; gap: 10px; }
+  .meta { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  @media (min-width: 720px) {
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .c-remain, .c-tl, .rcol, .c-rules, .c-built { grid-column: 1 / -1; }
+    .rcol { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (min-width: 1080px) {
+    .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .c-remain { grid-column: auto; }
+    .c-tl { grid-column: span 2; align-self: start; }
+    .rcol { grid-column: span 1; grid-template-columns: minmax(0, 1fr); }
+    .c-rules, .c-built { grid-column: 1 / -1; }
   }
 
-  /* layout */
-  .cols { display: grid; gap: 40px; grid-template-columns: minmax(0, 1fr); }
-  .stack { display: grid; gap: 40px; min-width: 0; }
-  @media (min-width: 960px) { .cols { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 40px; align-items: start; } }
-  .sec-h { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px; margin: 0 0 14px; }
-  .sec-h h2 { margin: 0; font-size: 22px; letter-spacing: -.015em; line-height: 1.2; }
-  .sec-h .meta { color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
-  #inboxSec { scroll-margin-top: 16px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); min-width: 0; }
-  .more { margin-top: 12px; }
+  /* numerals */
+  .num { font-size: clamp(38px, 9vw, 46px); font-weight: 700; line-height: 1.05; letter-spacing: -.03em; margin-top: 4px; font-variant-numeric: tabular-nums; font-variation-settings: "wdth" 92; overflow-wrap: anywhere; }
+  .num .cur { font-weight: 400; color: var(--muted); margin-right: 2px; }
+  .num.sm { font-size: 32px; margin-top: 2px; }
+
+  /* purse card */
+  .vcard { display: grid; grid-template-columns: 38% minmax(0, 1fr); border-radius: 20px; overflow: hidden; border: 1px solid var(--line); min-height: 168px; margin-bottom: 20px; }
+  .vc-gold { position: relative; background: linear-gradient(155deg, #F8C84A, var(--gold) 48%, #E8A810); color: #111214; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+  .vc-gold::before { content: ""; position: absolute; right: -54px; bottom: -50px; width: 128px; height: 128px; border-radius: 50%; border: 18px solid rgba(17, 18, 20, .08); }
+  .vc-gold::after { content: ""; position: absolute; right: -14px; bottom: -66px; width: 90px; height: 90px; border-radius: 50%; border: 12px solid rgba(17, 18, 20, .07); }
+  .vc-brand { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; position: relative; z-index: 1; }
+  .vc-nfc { width: 26px; height: 26px; position: relative; z-index: 1; }
+  .vc-white { background: var(--card); padding: 14px 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; min-width: 0; }
+  .vc-addr { margin-top: 4px; }
+  .vc-micro { display: flex; flex-wrap: wrap; gap: 6px 24px; }
+  .vc-micro i { display: block; font-style: normal; font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .vc-micro b { font-size: 19px; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .xlist { margin-top: 18px; border-top: 1px solid var(--line); }
+  .xlist details { border-bottom: 1px solid var(--line); }
+  .xlist summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 2px; font-weight: 600; border-radius: 8px; }
+  .xlist summary::-webkit-details-marker { display: none; }
+  .xlist summary > span:first-child::after { content: "⌄"; display: inline-block; margin-left: 8px; color: var(--muted); transition: transform .15s; }
+  .xlist details[open] summary > span:first-child::after { transform: rotate(180deg); }
+  .x-meta { color: var(--muted); font-weight: 600; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .drows { list-style: none; margin: 0; padding: 0 0 10px; display: grid; gap: 4px; }
+  .drows li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; font-size: 13px; padding: 5px 2px; }
+  .drows li.empty, .drows li.more-rows { display: block; color: var(--muted); font-style: italic; }
+  .xr-b { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .xr-c { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; min-width: 52px; }
+  .xr-c.fuel { color: var(--teal); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: .08em; }
+
+  /* spending card */
+  .bars { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: end; height: 172px; margin: 20px 0 14px; }
+  .bar-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; height: 100%; min-width: 0; }
+  .bar-amt { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .bar { display: block; width: 100%; max-width: 70px; min-height: 6px; border-radius: 16px 16px 8px 8px; transition: height .4s ease; }
+  .bar.ink { background: var(--ink); }
+  .bar.gold { background: var(--gold); }
+  .bar.hatch { background: repeating-linear-gradient(135deg, var(--hatch-a) 0 3px, var(--hatch-b) 3px 7px); border: 1px solid var(--line); }
+  .bar-name { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .gauge { display: flex; gap: 3px; height: 10px; margin-top: 12px; }
+  .seg { position: relative; background: var(--well); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; min-width: 6px; cursor: help; }
+  .seg i { position: absolute; inset: 0 auto 0 0; background: var(--gold); }
+  .seg:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
+  .spend-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 16px; }
+  .cnt { font-size: 17px; font-variant-numeric: tabular-nums; }
+  .spend-foot .sub { margin: 0; }
+
+  /* remaining arc */
+  .gauge-wrap { position: relative; width: 100%; max-width: 280px; aspect-ratio: 220 / 180; margin: 0 auto; }
+  .gauge-wrap svg { display: block; width: 100%; height: 100%; }
+  .arc { fill: none; }
+  .arc-track { stroke: var(--line); }
+  .arc-gold { stroke: var(--gold); }
+  .arc-ink { stroke: var(--ink); }
+  .arc-fuel { stroke: var(--teal); }
+  .arc-center { position: absolute; left: 18%; right: 18%; top: 55%; transform: translateY(-50%); text-align: center; }
+  .arc-center .sub { margin-top: 2px; font-size: 12px; }
+  .legend { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 20px; font-size: 13px; color: var(--muted); }
+  .legend li { display: inline-flex; align-items: center; gap: 7px; }
+  .legend b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .ldot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .ldot.gold { background: var(--gold); } .ldot.ink { background: var(--ink); } .ldot.teal { background: var(--teal); }
 
   /* timeline */
-  .tl-card { padding: 8px 18px; }
+  .tl-scroll { margin: 0 -6px; padding: 0 6px; }
+  @media (min-width: 1080px) { .tl-scroll { max-height: 820px; overflow-y: auto; } }
   .tl { list-style: none; margin: 0; padding: 0; position: relative; }
-  .tl::before { content: ""; position: absolute; left: 19px; top: 10px; bottom: 10px; width: 2px; background: var(--line); }
+  .tl::before { content: ""; position: absolute; left: 17px; top: 10px; bottom: 10px; width: 1px; background: var(--line); }
   .tl.is-empty::before { display: none; }
-  .tl .empty { padding: 14px 0; }
-  .day { padding: 12px 0 2px 52px; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-  .ev { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; padding: 9px 0; position: relative; --k: var(--muted); }
-  .ev .glyph { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 17px; line-height: 1; border: 2px solid var(--k); background: color-mix(in srgb, var(--k) 12%, var(--card)); position: relative; z-index: 1; }
-  .k-deposit { --k: var(--ok); } .k-trigger { --k: var(--warn); } .k-decision { --k: var(--muted); } .k-purchase { --k: var(--accent); }
-  .k-receipt { --k: var(--ok); } .k-refusal { --k: var(--bad); } .k-proposal { --k: var(--warn); } .k-redeem { --k: var(--accent); }
+  .tl .empty { padding: 10px 0; }
+  .day { padding: 14px 0 4px 50px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .ev { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 14px; padding: 8px 0; position: relative; --k: var(--muted); }
+  .ev .glyph { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; line-height: 1; border: 1.5px solid var(--k); background: color-mix(in srgb, var(--k) 12%, var(--card)); position: relative; z-index: 1; }
+  .k-deposit { --k: var(--ok); } .k-trigger { --k: var(--warn); } .k-decision { --k: var(--muted); } .k-purchase { --k: var(--gold-deep); }
+  .k-receipt { --k: var(--teal); } .k-refusal { --k: var(--bad); } .k-proposal { --k: var(--warn); } .k-redeem { --k: var(--gold-deep); }
   .ev-body { min-width: 0; padding-top: 1px; }
   .ev-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
   .ev-title { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
@@ -129,44 +216,62 @@
   .ev time { color: var(--muted); font-size: 12.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .ev-detail { color: var(--muted); font-size: 14px; margin-top: 2px; overflow-wrap: anywhere; }
   .ev-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 7px; }
+  .k-receipt a.idpill { color: var(--teal); }
+  .more { margin-top: 14px; }
 
-  /* proposals, merchants, privacy */
-  .plist, .mlist { display: grid; gap: 12px; }
-  .pcard { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--warn); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
+  /* approvals */
+  .badge { min-width: 26px; height: 26px; padding: 0 8px; border-radius: 999px; display: inline-grid; place-items: center; font-size: 13px; font-weight: 700; background: var(--well); color: var(--ink); border: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  #apprTile.has .badge { background: var(--gold); border-color: var(--gold); color: #111214; }
+  .plist { display: grid; gap: 12px; }
+  .pcard { background: var(--well); border: 1px solid var(--line); border-radius: 18px; padding: 14px 16px; }
   .p-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
-  .p-title { font-weight: 700; font-size: 16px; line-height: 1.3; overflow-wrap: anywhere; }
-  .p-sub { color: var(--muted); font-size: 14px; margin-top: 2px; overflow-wrap: anywhere; }
-  .price { font-size: 26px; font-weight: 700; line-height: 1.1; white-space: nowrap; font-variant-numeric: tabular-nums; font-variation-settings: "wdth" 90; }
+  .p-title { font-weight: 700; font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; }
+  .p-sub { color: var(--muted); font-size: 13.5px; margin-top: 2px; overflow-wrap: anywhere; }
+  .price { font-size: 24px; font-weight: 700; line-height: 1.1; white-space: nowrap; letter-spacing: -.02em; font-variant-numeric: tabular-nums; font-variation-settings: "wdth" 92; }
   .p-actions { display: flex; gap: 8px; margin-top: 12px; }
   .p-actions .btn { flex: 1; }
-  .resolved { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; }
-  .resolved li { display: flex; justify-content: space-between; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; padding: 6px 2px; border-top: 1px dashed var(--line); }
+  .resolved { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+  .resolved li { display: flex; justify-content: space-between; align-items: center; gap: 10px; color: var(--muted); font-size: 13.5px; padding: 6px 2px; border-top: 1px solid var(--line); }
   .resolved li span:first-child { min-width: 0; overflow-wrap: anywhere; }
-  .mcard { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; box-shadow: var(--shadow); }
+
+  /* receipts: the filled ink + gold card */
+  .feature { background: var(--feature); color: var(--on-feature); border-color: color-mix(in srgb, var(--gold) 20%, var(--feature)); }
+  .feature .card-h h2 { color: var(--gold); }
+  .feature .lbl { color: color-mix(in srgb, var(--on-feature) 60%, transparent); }
+  .feature .num { color: var(--gold); margin-top: 0; }
+  .feature .num.cur-none { font-variation-settings: "wdth" 92; }
+  .feature .past { color: color-mix(in srgb, var(--on-feature) 75%, transparent); border: 1px solid color-mix(in srgb, var(--gold) 38%, transparent); border-radius: 999px; padding: 3px 11px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .rc-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+  .spark { display: block; width: 100%; height: auto; margin-top: 14px; overflow: visible; }
+
+  /* merchants + privacy */
+  .mlist { display: grid; }
+  .mcard { padding: 13px 0; border-top: 1px solid var(--line); }
+  .mcard:first-child { border-top: 0; padding-top: 2px; }
   .m-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
   .m-label { font-weight: 700; }
-  .m-detail { color: var(--muted); font-size: 14px; margin-top: 3px; overflow-wrap: anywhere; }
+  .m-detail { color: var(--muted); font-size: 13.5px; margin-top: 3px; overflow-wrap: anywhere; }
   .m-act { margin-top: 10px; }
-  .priv-card { padding: 2px 18px; }
   .priv { margin: 0; }
-  .priv > div { padding: 13px 0; border-top: 1px solid var(--line); }
-  .priv > div:first-child { border-top: 0; }
-  .priv dt { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
-  .priv dd { margin: 3px 0 0; }
+  .priv > div { padding: 12px 0; border-top: 1px solid var(--line); }
+  .priv > div:first-child { border-top: 0; padding-top: 2px; }
+  .priv dt { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+  .priv dt::before { content: ""; width: 7px; height: 7px; border-radius: 2px; background: var(--gold); flex: none; }
+  .priv dd { margin: 3px 0 0; color: var(--muted); font-size: 14px; }
   .priv dd::first-letter { text-transform: uppercase; }
+  .priv-note { margin: 12px 0 0; padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; }
 
   /* rules */
-  .rules-sec { margin-top: 48px; }
-  .rt-card { padding: 4px 18px; }
+  .rt-wrap { overflow-x: auto; }
   .rt { width: 100%; border-collapse: collapse; font-size: 14px; }
-  .rt th { text-align: left; padding: 12px 10px 8px 0; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
-  .rt td { padding: 12px 10px 12px 0; border-top: 1px solid var(--line); vertical-align: top; }
-  .rt tbody tr:first-child td { border-top: 1px solid var(--ink); }
+  .rt th { text-align: left; padding: 6px 12px 10px 0; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--line); }
+  .rt td { padding: 13px 12px 13px 0; border-top: 1px solid var(--line); vertical-align: top; }
+  .rt tbody tr:first-child td { border-top: 0; }
   .rt td:last-child, .rt th:last-child { padding-right: 0; }
   .cv { min-width: 0; overflow-wrap: anywhere; }
-  .ttype { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-right: 6px; }
+  .ttype { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-right: 6px; }
   .money { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .tag { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 5px; padding: 0 6px; }
+  .tag { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; }
   .acts-in { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
   @media (max-width: 720px) {
     .rt thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
@@ -174,19 +279,20 @@
     .rt tr { padding: 12px 0; border-top: 1px solid var(--line); }
     .rt tbody tr:first-child { border-top: 0; }
     .rt td, .rt tbody tr:first-child td { display: flex; gap: 12px; padding: 3px 0; border: 0; }
-    .rt td::before { content: attr(data-l); flex: 0 0 62px; padding-top: 3px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .rt td::before { content: attr(data-l); flex: 0 0 62px; padding-top: 3px; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
     .rt td.acts::before { display: none; }
     .rt td.acts { padding-top: 8px; }
     .acts-in { justify-content: flex-start; }
     .cv { flex: 1; }
   }
-  .add { margin-top: 18px; padding: 18px; }
+  .add { margin-top: 20px; padding: 20px; background: var(--well); border: 1px solid var(--line); border-radius: 20px; }
   .add h3 { margin: 0 0 4px; font-size: 17px; }
   .add .hint { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+  .add .in { background: var(--card); }
   .add-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 12px; }
   .msg { color: var(--bad); font-size: 14px; }
   .prop { margin-top: 18px; padding-top: 18px; border-top: 1px dashed var(--line); }
-  .readback { margin: 6px 0 12px; font-size: 19px; line-height: 1.35; font-weight: 600; letter-spacing: -.01em; padding-left: 14px; border-left: 4px solid var(--accent); }
+  .readback { margin: 6px 0 12px; font-size: 19px; line-height: 1.35; font-weight: 600; letter-spacing: -.01em; padding-left: 14px; border-left: 4px solid var(--gold); }
   .warns { margin: 0 0 14px; padding: 0; list-style: none; display: grid; gap: 6px; }
   .warns li { font-size: 14px; color: var(--warn); padding-left: 22px; position: relative; }
   .warns li::before { content: "!"; position: absolute; left: 0; top: 1px; width: 15px; height: 15px; border-radius: 50%; background: var(--warn); color: var(--card); font-size: 11px; font-weight: 800; display: grid; place-items: center; }
@@ -194,30 +300,66 @@
   .fields .wide { grid-column: 1 / -1; }
   @media (min-width: 640px) { .fields { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
+  /* built with */
+  .built-row + .built-row { margin-top: 20px; }
+  .chips { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 480px) { .chips { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 760px) { .chips { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (min-width: 1320px) { .chips { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+  .bchip { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 18px; background: var(--card); min-width: 0; transition: border-color .15s; }
+  .bchip:hover { border-color: var(--ink); }
+  .bchip .logo, .bchip .lm { width: 28px; height: 28px; border-radius: 8px; flex: none; }
+  .bchip .logo { padding: 4px; background: var(--tile); border: 1px solid var(--line); }
+  .lm { display: inline-grid; place-items: center; background: var(--feature); color: var(--gold); font-weight: 800; font-size: 13px; line-height: 1; border: 1px solid var(--line); }
+  .bt { display: grid; min-width: 0; line-height: 1.25; }
+  .bt b { font-size: 13.5px; }
+  .bt small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+
   /* footer */
-  .foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 24px; margin-top: 48px; padding-top: 18px; border-top: 3px double var(--ink); color: var(--muted); font-size: 14px; }
-  .foot .csv { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+  .foot { margin: 28px 0 0; text-align: center; color: var(--muted); font-size: 12px; }
+  .foot a { color: var(--muted); }
+  .foot a:hover { color: var(--ink); }
 
   /* modal */
-  dialog { border: 1px solid var(--line); border-radius: 14px; background: var(--card); color: var(--ink); padding: 0; width: min(540px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow: auto; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .55); }
-  dialog::backdrop { background: rgba(18, 13, 5, .6); }
-  .dlg-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 3px double var(--ink); }
-  .dlg-h h2 { margin: 0; font-size: 22px; letter-spacing: -.015em; }
-  .dlg-b { padding: 18px 20px 22px; display: grid; gap: 22px; }
+  dialog { border: 1px solid var(--line); border-radius: 24px; background: var(--card); color: var(--ink); padding: 0; width: min(540px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow: auto; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .45); }
+  dialog::backdrop { background: rgba(17, 18, 20, .55); }
+  .dlg-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 24px; border-bottom: 1px solid var(--line); }
+  .dlg-h h2 { margin: 0; font-size: 22px; letter-spacing: -.02em; font-weight: 600; }
+  .dlg-b { padding: 20px 24px 24px; display: grid; gap: 22px; }
   .dlg-b h3 { margin: 0 0 8px; }
-  .addr { display: flex; align-items: flex-start; gap: 10px; background: var(--bg); border: 1px dashed var(--muted); border-radius: 10px; padding: 10px 12px; }
+  .addr { display: flex; align-items: flex-start; gap: 10px; background: var(--well); border: 1px dashed var(--muted); border-radius: 16px; padding: 10px 12px; }
   .addr code { flex: 1; min-width: 0; font-family: var(--mono); font-size: 12.5px; word-break: break-all; }
-  .recipe { display: block; margin-top: 6px; padding: 8px 10px; border-radius: 8px; background: var(--wash); border: 1px solid var(--line); font-family: var(--mono); font-size: 12.5px; overflow-wrap: anywhere; }
+  .recipe { display: block; margin-top: 6px; padding: 8px 12px; border-radius: 12px; background: var(--well); border: 1px solid var(--line); font-family: var(--mono); font-size: 12.5px; overflow-wrap: anywhere; }
   .dlg-b p { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
   .noir-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
   .noir-row .field { width: 100px; }
   #noirStatus { margin-top: 10px; color: var(--muted); font-size: 14px; display: block; overflow-wrap: anywhere; }
 
   /* toast */
-  .toast { position: fixed; left: 50%; bottom: 20px; transform: translate(-50%, 16px); opacity: 0; pointer-events: none; z-index: 60; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; max-width: calc(100% - 32px); font-size: 14px; box-shadow: var(--shadow); transition: opacity .2s, transform .2s; }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translate(-50%, 16px); opacity: 0; pointer-events: none; z-index: 60; background: var(--solid); color: var(--on-solid); padding: 10px 18px; border-radius: 999px; max-width: calc(100% - 32px); font-size: 14px; transition: opacity .2s, transform .2s; }
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
   .toast.bad { background: var(--bad); color: #fff; }
 
+  /* phones: container goes edge to edge, 16px gutters */
+  @media (max-width: 860px) {
+    .nav { flex-wrap: wrap; border-radius: 28px; }
+    .tabs { order: 3; flex-basis: 100%; justify-content: flex-start; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+    .nav-r { margin-left: auto; }
+  }
+  @media (max-width: 640px) {
+    body { padding: 0; }
+    .shell { border-radius: 0; padding: 16px; }
+    .card { padding: 20px; border-radius: 22px; }
+    .hello { margin-top: 26px; }
+    .search { width: 100%; }
+    .tb-r { width: 100%; flex-wrap: nowrap; }
+    .logo-mark .wordmark { display: none; }
+    .nav { column-gap: 8px; }
+    .live { margin-right: 0; font-size: 10px; letter-spacing: .04em; gap: 6px; }
+    .nav-r { gap: 6px; }
+    .nav-r [aria-label="Settings"] { display: none; }
+    .mockflag { padding: 0 7px; font-size: 10px; }
+  }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     *, *::before, *::after { transition: none !important; }
@@ -225,108 +367,252 @@
 </style>
 </head>
 <body>
-<main>
+<div class="shell">
 
-  <header class="top">
-    <div class="brand">
-      <h1>Munim<span class="dot">.</span><small>Zcash testnet</small></h1>
-      <p class="tagline">A capped purse for a household agent. Fund it in shielded Zcash, it shops when a rule fires.</p>
+  <nav class="nav" aria-label="Primary">
+    <a class="logo-mark" href="#top" aria-label="Munim, back to top">
+      <svg viewBox="0 0 38 38" aria-hidden="true">
+        <defs><clipPath id="munimRingTop"><rect x="0" y="0" width="38" height="19"/></clipPath></defs>
+        <circle cx="19" cy="19" r="19" fill="#111214"/>
+        <g fill="none" stroke-width="2.6">
+          <circle cx="14.5" cy="19" r="7.2" stroke="#F4B728"/>
+          <circle cx="23.5" cy="19" r="7.2" stroke="#FFFFFF"/>
+          <g clip-path="url(#munimRingTop)"><circle cx="14.5" cy="19" r="7.2" stroke="#F4B728"/></g>
+        </g>
+      </svg>
+      <span class="wordmark">Munim</span>
+    </a>
+    <div class="tabs" id="tabs">
+      <a class="tab" href="#tlSec" aria-current="true">Timeline</a>
+      <a class="tab" href="#rulesSec">Rules</a>
+      <a class="tab" href="#walletsSec">Wallets</a>
+      <a class="tab" href="#privSec">Privacy</a>
     </div>
-    <div class="top-actions">
+    <div class="nav-r">
       <span id="mockFlag" class="mockflag" hidden>mock data</span>
       <span id="live" class="live" role="status">connecting</span>
-      <button id="fundBtn" class="btn sm" type="button">Fund</button>
+      <button class="rbtn" type="button" aria-label="Settings" title="Settings">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+      <a class="rbtn bell" id="bell" href="#inboxSec" aria-label="Approvals inbox" title="Approvals">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+      </a>
+      <span class="rbtn avatar" role="img" aria-label="Signed in as W">W</span>
     </div>
+  </nav>
+
+  <header class="hello" id="top">
+    <div class="hello-l">
+      <h1 id="greet">Hello,</h1>
+      <span class="addr-chip mono" id="greetAddr" title="Purse address">—</span>
+    </div>
+    <button id="fundBtn" class="pill solid big" type="button"><span aria-hidden="true">+</span> Fund the purse</button>
   </header>
 
-  <section class="hero" aria-label="Purse summary">
-    <div class="tile">
-      <div class="lbl">Authorised cap</div>
-      <div class="num" id="cap">—</div>
-      <div class="sub" id="capNote">&nbsp;</div>
+  <div class="toolbar">
+    <div class="tb-l">
+      <button class="pill" type="button">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+        Filter
+      </button>
+      <button class="pill" type="button">
+        Last 30 days
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <a class="pill" href="/export.csv">Export CSV</a>
     </div>
-    <div class="tile">
-      <div class="lbl">Spent</div>
-      <div class="num spent" id="spent">—</div>
-      <div class="gauge" id="gauge" aria-label="Spend against each deposit's cap"></div>
-      <div class="sub" id="gaugeNote">&nbsp;</div>
-    </div>
-    <div class="tile">
-      <div class="lbl">Remaining</div>
-      <div class="num" id="remaining">—</div>
-      <div class="sub" id="remNote">&nbsp;</div>
-    </div>
-    <div class="tile">
-      <div class="lbl">Purchases</div>
-      <div class="num" id="count">—</div>
-      <div class="sub" id="countNote">&nbsp;</div>
-    </div>
-    <a class="tile tile-appr" id="apprTile" href="#inboxSec" aria-label="Approvals waiting, jump to inbox">
-      <div>
-        <div class="lbl">Approvals</div>
-        <div class="sub" id="apprNote">none waiting</div>
-      </div>
-      <span class="badge" id="apprBadge">0</span>
-    </a>
-  </section>
-
-  <div class="cols">
-    <section aria-labelledby="h-tl">
-      <div class="sec-h"><h2 id="h-tl">Timeline</h2><span class="meta">newest first</span></div>
-      <div class="card tl-card"><ol class="tl is-empty" id="timeline"></ol></div>
-      <button id="tlMore" class="btn ghost sm more" type="button" hidden>Show older</button>
-    </section>
-
-    <div class="stack">
-      <section id="inboxSec" aria-labelledby="h-inbox">
-        <div class="sec-h"><h2 id="h-inbox">Approvals</h2><span class="meta" id="inboxMeta"></span></div>
-        <div class="plist" id="inbox"></div>
-      </section>
-
-      <section aria-labelledby="h-mw">
-        <div class="sec-h"><h2 id="h-mw">Merchant wallets</h2><span class="meta">where the codes get spent</span></div>
-        <div class="mlist" id="merchants"></div>
-      </section>
-
-      <section aria-labelledby="h-priv">
-        <div class="sec-h"><h2 id="h-priv">Privacy</h2><span class="meta">who sees what</span></div>
-        <div class="card priv-card"><dl class="priv" id="privacy"></dl></div>
-      </section>
+    <div class="tb-r">
+      <label class="search">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <span class="sr">Search the timeline</span>
+        <input id="tlSearch" type="search" placeholder="Search the timeline" autocomplete="off">
+      </label>
+      <button class="rbtn" type="button" aria-label="More options">⋮</button>
     </div>
   </div>
 
-  <section class="rules-sec" aria-labelledby="h-rules">
-    <div class="sec-h"><h2 id="h-rules">Rules</h2><span class="meta" id="rulesMeta">what starts a purchase, no prompt needed</span></div>
-    <div class="card rt-card">
-      <table class="rt">
-        <thead><tr><th>Rule</th><th>Trigger</th><th>Max</th><th>Intent</th><th><span class="sr">Actions</span></th></tr></thead>
-        <tbody id="rules"></tbody>
-      </table>
+  <main class="grid">
+
+    <!-- Row 1 -->
+    <section class="card c-purse" aria-labelledby="h-purse">
+      <div class="card-h"><h2 id="h-purse">Purse</h2><span class="meta">shielded · capped</span></div>
+      <div class="vcard">
+        <div class="vc-gold">
+          <span class="vc-brand">ZEC · testnet</span>
+          <svg class="vc-nfc" viewBox="0 0 24 24" fill="none" stroke="#111214" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 6.5c3 3.4 3 7.6 0 11M11.5 8.5c2 2.2 2 4.8 0 7M16 10.4c1 1.1 1 2.1 0 3.2"/></svg>
+        </div>
+        <div class="vc-white">
+          <div><div class="lbl">Purse address</div><div class="vc-addr mono" id="vcAddr">—</div></div>
+          <div class="vc-micro">
+            <span><i>cap</i><b id="vcCap">—</b></span>
+            <span><i>spent</i><b id="vcSpent">—</b></span>
+          </div>
+        </div>
+      </div>
+      <div class="lbl">Net authorised</div>
+      <div class="num" id="cap">—</div>
+      <div class="sub" id="capNote">&nbsp;</div>
+      <div class="xlist">
+        <details>
+          <summary><span>Deposits</span><span class="x-meta" id="depMeta">—</span></summary>
+          <ul class="drows" id="depRows"></ul>
+        </details>
+        <details>
+          <summary><span>Spent</span><span class="x-meta" id="pcSpent">—</span></summary>
+          <ul class="drows" id="spRows"></ul>
+        </details>
+        <details>
+          <summary><span>Remaining</span><span class="x-meta" id="pcRem">—</span></summary>
+          <ul class="drows" id="remRows"></ul>
+        </details>
+      </div>
+    </section>
+
+    <section class="card c-spend" aria-labelledby="h-spend">
+      <div class="card-h"><h2 id="h-spend">Spending</h2><span class="meta">by product</span></div>
+      <div class="num" id="spent">—</div>
+      <div class="sub" id="spentOf">spent this round</div>
+      <div class="bars" id="bars"></div>
+      <div class="lbl">By deposit</div>
+      <div class="gauge" id="gauge" aria-label="Spend against each deposit's cap"></div>
+      <div class="sub" id="gaugeNote">&nbsp;</div>
+      <div class="spend-foot">
+        <span><b class="cnt" id="count">—</b> purchases <span class="sub" id="countNote"></span></span>
+        <a class="pill sm" href="/export.csv">View ledger <span aria-hidden="true">›</span></a>
+      </div>
+    </section>
+
+    <section class="card c-remain" aria-labelledby="h-remain">
+      <div class="card-h"><h2 id="h-remain">Remaining</h2><span class="meta">of the authorised cap</span></div>
+      <div class="gauge-wrap">
+        <svg id="arc" viewBox="0 0 220 180" role="img" aria-label="Spent versus remaining of the cap">
+          <path class="arc arc-track" d="M 50.6 159.4 A 84 84 0 1 1 169.4 159.4" pathLength="100" stroke-width="18"/>
+          <path class="arc arc-gold" id="arcSpent" d="M 50.6 159.4 A 84 84 0 1 1 169.4 159.4" pathLength="100" stroke-width="18" stroke-dasharray="0 100"/>
+          <path class="arc arc-ink" id="arcRem" d="M 50.6 159.4 A 84 84 0 1 1 169.4 159.4" pathLength="100" stroke-width="18" stroke-dasharray="0 100"/>
+          <path class="arc arc-track" d="M 66.2 143.8 A 62 62 0 1 1 153.8 143.8" pathLength="100" stroke-width="5"/>
+          <path class="arc arc-fuel" id="ringFuel" d="M 66.2 143.8 A 62 62 0 1 1 153.8 143.8" pathLength="100" stroke-width="5" stroke-dasharray="0 100"/>
+        </svg>
+        <div class="arc-center">
+          <div class="lbl">Available</div>
+          <div class="num sm" id="remaining">—</div>
+          <div class="sub" id="remNote">&nbsp;</div>
+        </div>
+      </div>
+      <ul class="legend">
+        <li><span class="ldot gold"></span>Spent <b id="lgSpent">—</b></li>
+        <li><span class="ldot ink"></span>Remaining <b id="lgRem">—</b></li>
+        <li><span class="ldot teal"></span>Fuel TAZ <b id="lgFuel">—</b></li>
+      </ul>
+    </section>
+
+    <!-- Row 2 -->
+    <section class="card c-tl" id="tlSec" aria-labelledby="h-tl">
+      <div class="card-h"><h2 id="h-tl">Timeline</h2><span class="meta">newest first</span></div>
+      <div class="tl-scroll"><ol class="tl is-empty" id="timeline"></ol></div>
+      <button id="tlMore" class="btn ghost sm more" type="button" hidden>Show older</button>
+    </section>
+
+    <div class="rcol">
+      <section class="card" id="inboxSec" aria-labelledby="h-inbox">
+        <div class="card-h" id="apprTile">
+          <h2 id="h-inbox">Approvals <span class="badge" id="apprBadge">0</span></h2>
+          <span class="meta" id="inboxMeta"></span>
+          <span class="sr" id="apprNote">none waiting</span>
+        </div>
+        <div class="plist" id="inbox"></div>
+      </section>
+
+      <section class="card feature" aria-labelledby="h-rcpt">
+        <div class="card-h"><h2 id="h-rcpt">Receipts sent</h2><span class="past">Past 30 days <span aria-hidden="true">⌄</span></span></div>
+        <div class="rc-top">
+          <div>
+            <div class="num" id="rcptNum">0</div>
+            <div class="lbl" id="rcptNote">encrypted memos to the funder</div>
+          </div>
+        </div>
+        <svg class="spark" id="spark" viewBox="0 0 240 72" role="img" aria-label="Receipts sent per day over the past 30 days">
+          <defs>
+            <linearGradient id="sparkFade" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#F4B728" stop-opacity=".32"/>
+              <stop offset="1" stop-color="#F4B728" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path id="sparkArea" d="" fill="url(#sparkFade)" stroke="none"/>
+          <path id="sparkLine" d="" fill="none" stroke="#F4B728" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle id="sparkDot" cx="240" cy="64" r="3.5" fill="#F4B728"/>
+        </svg>
+      </section>
+
+      <section class="card" id="walletsSec" aria-labelledby="h-mw">
+        <div class="card-h"><h2 id="h-mw">Merchant wallets</h2><span class="meta">where the codes get spent</span></div>
+        <div class="mlist" id="merchants"></div>
+      </section>
+
+      <section class="card" id="privSec" aria-labelledby="h-priv">
+        <div class="card-h"><h2 id="h-priv">Privacy</h2><span class="meta">who sees what</span></div>
+        <dl class="priv" id="privacy"></dl>
+        <p class="priv-note">This page is read-only: built from the viewing key, no spend key on this server.</p>
+      </section>
     </div>
 
-    <div class="card add">
-      <h3>Add a rule in plain words</h3>
-      <p class="hint">Say what should be bought and when. You review the exact rule before anything is saved.</p>
-      <label class="field">
-        <span class="lbl">Describe the rule</span>
-        <textarea id="ruleText" class="in" rows="3" placeholder="Every month on the 1st, top up Mum's Airtel number with ₹299, never more than ₹300."></textarea>
-      </label>
-      <div class="add-row">
-        <button id="proposeBtn" class="btn" type="button">Propose</button>
-        <span id="proposeMsg" class="msg" role="alert"></span>
+    <!-- Row 3 -->
+    <section class="card c-rules" id="rulesSec" aria-labelledby="h-rules">
+      <div class="card-h"><h2 id="h-rules">Rules</h2><span class="meta" id="rulesMeta">what starts a purchase, no prompt needed</span></div>
+      <div class="rt-wrap">
+        <table class="rt">
+          <thead><tr><th>Rule</th><th>Trigger</th><th>Max</th><th>Intent</th><th><span class="sr">Actions</span></th></tr></thead>
+          <tbody id="rules"></tbody>
+        </table>
       </div>
-      <div id="proposeOut" class="prop" hidden></div>
-    </div>
-  </section>
+
+      <div class="add">
+        <h3>Add a rule in plain words</h3>
+        <p class="hint">Say what should be bought and when. You review the exact rule before anything is saved.</p>
+        <label class="field">
+          <span class="lbl">Describe the rule</span>
+          <textarea id="ruleText" class="in" rows="3" placeholder="Every month on the 1st, top up Mum's Airtel number with ₹299, never more than ₹300."></textarea>
+        </label>
+        <div class="add-row">
+          <button id="proposeBtn" class="btn" type="button">Propose</button>
+          <span id="proposeMsg" class="msg" role="alert"></span>
+        </div>
+        <div id="proposeOut" class="prop" hidden></div>
+      </div>
+    </section>
+
+    <!-- Row 4: built with -->
+    <section class="card c-built" id="builtSec" aria-labelledby="h-built">
+      <div class="card-h"><h2 id="h-built">Integrations &amp; stack</h2><span class="meta">what Munim is built with</span></div>
+      <div class="built-row">
+        <div class="lbl">Integrations</div>
+        <ul class="chips">
+          <li class="bchip"><img class="logo" src="https://cdn.simpleicons.org/zcash/F4B728" width="28" height="28" alt="" data-lm="Z"><span class="bt"><b>Zcash</b><small>shielded rails · testnet NU7</small></span></li>
+          <li class="bchip"><span class="lm" aria-hidden="true">B</span><span class="bt"><b>Bitrefill</b><small>catalog, invoices, delivery</small></span></li>
+          <li class="bchip"><img class="logo" src="https://cdn.simpleicons.org/swiggy/FC8019" width="28" height="28" alt="" data-lm="S"><span class="bt"><b>Swiggy</b><small>Instamart orders via official MCP</small></span></li>
+          <li class="bchip"><span class="lm" aria-hidden="true">N</span><span class="bt"><b>Noir Wallet</b><small>browser wallet, funds the purse</small></span></li>
+          <li class="bchip"><img class="logo" src="https://cdn.simpleicons.org/anthropic/D97757" width="28" height="28" alt="" data-lm="C"><span class="bt"><b>Anthropic Claude</b><small>Sonnet 5.5, the agent's brain</small></span></li>
+          <li class="bchip"><img class="logo" src="https://cdn.simpleicons.org/modelcontextprotocol/111214" width="28" height="28" alt="" data-lm="M"><span class="bt"><b>MCP</b><small>Model Context Protocol, how the agent calls tools</small></span></li>
+        </ul>
+      </div>
+      <div class="built-row">
+        <div class="lbl">Stack</div>
+        <ul class="chips">
+          <li class="bchip"><img class="logo" src="https://cdn.simpleicons.org/typescript/3178C6" width="28" height="28" alt="" data-lm="T"><span class="bt"><b>TypeScript</b><small>agent, server and dashboard</small></span></li>
+          <li class="bchip"><img class="logo" src="https://cdn.simpleicons.org/nodedotjs/5FA04E" width="28" height="28" alt="" data-lm="N"><span class="bt"><b>Node.js</b><small>runtime for the agent loop</small></span></li>
+          <li class="bchip"><img class="logo" src="https://cdn.simpleicons.org/rust/111214" width="28" height="28" alt="" data-lm="R"><span class="bt"><b>zcash-devtool</b><small>Rust wallet CLI, sync and shielded sends</small></span></li>
+          <li class="bchip"><img class="logo" src="https://cdn.simpleicons.org/zod/3E67B1" width="28" height="28" alt="" data-lm="Z"><span class="bt"><b>Zod</b><small>schema checks at every boundary</small></span></li>
+          <li class="bchip"><img class="logo" src="https://cdn.simpleicons.org/esbuild/FFCF00" width="28" height="28" alt="" data-lm="E"><span class="bt"><b>esbuild</b><small>bundles the Noir SDK for the browser</small></span></li>
+          <li class="bchip"><img class="logo" src="https://cdn.simpleicons.org/github/181717" width="28" height="28" alt="" data-lm="G"><span class="bt"><b>Git / GitHub</b><small>source and history</small></span></li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
 
   <footer class="foot">
-    <div class="csv">
-      <a class="btn ghost sm" href="/export.csv">Download accountant CSV</a>
-      <span>Read-only, built from the viewing key. No spend key is on this server.</span>
-    </div>
-    <a href="https://github.com/0xStoneyStark/munim" target="_blank" rel="noopener noreferrer">github.com/0xStoneyStark/munim</a>
+    Munim · Free Society Hackathon, Mumbai, 4 Nov 2026 · <a href="https://github.com/0xStoneyStark/munim" target="_blank" rel="noopener noreferrer">github.com/0xStoneyStark/munim</a>
   </footer>
-</main>
+</div>
 
 <dialog id="fundDlg" aria-labelledby="fundTitle">
   <div class="dlg-h">
@@ -749,6 +1035,190 @@ async function mockApi(path, opts) {
   }
   throw new Error("mock: no route for " + path);
 }
+
+/* ---------- restyle layer: greeting, derived panels, search, tabs (additive; the code above is untouched) ---------- */
+const TAZ = (z) => (num(z) / 1e8).toFixed(4);
+const shortAddr = (a) => (a && String(a).length > 14 ? String(a).slice(0, 6) + "…" + String(a).slice(-6) : a || "");
+const curify = (id) => { const el = $(id); const t = el.textContent; if (t.charAt(0) === "₹") el.innerHTML = `<span class="cur">₹</span>${esc(t.slice(1))}`; };
+const clampPct = (n) => Math.max(0, Math.min(100, n));
+const ROW_LIMIT = 8;
+
+function setGreeting() {
+  const h = new Date().getHours();
+  $("greet").textContent = (h >= 5 && h < 12 ? "Good morning" : h >= 12 && h < 17 ? "Good afternoon" : "Good evening") + ",";
+}
+
+function productClass(s, ruleTypes) {
+  const pt = ruleTypes[s.ruleId] || "";
+  const hay = `${s.productName || ""} ${s.ruleId || ""}`.toLowerCase();
+  if (/e-?sim|airalo|holafly/.test(pt + " " + hay)) return "esim";
+  if (/gift|voucher|card/.test(pt) || /gift|voucher|amazon|flipkart|myntra|zomato|swiggy|card/.test(hay)) return "gift";
+  return "topup";
+}
+
+function depositSplit(d) {
+  let left = num((d.budget || {}).spentInr);
+  return arr(d.deposits).filter((x) => x.capInr != null && num(x.capInr) > 0).map((x) => {
+    const cap = num(x.capInr); const used = Math.min(cap, Math.max(0, left)); left -= used;
+    return { x, cap, used, rest: cap - used };
+  });
+}
+
+const xrow = (a, b, c) => `<li><span>${a}</span><span class="xr-b">${b}</span><span class="xr-c">${c}</span></li>`;
+const txPill = (txid) => { const h = txHref(txid); const t = esc(short(txid)); return h ? aTag(h, t + " ↗", "mono idpill") : `<span class="mono idpill">${t}</span>`; };
+const rowsOrEmpty = (rows, msg) => (rows.length ? rows.slice(0, ROW_LIMIT).join("") + (rows.length > ROW_LIMIT ? `<li class="more-rows">and ${rows.length - ROW_LIMIT} more, see the timeline</li>` : "") : `<li class="empty">${esc(msg)}</li>`);
+
+function renderChrome(d) {
+  setGreeting();
+  const sa = shortAddr(d.address);
+  $("greetAddr").textContent = sa || "—";
+  $("greetAddr").title = d.address || "Purse address";
+  $("vcAddr").textContent = sa || "(agent not started yet)";
+  $("bell").classList.toggle("has", num($("apprBadge").textContent) > 0);
+  ["cap", "spent", "remaining"].forEach(curify);
+}
+
+function renderPurse(d) {
+  const b = d.budget || {};
+  const deps = arr(d.deposits);
+  $("vcCap").textContent = inr(b.capInr);
+  $("vcSpent").textContent = inr(b.spentInr);
+  $("depMeta").textContent = `${deps.length} · ${TAZ(deps.reduce((s, x) => s + num(x.zatoshis), 0))} TAZ`;
+  $("depRows").innerHTML = rowsOrEmpty(deps.map((x) => {
+    const capped = x.capInr != null && num(x.capInr) > 0;
+    return xrow(txPill(x.txid), `${TAZ(x.zatoshis)} TAZ`, capped ? inr(x.capInr) : `<span class="xr-c fuel">fuel</span>`);
+  }), "No deposits yet.");
+  $("pcSpent").textContent = inr(b.spentInr);
+  const spends = arr(d.spends).slice().sort((a, c) => (when(c.at) || 0) - (when(a.at) || 0));
+  $("spRows").innerHTML = rowsOrEmpty(spends.map((s) => xrow(esc(s.productName), chip(s.status), inr(s.valueInr))), "Nothing spent yet.");
+  $("pcRem").textContent = inr(b.remainingInr);
+  $("remRows").innerHTML = rowsOrEmpty(depositSplit(d).map((p) => xrow(txPill(p.x.txid), `of ${inr(p.cap)}`, inr(p.rest))), "No capped deposit yet.");
+}
+
+function renderSpending(d) {
+  const b = d.budget || {};
+  const types = {};
+  arr(d.rules).forEach((r) => { types[r.id] = String(r.productType || "").toLowerCase(); });
+  const sums = { topup: 0, gift: 0, esim: 0 };
+  arr(d.spends).filter((s) => !TONE_BAD.has(String(s.status || "").toLowerCase())).forEach((s) => { sums[productClass(s, types)] += num(s.valueInr); });
+  const cols = [["Top-ups", "ink", sums.topup], ["Gift cards", "gold", sums.gift], ["eSIMs", "hatch", sums.esim]];
+  const max = Math.max(...cols.map((c) => c[2]));
+  $("bars").innerHTML = cols.map(([name, cls, v]) =>
+    `<div class="bar-col"><span class="bar-amt">${inr(v)}</span><span class="bar ${cls}" style="height:${max > 0 ? Math.max(6, Math.round(110 * v / max)) : 6}px"></span><span class="bar-name">${name}</span></div>`).join("");
+  $("spentOf").textContent = num(b.capInr) > 0 ? `spent of ${inr(b.capInr)} this round` : "spent this round";
+}
+
+function setDash(id, start, len) {
+  const l = Math.max(0, len);
+  const el = $(id);
+  el.setAttribute("stroke-dasharray", `${l} ${100 - l}`);
+  el.setAttribute("stroke-dashoffset", String(-start));
+}
+
+function renderArc(d) {
+  const b = d.budget || {};
+  const cap = num(b.capInr);
+  const sp = cap > 0 ? clampPct(100 * num(b.spentInr) / cap) : 0;
+  const rp = cap > 0 ? Math.min(100 - sp, clampPct(100 * num(b.remainingInr) / cap)) : 0;
+  const gap = sp > 0 && rp > 0 ? 0.6 : 0;
+  setDash("arcSpent", 0, sp - gap);
+  setDash("arcRem", sp + gap, rp - gap);
+  const deps = arr(d.deposits);
+  const fuel = deps.filter((x) => !(x.capInr != null && num(x.capInr) > 0)).reduce((s, x) => s + num(x.zatoshis), 0);
+  const total = deps.reduce((s, x) => s + num(x.zatoshis), 0);
+  setDash("ringFuel", 0, total > 0 ? clampPct(100 * fuel / total) : 0);
+  $("lgSpent").textContent = inr(b.spentInr);
+  $("lgRem").textContent = inr(b.remainingInr);
+  $("lgFuel").textContent = `${TAZ(fuel)}`;
+  $("arc").setAttribute("aria-label", cap > 0 ? `${inr(b.spentInr)} spent, ${inr(b.remainingInr)} remaining of ${inr(cap)}` : "No cap yet");
+}
+
+function sparkPath(counts, w, h, pad) {
+  const max = Math.max(1, ...counts);
+  const pts = counts.map((c, i) => [i * (w / (counts.length - 1)), h - pad - (c / max) * (h - 2 * pad)]);
+  const f = (n) => n.toFixed(1);
+  let line = `M ${f(pts[0][0])} ${f(pts[0][1])}`;
+  for (let i = 1; i < pts.length; i++) {
+    const [x0, y0] = pts[i - 1]; const [x1, y1] = pts[i]; const mx = (x0 + x1) / 2;
+    line += ` C ${f(mx)} ${f(y0)} ${f(mx)} ${f(y1)} ${f(x1)} ${f(y1)}`;
+  }
+  return { line, area: `${line} L ${w} ${h} L 0 ${h} Z`, last: pts[pts.length - 1] };
+}
+
+function renderReceipts(d) {
+  const withReceipt = arr(d.spends).filter((s) => s.receiptTxid);
+  $("rcptNum").textContent = String(withReceipt.length);
+  const DAYS = 30; const DAY_MS = 86400000;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const t0 = today.getTime() - (DAYS - 1) * DAY_MS;
+  const counts = new Array(DAYS).fill(0);
+  withReceipt.forEach((s) => {
+    const dt = when(s.at); if (!dt) return;
+    dt.setHours(0, 0, 0, 0);
+    const i = Math.round((dt.getTime() - t0) / DAY_MS);
+    if (i >= 0 && i < DAYS) counts[i] += 1;
+  });
+  const p = sparkPath(counts, 240, 72, 8);
+  $("sparkLine").setAttribute("d", p.line);
+  $("sparkArea").setAttribute("d", p.area);
+  $("sparkDot").setAttribute("cx", String(p.last[0]));
+  $("sparkDot").setAttribute("cy", String(p.last[1]));
+}
+
+function renderExtras(d) {
+  renderChrome(d); renderPurse(d); renderSpending(d); renderArc(d); renderReceipts(d);
+}
+
+/* timeline search: client-side, survives every re-render */
+const tlSearch = $("tlSearch");
+function applyTlFilter() {
+  const q = tlSearch.value.trim().toLowerCase();
+  const tl = $("timeline");
+  tl.querySelectorAll(".tl-nomatch").forEach((n) => n.remove());
+  let total = 0, shown = 0, dayEl = null, dayHit = false;
+  const closeDay = () => { if (dayEl) dayEl.hidden = !!q && !dayHit; };
+  for (const li of tl.children) {
+    if (li.classList.contains("day")) { closeDay(); dayEl = li; dayHit = false; continue; }
+    if (!li.classList.contains("ev")) continue;
+    total++;
+    const hay = (li.textContent + " " + Array.from(li.querySelectorAll("a"), (a) => a.href).join(" ")).toLowerCase();
+    const hit = !q || hay.includes(q);
+    li.hidden = !hit;
+    if (hit) { shown++; dayHit = true; }
+  }
+  closeDay();
+  if (q && total && !shown) tl.insertAdjacentHTML("beforeend", `<li class="empty tl-nomatch">No timeline entries match “${esc(tlSearch.value.trim())}”.</li>`);
+}
+tlSearch.addEventListener("input", () => {
+  tlLimit = tlSearch.value.trim() ? Infinity : 30;
+  if (data) renderTimeline(data); else applyTlFilter();
+});
+
+const baseRenderTimeline = renderTimeline;
+renderTimeline = function (d) { baseRenderTimeline(d); applyTlFilter(); };
+const baseRender = render;
+render = function (d) { baseRender(d); try { renderExtras(d); } catch (e) { console.error("extras failed", e); } };
+
+/* nav tabs: active pill follows the section in view */
+const tabLinks = Array.from(document.querySelectorAll(".tab"));
+const setTab = (id) => tabLinks.forEach((a) => { if (a.getAttribute("href") === "#" + id) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current"); });
+tabLinks.forEach((a) => a.addEventListener("click", () => setTab(a.getAttribute("href").slice(1))));
+if ("IntersectionObserver" in window) {
+  const io = new IntersectionObserver((ents) => { for (const e of ents) if (e.isIntersecting) setTab(e.target.id); }, { rootMargin: "-35% 0px -55% 0px" });
+  tabLinks.forEach((a) => { const t = document.getElementById(a.getAttribute("href").slice(1)); if (t) io.observe(t); });
+}
+
+/* logo chips: a failed image swaps to a gold-on-ink lettermark */
+document.querySelectorAll("img.logo").forEach((img) => {
+  img.addEventListener("error", () => {
+    const m = document.createElement("span");
+    m.className = "lm"; m.setAttribute("aria-hidden", "true");
+    m.textContent = img.dataset.lm || "?";
+    img.replaceWith(m);
+  }, { once: true });
+});
+
+setGreeting();
 
 /* ---------- boot ---------- */
 if (MOCK) $("mockFlag").hidden = false;
