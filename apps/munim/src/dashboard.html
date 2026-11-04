@@ -647,6 +647,24 @@
         </table>
       </div>
 
+      <div class="add" id="addrCard">
+        <h3>Delivery addresses (Swiggy)</h3>
+        <p class="hint">Saved on your Swiggy account through its official MCP. Name one in a rule ("deliver to Bloom BKC") and the agent uses it.</p>
+        <div class="mlist" id="addrList"><p class="empty">Loading…</p></div>
+        <details class="howto" style="margin-top:10px"><summary class="btn ghost sm" style="display:inline-flex;cursor:pointer">Add an address</summary>
+          <div style="display:grid;gap:8px;margin-top:10px">
+            <input class="in" id="adrTag" placeholder="Label, e.g. Mom's place">
+            <input class="in" id="adrFull" placeholder="Full address (house, street, area, city, PIN)">
+            <input class="in" id="adrLine" placeholder="House / building (line 1)">
+            <input class="in" id="adrLine2" placeholder="Floor, wing, landmark (line 2, optional)">
+            <div style="display:flex;gap:8px"><input class="in" id="adrCity" placeholder="City" style="flex:1"><input class="in" id="adrPin" placeholder="6-digit PIN" maxlength="6" style="width:9em"></div>
+            <div style="display:flex;gap:8px"><input class="in" id="adrName" placeholder="Receiver name" style="flex:1"><input class="in" id="adrPhone" placeholder="10-digit mobile" maxlength="10" style="width:11em"></div>
+            <select class="in" id="adrCat"><option value="HOME">Home</option><option value="WORK">Work</option><option value="FRIENDS_AND_FAMILY">Friends &amp; family</option><option value="OTHER" selected>Other</option></select>
+            <div class="add-row"><button class="btn" type="button" id="adrSave">Save to Swiggy</button><span class="msg" id="adrMsg" role="alert"></span></div>
+          </div>
+        </details>
+      </div>
+
       <div class="add">
         <h3>Add a rule in plain words</h3>
         <p class="hint">Say what should be bought and when. You review the exact rule before anything is saved.</p>
@@ -2135,7 +2153,33 @@ const viewFromPath = (p) => {
 };
 const tabLinks = Array.from(document.querySelectorAll(".logo-mark, #tabs .tab, #bell, #apprStat, #bar a[data-view], #moreSheet a[data-view]"));
 const views = Array.from(document.querySelectorAll(".view"));
+/* ---------- Swiggy delivery addresses (official MCP: get/create/delete) ---------- */
+let addrLoaded = false;
+async function loadAddresses(force) {
+  const box = $("addrList"); if (!box || (addrLoaded && !force)) return;
+  if (MOCK) { box.innerHTML = `<article class="mcard"><div class="m-top"><span class="m-label">Bloom BKC</span><span class="chip">saved</span></div><div class="m-detail">Bloom bkc, Floor 1003, Kalina, Santacruz East, Mumbai 400098</div></article>`; addrLoaded = true; return; }
+  try {
+    const r = await api("/connections/swiggy/addresses");
+    const list = arr(r.addresses);
+    box.innerHTML = list.length ? list.map((a) => `<article class="mcard" data-addr="${esc(a.id)}"><div class="m-top"><span class="m-label">${esc(a.tag || "address")}</span><button class="btn ghost sm" type="button" data-addr-del="${esc(a.id)}">Delete</button></div><div class="m-detail">${esc(a.name)} · ${esc(a.address)}</div></article>`).join("") : `<p class="empty">No saved addresses.</p>`;
+    addrLoaded = true;
+  } catch (e) { box.innerHTML = `<p class="empty">Could not load addresses: ${esc(e.message || e)}</p>`; }
+}
+$("addrSave") && $("addrSave").addEventListener("click", async () => {
+  const msg = $("adrMsg"); msg.textContent = "Saving…";
+  const body = { addressTag: $("adrTag").value.trim(), fullAddress: $("adrFull").value.trim(), addressLine: $("adrLine").value.trim(), addressLine2: $("adrLine2").value.trim(), city: $("adrCity").value.trim(), postalCode: $("adrPin").value.trim(), userName: $("adrName").value.trim(), userPhone: $("adrPhone").value.replace(/\D/g, ""), addressCategory: $("adrCat").value };
+  try { const r = await post("/connections/swiggy/addresses", body); msg.textContent = r.addressId ? "Saved." : "Saved (see Swiggy)."; toast("Address saved to Swiggy."); await loadAddresses(true); }
+  catch (e) { msg.textContent = e.message || "failed"; toast("Could not save: " + (e.message || e), true); }
+});
+$("addrList") && $("addrList").addEventListener("click", async (ev) => {
+  const b = ev.target.closest("[data-addr-del]"); if (!b) return;
+  if (!confirm("Delete this address from Swiggy? This cannot be undone.")) return;
+  b.disabled = true;
+  try { await post("/connections/swiggy/addresses/delete", { addressId: b.dataset.addrDel }); toast("Address deleted."); await loadAddresses(true); }
+  catch (e) { b.disabled = false; toast("Could not delete: " + (e.message || e), true); }
+});
 function showView(name, scroll) {
+  if (name === "rules") loadAddresses(false);
   views.forEach((v) => { v.hidden = v.dataset.view !== name; });
   document.querySelectorAll("#tabs .tab, #bar a[data-view], #moreSheet a[data-view]").forEach((a) => {
     if (a.dataset.view === name) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");

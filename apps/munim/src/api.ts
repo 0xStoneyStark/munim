@@ -26,6 +26,7 @@ import {
 import { handleVerify } from "./verify.js";
 import type { Bitrefill } from "./bitrefill.js";
 import { loadSwiggySession, probe } from "./swiggy-money.js";
+import { SwiggyMcp } from "./swiggy-mcp.js";
 import { publicKey, sendToAll, subscribe, subscriptionSchema, unsubscribe } from "./push.js";
 
 export interface ApiDeps {
@@ -257,13 +258,63 @@ async function postPushTest(deps: ApiDeps): Promise<unknown> {
   return sendToAll({ title: "Munim", body: "Notifications are on.", url: "/", tag: "test" }, deps.dataDir);
 }
 
+// ---------------------------------------------------------------------- swiggy addresses (official MCP)
+
+const addressBody = z.object({
+  fullAddress: z.string().min(6).max(300),
+  addressLine: z.string().min(2).max(200),
+  addressLine2: z.string().max(200).default(""),
+  locality: z.string().max(120).optional(),
+  city: z.string().min(2).max(80),
+  postalCode: z.string().regex(/^\d{6}$/),
+  addressCategory: z.enum(["HOME", "WORK", "OFFICE", "FRIENDS_AND_FAMILY", "OTHER"]).default("OTHER"),
+  addressTag: z.string().min(1).max(40),
+  userName: z.string().min(1).max(80),
+  userPhone: z.string().regex(/^\d{10}$/),
+});
+const addressDeleteBody = z.object({ addressId: z.string().min(4).max(120) });
+
+function parseAddressList(text: string): Array<{ tag: string; name: string; address: string; id: string }> {
+  const out: Array<{ tag: string; name: string; address: string; id: string }> = [];
+  const re = /\d+\.\s*\[([^\]]*)\]\s*([^:]+):\s*([\s\S]*?)\s*\(ID:\s*([^)\s]+)\)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) out.push({ tag: m[1].trim(), name: m[2].trim(), address: m[3].trim(), id: m[4] });
+  return out;
+}
+
+async function withSwiggy<T>(fn: (m: SwiggyMcp) => Promise<T>): Promise<T> {
+  const m = new SwiggyMcp("instamart");
+  try { return await fn(m); } finally { await m.close().catch(() => {}); }
+}
+
+async function getAddresses(): Promise<unknown> {
+  const text = await withSwiggy((m) => m.call("get_addresses", { pageSize: 10 }));
+  return { addresses: parseAddressList(text), raw: text.slice(0, 2000) };
+}
+
+async function postAddress(req: http.IncomingMessage): Promise<unknown> {
+  const body = await readBody(req, addressBody);
+  const text = await withSwiggy((m) => m.call("create_address", body));
+  const id = /"addressId"\s*:\s*"([^"]+)"/.exec(text)?.[1] ?? null;
+  return { ok: true, addressId: id, raw: text.slice(0, 500) };
+}
+
+async function deleteAddress(req: http.IncomingMessage): Promise<unknown> {
+  const { addressId } = await readBody(req, addressDeleteBody);
+  const text = await withSwiggy((m) => m.call("delete_address", { addressId }));
+  return { ok: /success/i.test(text), raw: text.slice(0, 300) };
+}
+
 async function route(req: http.IncomingMessage, url: URL, deps: ApiDeps): Promise<unknown | undefined> {
   const p = url.pathname;
   if (req.method === "GET" && p === "/api") return { ...overview(deps), agentRunning: agentRunning(deps) };
   if (req.method === "GET" && p === "/push/public-key") return { publicKey: publicKey(deps.dataDir) };
+  if (req.method === "GET" && p === "/connections/swiggy/addresses") return getAddresses();
   if (req.method !== "POST") return undefined;
   if (p === "/agent/run") return runAgentPass(deps);
   if (p === "/connections/swiggy-money/probe") return probeSwiggyMoney();
+  if (p === "/connections/swiggy/addresses") return postAddress(req);
+  if (p === "/connections/swiggy/addresses/delete") return deleteAddress(req);
   if (p.startsWith("/signal/")) return postSignal(deps, p.slice("/signal/".length));
   const proposal = /^\/proposals\/([^/]+)\/(approve|decline)$/.exec(p);
   if (proposal) return decideProposal(decodeURIComponent(proposal[1]), proposal[2] as "approve" | "decline");
