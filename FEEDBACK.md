@@ -28,6 +28,12 @@ Team of one human + Claude (Fable 5.1 driving the build, Sonnet 5.5 inside the a
 - **MCP returns TOON, not JSON.** `search-products` over MCP returns a TOON text table; the REST API returns JSON for the same data. Fine for a model, but a `format: "json"` argument would let code consume it without a parser. The product slugs do match the REST ids, which is what makes "discover over MCP, buy over REST" possible.
 - **Good:** `/products/search` with `country=IN&type=phone_refill` is fast and exact; the Jio catalog had a ₹10 talktime pack, perfect for a cheap real demo. Invoice creation with `auto_pay: true` is one call.
 
+## Swiggy MCP (for the record — not a Bitrefill issue)
+
+- **Dynamic client registration works, but only `localhost` redirect URIs are honoured.** Our self-registered client signs in fine with `http://localhost:8788/oauth/swiggy/callback`; with `https://munim.heneryshop.com/oauth/swiggy/callback` the consent page says *"Oops, Heneryshop isn't whitelisted yet — request access on Builders Club"*. The bearer token is not bound to the redirect host, so a token obtained on the laptop works from the server; re-links have to happen on localhost and be synced. Whitelisting request filed via Builders Club is on NEXT.md.
+- **Instamart lives at `/im`, not `/instamart`.** The launch coverage says "separate servers for Instamart and Dineout" without URLs; `/instamart` is a 404 HTML page. `/food`, `/im`, `/dineout`, `/scenes` all answer MCP `initialize`.
+- **Payment method `SwiggyPay` exists on `checkout`** but is not mentioned in the tool descriptions' prose (they talk about UPI and Cash); we found it in the `paymentMethod` enum text. Worth one line in the description, since it's the only method an unattended agent can use.
+
 ## Tooling
 
 - `@anthropic-ai/sdk`'s `betaZodTool` requires **zod v4**; `@modelcontextprotocol/sdk` examples still show zod v3. Both installed side by side fine once we pinned `zod@^4`, but the type errors (`$ZodTypeInternals` missing) do not say "upgrade zod".
