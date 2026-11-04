@@ -10,6 +10,7 @@ export function purseConfigFromEnv(): PurseConfig {
     walletDir: process.env.PURSE_WALLET_DIR ?? "./wallets/agent",
     identity: process.env.PURSE_IDENTITY ?? "./wallets/agent-identity.txt",
     server: "zecrocks",
+    connection: process.env.PURSE_CONNECTION || "direct",
     ledgerFile: path.resolve(process.env.PURSE_LEDGER ?? "./data/ledger.json"),
   };
 }

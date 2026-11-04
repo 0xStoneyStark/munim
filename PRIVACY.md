@@ -33,7 +33,7 @@ Judges score "Private" from this note, so it is written to be honest rather than
 ## 4. What we would fix next
 
 - **ZEC → Bitrefill is a trust gap, not a payment rail.** The purse is funded in ZEC but Bitrefill is paid from the operator's USD balance. The honest description is "ZEC-authorised, operator-settled". Closing it needs a ZEC→USDC swap (NEAR Intents 1Click, transparent address, mainnet only) or x402 with a USDC wallet, neither of which has a testnet path today.
-- **Network privacy.** Every sync reveals the server's IP to zec.rocks. `zcash-devtool` already supports `--connection tor`; the next step is routing both the agent and the view-only dashboard sync over Tor or the Nym mixnet.
+- **Network privacy — partly done.** `PURSE_CONNECTION=tor` routes the purse's sync, enhance, send and view-export traffic through `zcash-devtool`'s built-in Tor client (tested on this machine: cold start ~2 min, warm sync ~15 s), so the light server no longer sees our IP. It still sees *what* is asked — the block ranges and tx fetches, now tied to a Tor exit — and the transactions we broadcast. Bitrefill, Swiggy and Anthropic traffic does **not** go through Tor; direct is the default. Nym's mixnet (the Zcash SDK for Nym) is the next step for the sync pattern itself.
 - **The cap is operator-enforced.** A real design would hold the purse key in a separate signer (PCZT flow in `zcash-devtool`, or FROST 2-of-3 with the funder) so the operator alone cannot exceed the cap.
 - **Phone number and intents sit in plaintext config.** They should be in the funding memo (encrypted) so the server never stores them at rest.
 - **The ledger is unencrypted JSON** on the operator's disk, and so is the Swiggy session file.

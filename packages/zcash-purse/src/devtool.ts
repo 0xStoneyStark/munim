@@ -13,6 +13,23 @@ export interface DevtoolConfig {
   walletDir: string;
   identity?: string; // age identity file; only needed to send
   server?: string;
+  /**
+   * Network path to the light-wallet server: "direct" | "tor" | "socks5://host:port".
+   * "direct" (or unset) adds no flag, so the CLI line is identical to before; the
+   * devtool's own default is already direct.
+   */
+  connection?: string;
+}
+
+const CONNECTION_RE = /^(direct|tor|socks5:\/\/[^\s/]+:\d+)$/;
+
+/** `--connection X` for commands that talk to the server; empty for direct/unset. */
+export function connectionArgs(connection?: string): string[] {
+  if (!connection || connection === "direct") return [];
+  if (!CONNECTION_RE.test(connection)) {
+    throw new Error(`invalid PURSE_CONNECTION "${connection}" (use direct, tor, or socks5://host:port)`);
+  }
+  return ["--connection", connection];
 }
 
 export interface TxOutput {
@@ -46,8 +63,8 @@ export class Devtool {
 
   /** sync scans compact blocks (no memos); enhance fetches full tx data so memos decrypt */
   async sync(): Promise<void> {
-    await this.run(["sync", "-s", this.cfg.server ?? "zecrocks"], 600_000);
-    await this.run(["enhance", "-s", this.cfg.server ?? "zecrocks"], 600_000);
+    await this.run(["sync", "-s", this.cfg.server ?? "zecrocks", ...connectionArgs(this.cfg.connection)], 600_000);
+    await this.run(["enhance", "-s", this.cfg.server ?? "zecrocks", ...connectionArgs(this.cfg.connection)], 600_000);
   }
 
   async address(): Promise<string> {
@@ -86,6 +103,7 @@ export class Devtool {
       "--address", address,
       "--value", String(zatoshis),
       "-s", this.cfg.server ?? "zecrocks",
+      ...connectionArgs(this.cfg.connection),
     ];
     if (memo) args.push("--memo", memo);
     const out = await this.run(args, 600_000);
