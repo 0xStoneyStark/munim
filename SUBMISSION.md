@@ -58,7 +58,25 @@ Paste FEEDBACK.md (Zcash section tagged "Zcash", Bitrefill section tagged "Bitre
 
 ---
 
-# Demo video — shot list (2–3 min, screen recording, mask codes)
+# Demo video — shot list v2 (2–3 min; phone + laptop; every step real; never show a gift-card code)
+
+Record the phone (installed app, https://munim.heneryshop.com) with the laptop screen beside it for the wallet/terminal shots. Order of shots:
+
+0:00 Title: "Munim — fund it privately, it shops while you sleep." (5 s)
+0:05 Phone · Timeline: cap, remaining, the timeline. "Nothing happens here without a shielded deposit and a cap." (8 s)
+0:13 Laptop · funder wallet sends shielded TAZ with memo `fund cap=300 INR reply=…` (zcash-devtool command on screen; txid appears). Open the txid on zexplorer.app/testnet — nothing readable. (25 s)
+0:38 Phone · Wallets: cap rises after the next pass (Fire now on any rule or wait). Point at the Funders card. (10 s)
+0:48 Phone · Rules: "Add a rule in plain words" → type "when I say topup, buy a ₹250 Swiggy Money card" → Propose → readback → Confirm & save. (15 s)
+1:03 Phone · Rules: Fire now on topup → "Agent working…" pill → Timeline: purchase delivered → "Swiggy Money +₹250" → Wallets: Swiggy Money balance. (25 s)
+1:28 Phone · Rules: the daily-diet-coke rule — "daily at 19:05" — Edit shows the clock editor. Then the Timeline's Instamart order event from 19:05 (order id, paid with Swiggy Money). Swiggy app: the order in Orders. (25 s)
+1:53 Phone · Approvals: the Dubai eSIM proposal that came from Google Calendar; tap Approve (buys only inside the cap). (12 s)
+2:05 Phone · Rules: Fire now on treat → Timeline: ⛔ refused — "exceeds remaining cap". The guardrail is code. (12 s)
+2:17 Laptop · funder wallet `list-tx` after sync+enhance: the receipt memos decrypted (`munim receipt inv=… code_sha256=…`). Then /verify: paste one → green ticks. (18 s)
+2:35 Phone · Privacy page + Connections page, 5 s each; close on the README's evidence table and the repo URL. (12 s)
+
+Old v1 shot list below for reference.
+
+# Demo video — shot list v1 (superseded)
 
 0:00 Title card: Munim — fund an agent privately, it shops while you sleep. (5 s)
 0:05 Dashboard: purse address, cap ₹0, empty tables. "Nothing is authorised yet." (10 s)
