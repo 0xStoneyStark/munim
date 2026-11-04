@@ -234,7 +234,8 @@ export async function claimVoucher(
   const code = voucher.code.replace(/[\s-]/g, "");
   const secret = voucher.secret.trim();
   const secrets = [code, secret, voucher.code, voucher.secret];
-  if (!/^\d{16}$/.test(code)) return { ok: false, creditedInr: null, message: "voucher code is not 16 digits", status: 0 };
+  // Swiggy's form says "16 digit code" but Bitrefill-issued vouchers are 16 alphanumerics
+  if (!/^[A-Z0-9]{16}$/i.test(code)) return { ok: false, creditedInr: null, message: "voucher code is not 16 characters", status: 0 };
   if (!/^\d{6}$/.test(secret)) return { ok: false, creditedInr: null, message: "voucher PIN is not 6 digits", status: 0 };
 
   let r: Fetched;
