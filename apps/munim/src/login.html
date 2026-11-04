@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#111214">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>Munim sign in</title>
+<style>
+  :root {
+    --page: #EEF0F3; --card: #FFFFFF; --well: #F5F6F8; --line: #E6E8EC;
+    --ink: #111214; --muted: #6B7280; --gold: #F4B728; --gold-deep: #D99A0B; --bad: #DC2626;
+    --font: "Bahnschrift", "Segoe UI", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page: #0F1012; --card: #17181B; --well: #1E2024; --line: #26282D;
+      --ink: #F3F4F6; --muted: #9CA3AF; --bad: #F87171;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--page); color: var(--ink); font: 16px/1.4 var(--font);
+    display: grid; place-items: center;
+    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  }
+  main {
+    width: 100%; max-width: 360px; background: var(--card); border: 1px solid var(--line);
+    border-radius: 20px; padding: 28px 24px 24px; box-shadow: 0 1px 2px rgb(0 0 0 / 6%), 0 12px 32px rgb(0 0 0 / 8%);
+  }
+  .mark { width: 44px; height: 44px; border-radius: 12px; display: block; margin-bottom: 16px; }
+  h1 { font-size: 22px; margin: 0 0 4px; font-weight: 700; letter-spacing: -0.01em; }
+  p.sub { margin: 0 0 20px; color: var(--muted); font-size: 14px; }
+  label { display: block; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  input[type=password] {
+    width: 100%; font: inherit; color: var(--ink); background: var(--well); border: 1px solid var(--line);
+    border-radius: 12px; padding: 12px 14px; outline: none;
+  }
+  input[type=password]:focus { border-color: var(--gold-deep); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 35%, transparent); }
+  button {
+    width: 100%; margin-top: 16px; font: inherit; font-weight: 700; color: #111214; background: var(--gold);
+    border: 0; border-radius: 12px; padding: 13px 14px; cursor: pointer;
+  }
+  button:hover { background: var(--gold-deep); }
+  button:focus-visible { outline: 3px solid var(--gold-deep); outline-offset: 2px; }
+  .err { color: var(--bad); font-size: 14px; margin: 12px 0 0; min-height: 1.4em; }
+</style>
+</head>
+<body>
+<main>
+  <img class="mark" src="/icon.svg" alt="" width="44" height="44">
+  <h1>Munim</h1>
+  <p class="sub">Sign in to the household purse.</p>
+  <form method="post" action="/login">
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required autofocus>
+    <button type="submit">Sign in</button>
+    <p class="err" role="alert"><!--ERROR--></p>
+  </form>
+</main>
+</body>
+</html>
