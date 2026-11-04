@@ -77,6 +77,10 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify(api()));
       return;
     }
+    if (url.pathname === "/noir-sdk.js") {
+      res.writeHead(200, { "content-type": "text/javascript" }).end(fs.readFileSync(path.resolve("apps/munim/src/noir-sdk.bundle.js")));
+      return;
+    }
     if (url.pathname === "/export.csv") {
       res.writeHead(200, { "content-type": "text/csv", "content-disposition": "attachment; filename=purse-view-export.csv" }).end(await viewExport());
       return;

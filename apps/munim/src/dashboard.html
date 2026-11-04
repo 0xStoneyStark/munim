@@ -62,6 +62,18 @@
     <h2>Fund the purse <span>send shielded TAZ with this memo</span></h2>
     <div class="addr"><code id="address">—</code></div>
     <p style="margin:10px 0 0">Memo: <code>fund cap=100 INR reply=&lt;your utest1 address&gt;</code> — the cap is the most the agent may ever spend from this deposit; <code>reply</code> is where receipts go.</p>
+    <div class="row" style="margin-top:12px">
+      <label>Cap ₹ <input id="noirCap" type="number" value="50" min="1" style="width:80px;font:inherit;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"></label>
+      <label>TAZ <input id="noirAmt" type="text" value="0.05" style="width:80px;font:inherit;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"></label>
+      <button id="noirBtn" type="button">Fund with Noir Wallet</button>
+      <span id="noirStatus" class="empty">Noir Wallet (testnet build) signs the shielded deposit; the memo is written for you.</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Spend what was bought <span>close the loop on Swiggy</span></h2>
+    <p>A Swiggy Money card bought through Bitrefill is redeemed once by you in the Swiggy app; after that Munim orders on <b>Instamart</b> through Swiggy's official MCP server and pays from that balance.</p>
+    <div class="row"><a href="/swiggy/login"><button type="button">Link Swiggy account</button></a><span id="swiggyStatus" class="empty">not linked</span></div>
   </section>
 
   <section>
@@ -110,10 +122,37 @@ async function load() {
   $("rules").innerHTML = d.rules.map((r) => `<tr><td><code>${esc(r.id)}</code></td><td>${r.trigger.every ? "every " + esc(r.trigger.every) : "signal <code>" + esc(r.trigger.signal) + "</code>"}</td><td>${inr(r.maxInr)}</td><td>${esc(r.intent)}</td><td>${r.trigger.signal ? `<button onclick="signal('${esc(r.trigger.signal)}')">Fire now</button>` : ""}</td></tr>`).join("") || `<tr><td colspan="5" class="empty">no rules</td></tr>`;
   $("deposits").innerHTML = d.deposits.map((x) => `<tr><td><a href="${d.explorer}${x.txid}" target="_blank"><code>${short(x.txid)}</code></a></td><td>${(x.zatoshis / 1e8).toFixed(4)}</td><td>${x.capInr != null ? inr(x.capInr) : "<span class=empty>none</span>"}</td><td><code>${esc(x.memo)}</code></td></tr>`).join("") || `<tr><td colspan="4" class="empty">waiting for the first shielded deposit</td></tr>`;
   $("spends").innerHTML = d.spends.map((s) => `<tr><td>${new Date(s.at).toLocaleTimeString()}</td><td><code>${esc(s.ruleId)}</code></td><td>${esc(s.productName)}</td><td>${s.valueInr}</td><td>${s.cost} ${esc(s.costCurrency)}</td><td><code>${esc(s.invoiceId)}</code></td><td><span class="pill ${esc(s.status)}">${esc(s.status)}</span></td><td>${s.receiptTxid ? `<a href="${d.explorer}${s.receiptTxid}" target="_blank"><code>${short(s.receiptTxid)}</code></a>` : "—"}</td></tr>`).join("") || `<tr><td colspan="8" class="empty">nothing bought yet</td></tr>`;
+  $("swiggyStatus").textContent = d.swiggyLinked ? "linked — the agent can order on Instamart" : "not linked";
   $("runs").innerHTML = d.runs.slice().reverse().map((r) => `<p><b>${new Date(r.at).toLocaleTimeString()}</b> · <code>${esc(r.ruleId)}</code> (${esc(r.reason)})<br>${esc(r.summary)}</p>`).join("") || `<p class="empty">no runs yet</p>`;
 }
 async function signal(name) { await fetch("/signal/" + name, { method: "POST" }); alert("Signal '" + name + "' queued; the agent picks it up on its next pass."); }
 load(); setInterval(load, 10000);
+</script>
+<script type="module">
+// Fund the purse from the Noir Wallet browser extension (testnet build). The dApp
+// never sees the funder's keys: Noir shows the amount + memo and the user approves.
+import { getNoirWallet } from "/noir-sdk.js";
+const status = (t) => { document.getElementById("noirStatus").textContent = t; };
+document.getElementById("noirBtn").addEventListener("click", async () => {
+  try {
+    const wallet = getNoirWallet();
+    if (!wallet) { status("Noir Wallet extension not detected in this browser."); return; }
+    const zcash = wallet.zcash ?? wallet;
+    status("Connecting to Noir Wallet…");
+    const conn = (await zcash.getAccounts()) ?? (await zcash.connect());
+    const reply = conn.shielded ?? conn.accounts?.[0]?.addresses?.shielded;
+    if (!reply) { status("Noir Wallet returned no shielded address."); return; }
+    const to = document.getElementById("address").textContent.trim();
+    const cap = Number(document.getElementById("noirCap").value || 0);
+    const amount = document.getElementById("noirAmt").value.trim();
+    const memo = `fund cap=${cap} INR reply=${reply}`;
+    status(`Approve in Noir: ${amount} TAZ with memo "${memo.slice(0, 40)}…"`);
+    const txid = await zcash.sendTransaction({ to, amount, memo, fundingSource: "shielded" });
+    status(`Sent. txid ${typeof txid === "string" ? txid : JSON.stringify(txid)} — the agent sees it on its next pass.`);
+  } catch (e) {
+    status("Noir: " + (e?.message ?? String(e)));
+  }
+});
 </script>
 </body>
 </html>
