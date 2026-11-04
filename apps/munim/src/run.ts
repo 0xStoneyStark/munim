@@ -2,6 +2,7 @@
 //   npm run agent                 -- keeps running, checks every 30s
 //   npm run agent -- --once        -- one pass
 //   npm run agent -- --signal treat -- fire the rule listening for `treat`, then exit
+//   npm run agent -- --signal rule:<id> -- run that rule now whatever its trigger, then exit
 
 import "dotenv/config";
 import crypto from "node:crypto";
@@ -11,7 +12,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { Purse, budget } from "@munim/zcash-purse";
 import { purseConfigFromEnv } from "@munim/zcash-purse/src/config.js";
 import { Bitrefill } from "./bitrefill.js";
-import { loadRules, due, type Rule } from "./rules.js";
+import { loadRules, due, forcedRuleIds, signalFromFileName, type Rule } from "./rules.js";
 import { runRule } from "./agent.js";
 import { buyApproved, loadProposals, saveProposals, scanAndPropose, type Proposal } from "./travel.js";
 import { loadSwiggySession, saveSwiggySession, redeemBitrefillOrder } from "./swiggy-money.js";
@@ -39,12 +40,12 @@ function log(line: string) {
   fs.appendFileSync(LOG_FILE, msg + "\n");
 }
 
-/** Signals are files in data/signals/<name>; the dashboard or CLI drops them. */
+/** Signals are files in data/signals/<file>; the dashboard or CLI drops them. `rule--<id>` on disk means the signal `rule:<id>`. */
 function takeSignals(): Set<string> {
   fs.mkdirSync(SIGNAL_DIR, { recursive: true });
-  const names = fs.readdirSync(SIGNAL_DIR);
-  for (const n of names) fs.unlinkSync(path.join(SIGNAL_DIR, n));
-  return new Set(names);
+  const files = fs.readdirSync(SIGNAL_DIR);
+  for (const f of files) fs.unlinkSync(path.join(SIGNAL_DIR, f));
+  return new Set(files.map(signalFromFileName));
 }
 
 type Deps = Parameters<typeof runRule>[0];
@@ -203,6 +204,8 @@ async function pass(deps: Deps, rulesFile: string, extraSignals: Set<string>) {
   let state = loadState();
   const signals = new Set([...takeSignals(), ...extraSignals]);
   const firings = due(rules, state.lastRun, signals);
+  const knownIds = new Set(rules.map((r) => r.id));
+  for (const id of forcedRuleIds(signals)) if (!knownIds.has(id)) log(`signal rule:${id} matches no rule`);
   if (firings.length === 0) {
     log("nothing due");
     return;
@@ -211,6 +214,13 @@ async function pass(deps: Deps, rulesFile: string, extraSignals: Set<string>) {
     log(`rule ${f.rule.id} fired (${f.reason})`);
     state = { ...state, lastRun: { ...state.lastRun, [f.rule.id]: Date.now() } };
     fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+    if ("calendar" in f.rule.trigger) {
+      // a manually fired calendar rule runs the travel scan for itself and never the shopping agent
+      await scanCalendarRules(deps, [f.rule]);
+      state = { ...state, runs: [...state.runs, { at: new Date().toISOString(), ruleId: f.rule.id, reason: f.reason, summary: "calendar scan run", spendId: null, receiptTxid: null }] };
+      fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+      continue;
+    }
     try {
       const r = f.rule.spend === "instamart" ? { ...(await runInstamartRule(deps, f.rule)), spend: null, receiptTxid: null } : await runRule(deps, f.rule, f.reason);
       log(`agent: ${r.summary}`);

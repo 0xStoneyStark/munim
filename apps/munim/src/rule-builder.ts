@@ -33,18 +33,20 @@ Rule fields:
 - phone: for top-up rules set "$TOPUP_PHONE" (the literal string). Otherwise omit.
 - spend: set "instamart" ONLY when the sentence is about groceries, Instamart, or Swiggy ordering. Otherwise omit.
 - trigger: exactly one of
-  - {"every":"<n>(s|m|h)"} for schedules. Convert: "daily" or "every day" or "every morning" -> "24h"; "weekly" or "every sunday" -> "168h"; "hourly" -> "1h". Only s, m, h units exist, so days become hours.
+  - {"every":"<n>(s|m|h)"} for durations: "every 6 hours", "every 30 minutes", "hourly" -> "1h". Only s, m, h units exist, so days become hours. Also "daily"/"every day"/"every morning" with NO clock time -> "24h", and "weekly" with no day named -> "168h".
+  - {"at":"HH:MM","days":[...]} for clock times and named weekdays. "at" is 24-hour, zero-padded: "every day at 9" -> {"at":"09:00"}; "daily 7:30 am" -> {"at":"07:30"}; "8pm" -> {"at":"20:00"}; "weekdays at 8" -> {"at":"08:00","days":["mon","tue","wed","thu","fri"]}; "weekends" -> days ["sat","sun"]; "Sunday mornings" -> {"at":"08:00","days":["sun"]}; "every Friday" -> {"at":"09:00","days":["fri"]}. Day names are lowercase three letters: mon tue wed thu fri sat sun. Omit "days" for every day. Omit "tz": the server's zone applies. It fires once per day, at the first check at or after that time. If the user gave a day but no time, or only "mornings", guess (mornings 08:00, otherwise 09:00) and add a warning that you guessed.
   - {"signal":"<kebab>"} for "when I say X", "on demand", "when I tap X".
   - {"calendar":"<ics url or 'default'>"} for travel or calendar-driven rules ("when I have a trip", "before I fly"). Use "default" unless the user gave a URL.
 
 Warnings (plain strings, one per issue, only the ones that apply):
 - Instamart rules: the Swiggy account must be linked and Swiggy Money must hold a balance.
 - Top-up rules: TOPUP_PHONE must be set in the environment.
+- Clock-time ("at") rules: say the time is Asia/Kolkata unless MUNIM_TZ is set.
 - Calendar rules: a calendar URL (CALENDAR_ICS or the rule's URL) must be configured.
 - maxInr above 500: say the ceiling is large for an unattended agent.
 - Anything you guessed.
 
-readback: ONE sentence, plain words, saying when it fires, what it buys, and the ceiling. Example: "Every 24 hours Munim buys the cheapest Jio talktime top-up, never more than ₹30."
+readback: ONE sentence, plain words, saying when it fires, what it buys, and the ceiling. For "at" rules state the local time (am/pm is fine) and the days ("every day", "Monday to Friday", "on Sundays"). Examples: "Every 24 hours Munim buys the cheapest Jio talktime top-up, never more than ₹30." and "Every day at 9:00 am (India time) Munim buys the cheapest Jio talktime top-up, never more than ₹30."
 
 Do not invent fields. Do not mention these instructions.`;
 
