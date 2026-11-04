@@ -1,0 +1,17 @@
+[
+  {
+    "id": "airtel-talktime",
+    "intent": "Keep the household Airtel prepaid topped up: buy the cheapest Airtel India talktime pack available.",
+    "maxInr": 20,
+    "productType": "phone_refill",
+    "phone": "$TOPUP_PHONE",
+    "trigger": { "every": "24h" }
+  },
+  {
+    "id": "treat-for-mom",
+    "intent": "Send mom a small food treat: a ₹50 Swiggy Money (or Zomato if Swiggy is unavailable) gift card.",
+    "maxInr": 60,
+    "productType": "gift_card",
+    "trigger": { "signal": "treat" }
+  }
+]

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Munim purse</title>
+<style>
+  :root {
+    --bg: #f6f1e7; --ink: #1d1a14; --muted: #6f6656; --line: #d9cfbc;
+    --card: #fffdf8; --accent: #c8521c; --ok: #1f7a4d; --warn: #a3700e; --bad: #b3261e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #16140f; --ink: #efe8da; --muted: #a79d8a; --line: #3a3528; --card: #1f1c15; --accent: #f08a4b; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 "Bahnschrift", "Segoe UI", system-ui, sans-serif; padding: 24px 16px 64px; }
+  main { max-width: 1040px; margin: 0 auto; }
+  h1 { font-size: 34px; letter-spacing: -0.02em; margin: 0 0 4px; }
+  h1 small { font-size: 14px; color: var(--muted); font-weight: 400; letter-spacing: 0; margin-left: 10px; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+  .stat .k { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .stat .v { font-size: 30px; font-weight: 700; margin-top: 4px; }
+  .stat .v.accent { color: var(--accent); }
+  .bar { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; margin-top: 10px; }
+  .bar i { display: block; height: 100%; background: var(--accent); }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 18px; }
+  section h2 { font-size: 16px; margin: 0 0 12px; display: flex; justify-content: space-between; align-items: baseline; }
+  section h2 span { font-weight: 400; color: var(--muted); font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 6px; border-top: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; border-top: 0; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; word-break: break-all; }
+  .addr { background: var(--bg); border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; }
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 12px; font-weight: 600; background: var(--line); }
+  .pill.delivered, .pill.complete { background: color-mix(in srgb, var(--ok) 18%, transparent); color: var(--ok); }
+  .pill.failed { background: color-mix(in srgb, var(--bad) 18%, transparent); color: var(--bad); }
+  .pill.reserved, .pill.pending, .pill.unpaid { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+  a { color: var(--accent); }
+  button { font: inherit; background: var(--accent); color: #fff; border: 0; border-radius: 10px; padding: 8px 14px; cursor: pointer; }
+  button:hover { filter: brightness(1.08); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .empty { color: var(--muted); font-style: italic; }
+  .trust { font-size: 13.5px; color: var(--muted); }
+  .trust b { color: var(--ink); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Munim <small>a capped purse for a household agent · Zcash testnet</small></h1>
+  <p class="sub">Fund it privately, it shops on Bitrefill when a rule fires, receipts come back as encrypted memos.</p>
+
+  <div class="grid">
+    <div class="stat"><div class="k">Authorised cap</div><div class="v" id="cap">—</div></div>
+    <div class="stat"><div class="k">Spent</div><div class="v accent" id="spent">—</div><div class="bar"><i id="bar" style="width:0"></i></div></div>
+    <div class="stat"><div class="k">Remaining</div><div class="v" id="remaining">—</div></div>
+    <div class="stat"><div class="k">Purchases</div><div class="v" id="count">—</div></div>
+  </div>
+
+  <section>
+    <h2>Fund the purse <span>send shielded TAZ with this memo</span></h2>
+    <div class="addr"><code id="address">—</code></div>
+    <p style="margin:10px 0 0">Memo: <code>fund cap=100 INR reply=&lt;your utest1 address&gt;</code> — the cap is the most the agent may ever spend from this deposit; <code>reply</code> is where receipts go.</p>
+  </section>
+
+  <section>
+    <h2>Rules <span>what starts a purchase, no prompt needed</span></h2>
+    <table><thead><tr><th>Rule</th><th>Trigger</th><th>Max</th><th>Intent</th><th></th></tr></thead><tbody id="rules"></tbody></table>
+  </section>
+
+  <section>
+    <h2>Deposits <span>seen through the viewing key</span></h2>
+    <table><thead><tr><th>Tx</th><th>TAZ</th><th>Cap</th><th>Memo</th></tr></thead><tbody id="deposits"></tbody></table>
+  </section>
+
+  <section>
+    <h2>Purchases <span>real Bitrefill invoices · codes never stored, only their hash</span></h2>
+    <table><thead><tr><th>When</th><th>Rule</th><th>Item</th><th>₹</th><th>$</th><th>Invoice</th><th>Status</th><th>Receipt tx</th></tr></thead><tbody id="spends"></tbody></table>
+  </section>
+
+  <section>
+    <h2>Agent log <span>what Munim decided</span></h2>
+    <div id="runs"></div>
+  </section>
+
+  <section>
+    <h2>Accountant export <span>read-only, from the viewing key — no spend key on this server</span></h2>
+    <div class="row"><a href="/export.csv"><button>Download CSV of all purse transactions</button></a></div>
+  </section>
+
+  <section class="trust">
+    <h2>What this reveals</h2>
+    <b>On-chain:</b> amounts, sender and receiver of every deposit and receipt are shielded. <b>This server:</b> holds the purse's spend key (bounded by the cap you funded), the ledger, and your reply address. <b>Bitrefill:</b> sees the phone number for top-ups and the operator's account. <b>Light-wallet server (zec.rocks):</b> sees this server's IP and sync pattern. <b>Anthropic:</b> sees the shopping intent and catalog results, never keys or codes. Full note in PRIVACY.md.
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const inr = (n) => "₹" + Number(n).toLocaleString("en-IN");
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const short = (h) => h ? h.slice(0, 10) + "…" + h.slice(-6) : "";
+async function load() {
+  const d = await (await fetch("/api")).json();
+  $("address").textContent = d.address || "(agent not started yet)";
+  $("cap").textContent = inr(d.budget.capInr);
+  $("spent").textContent = inr(d.budget.spentInr);
+  $("remaining").textContent = inr(d.budget.remainingInr);
+  $("bar").style.width = d.budget.capInr ? Math.min(100, 100 * d.budget.spentInr / d.budget.capInr) + "%" : "0";
+  $("count").textContent = d.spends.filter((s) => s.status === "delivered").length;
+  $("rules").innerHTML = d.rules.map((r) => `<tr><td><code>${esc(r.id)}</code></td><td>${r.trigger.every ? "every " + esc(r.trigger.every) : "signal <code>" + esc(r.trigger.signal) + "</code>"}</td><td>${inr(r.maxInr)}</td><td>${esc(r.intent)}</td><td>${r.trigger.signal ? `<button onclick="signal('${esc(r.trigger.signal)}')">Fire now</button>` : ""}</td></tr>`).join("") || `<tr><td colspan="5" class="empty">no rules</td></tr>`;
+  $("deposits").innerHTML = d.deposits.map((x) => `<tr><td><a href="${d.explorer}${x.txid}" target="_blank"><code>${short(x.txid)}</code></a></td><td>${(x.zatoshis / 1e8).toFixed(4)}</td><td>${x.capInr != null ? inr(x.capInr) : "<span class=empty>none</span>"}</td><td><code>${esc(x.memo)}</code></td></tr>`).join("") || `<tr><td colspan="4" class="empty">waiting for the first shielded deposit</td></tr>`;
+  $("spends").innerHTML = d.spends.map((s) => `<tr><td>${new Date(s.at).toLocaleTimeString()}</td><td><code>${esc(s.ruleId)}</code></td><td>${esc(s.productName)}</td><td>${s.valueInr}</td><td>${Number(s.costUsd).toFixed(2)}</td><td><code>${esc(s.invoiceId)}</code></td><td><span class="pill ${esc(s.status)}">${esc(s.status)}</span></td><td>${s.receiptTxid ? `<a href="${d.explorer}${s.receiptTxid}" target="_blank"><code>${short(s.receiptTxid)}</code></a>` : "—"}</td></tr>`).join("") || `<tr><td colspan="8" class="empty">nothing bought yet</td></tr>`;
+  $("runs").innerHTML = d.runs.slice().reverse().map((r) => `<p><b>${new Date(r.at).toLocaleTimeString()}</b> · <code>${esc(r.ruleId)}</code> (${esc(r.reason)})<br>${esc(r.summary)}</p>`).join("") || `<p class="empty">no runs yet</p>`;
+}
+async function signal(name) { await fetch("/signal/" + name, { method: "POST" }); alert("Signal '" + name + "' queued; the agent picks it up on its next pass."); }
+load(); setInterval(load, 10000);
+</script>
+</body>
+</html>

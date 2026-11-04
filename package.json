@@ -1,0 +1,28 @@
+{
+  "name": "munim",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "agent": "tsx apps/munim/src/run.ts",
+    "dashboard": "tsx apps/munim/src/dashboard.ts",
+    "purse": "tsx packages/zcash-purse/src/cli.ts",
+    "purse:mcp": "tsx packages/zcash-purse/src/mcp.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest",
+    "@modelcontextprotocol/sdk": "latest",
+    "dotenv": "^16.4.0",
+    "zod": "^4.6.7"
+  }
+}
