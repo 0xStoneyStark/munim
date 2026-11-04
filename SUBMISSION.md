@@ -29,7 +29,7 @@ Also: `599b5c2f-aba9-4774-8d2d-676d2e64b373` — Swiggy Money ₹50 gift card, d
 ## Which parts are for which track
 
 - **Privacy track:** `packages/zcash-purse` — the capped shielded purse (memo-authorised budget, cap enforcement, receipt memos, view-only export) and its MCP server. Themes: private payment rails ("agent wallet with a spending cap", "MCP server so agents use Zcash") and privacy beyond the transaction ("read-only export from a viewing key", "invoices in encrypted memos").
-- **Agentic Commerce track:** `apps/munim` — rules (schedule/signal triggers), the Sonnet 5.5 agent with tool-enforced guardrails, the Bitrefill REST integration, the dashboard. Lanes: Rails and guardrails, No prompt required, Private by default (with Zcash).
+- **Agentic Commerce track:** `apps/munim` — rules (schedule / signal / calendar triggers, plus plain-language rule creation), the Sonnet 5.5 agent with tool-enforced guardrails, the Bitrefill REST integration, **close the loop**: a delivered Swiggy Money card is redeemed by the agent into the funder's Swiggy balance (no app, no copy-paste) and spent on Instamart through Swiggy's official MCP server; calendar-driven eSIM proposals for upcoming international trips; the dashboard. Lanes: Rails and guardrails, Close the loop, No prompt required, Private by default (with Zcash).
 
 ## Guardrails (Bitrefill form field)
 

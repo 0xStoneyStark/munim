@@ -17,6 +17,7 @@ Judges score "Private" from this note, so it is written to be honest rather than
 | **Munim server (the operator)** | The purse's spending key (bounded: it can never spend more than funders deposited, and the software cap is lower still), the ledger (deposits, caps, spends, invoice ids, code hashes), the funder's reply address, the rules file, the top-up phone number. |
 | **Bitrefill** | The operator's account, every purchase, the phone number for top-ups, the operator's IP. Bitrefill is paid from the operator's balance in USD, not in ZEC, so Bitrefill never sees any Zcash activity. |
 | **Light-wallet server (`testnet.zec.rocks`)** | The server's IP address and its sync pattern (which blocks it fetches, when). It cannot read notes or memos (it only serves compact blocks) but it can infer that *something* at this IP has a wallet that syncs every 30 s. |
+| **Swiggy** | Once the funder saves their Swiggy web session (`data/swiggy-session.json`, gitignored), the operator holds a long-lived credential that can read the Swiggy Money balance, redeem vouchers into it and — through Swiggy's official MCP, after a separate OAuth consent — place Instamart orders paid from that balance. Swiggy sees the orders, the delivery address and the operator's IP. The voucher code and PIN pass through the process memory once and are never logged or stored; only amounts are kept. The session can be revoked by logging out of Swiggy. |
 | **Anthropic (the model provider)** | Each rule's intent text, the Bitrefill search results and package prices, the cap check verdicts, and the invoice id / order status / code hash returned by `buy`. Never the purse key, the Bitrefill API key, the funder's address, or a redemption code. |
 | **The chain / anyone** | That shielded transactions happened. Nothing else. |
 
@@ -25,7 +26,8 @@ Judges score "Private" from this note, so it is written to be honest rather than
 1. **The operator of Munim.** They run the process that holds the purse key and the Bitrefill key. A malicious operator could spend the purse (up to the cap) on anything. The cap is enforced in software by the same operator; the only hard bound is the amount deposited.
 2. **Bitrefill**, to deliver what was paid for and to keep the operator's account safe.
 3. **The hosted light-wallet server**, for honest chain data and for not correlating IP with wallet activity.
-4. **Anthropic**, to not misuse the shopping intents it sees and to follow the tool contract (it cannot bypass the cap: `buy` calls `purse.reserve`, which refuses over-cap spends regardless of what the model asks).
+4. **The operator, again, with your Swiggy session.** Saving it is optional; without it the redeem step is manual. With it, the operator could spend your existing Swiggy Money balance on Instamart, not only what the purse funded — the cap bounds funding, not the merchant wallet. We call this out rather than hide it; the fix is in section 4.
+5. **Anthropic**, to not misuse the shopping intents it sees and to follow the tool contract (it cannot bypass the cap: `buy` calls `purse.reserve`, which refuses over-cap spends regardless of what the model asks).
 5. **This code**, including `zcash-devtool`, which its own README says is not production-ready.
 
 ## 4. What we would fix next
@@ -34,5 +36,6 @@ Judges score "Private" from this note, so it is written to be honest rather than
 - **Network privacy.** Every sync reveals the server's IP to zec.rocks. `zcash-devtool` already supports `--connection tor`; the next step is routing both the agent and the view-only dashboard sync over Tor or the Nym mixnet.
 - **The cap is operator-enforced.** A real design would hold the purse key in a separate signer (PCZT flow in `zcash-devtool`, or FROST 2-of-3 with the funder) so the operator alone cannot exceed the cap.
 - **Phone number and intents sit in plaintext config.** They should be in the funding memo (encrypted) so the server never stores them at rest.
-- **The ledger is unencrypted JSON** on the operator's disk.
+- **The ledger is unencrypted JSON** on the operator's disk, and so is the Swiggy session file.
+- **Merchant sessions are over-scoped.** A Swiggy web session can do anything the user can. The right shape is Swiggy's official MCP OAuth token (scoped, refreshable, revocable) for ordering, and a merchant-side "redeem into my balance" API for vouchers — which does not exist yet. Until then, the private claim call is a documented, opt-in shortcut.
 - **Receipts leak timing.** A receipt is sent minutes after a purchase; someone who can see both the Bitrefill order time and the chain could correlate. Batching receipts would blur this.
