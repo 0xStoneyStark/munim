@@ -42,10 +42,10 @@ export interface Ledger {
   spends: Spend[];
 }
 
-/** memo grammar, one line, e.g. "fund cap=100 INR reply=utest1..." */
+/** memo grammar, one line, e.g. "fund cap=100 INR reply=utest1...". A negative cap (cap=-100) lowers the authorisation: the funder taking budget back. */
 export function parseFundMemo(memo: string | null): { capInr: number | null; replyTo: string | null } {
   if (!memo) return { capInr: null, replyTo: null };
-  const cap = memo.match(/cap\s*=\s*([0-9]+(?:\.[0-9]+)?)/i);
+  const cap = memo.match(/cap\s*=\s*(-?[0-9]+(?:\.[0-9]+)?)/i);
   const reply = memo.match(/reply\s*=\s*(utest1[0-9a-z]+|u1[0-9a-z]+)/i);
   return {
     capInr: cap ? parseFloat(cap[1]) : null,
@@ -70,7 +70,7 @@ export class LedgerStore {
 
 /** Budget = sum of caps authorised by funders, minus what the agent has spent. */
 export function budget(ledger: Ledger): { capInr: number; spentInr: number; remainingInr: number } {
-  const capInr = ledger.deposits.reduce((s, d) => s + (d.capInr ?? 0), 0);
+  const capInr = Math.max(0, ledger.deposits.reduce((s, d) => s + (d.capInr ?? 0), 0));
   const spentInr = ledger.spends
     .filter((s) => s.status !== "failed" && s.status !== "refunded")
     .reduce((s, x) => s + x.valueInr, 0);
