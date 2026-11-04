@@ -8,6 +8,11 @@ import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { Purse, hashCode, type Spend } from "@munim/zcash-purse";
 import { Bitrefill } from "./bitrefill.js";
+import { bitrefillMcp } from "./bitrefill-mcp.js";
+import { bridgeTools } from "./mcp-bridge.js";
+import type { McpHttp } from "./mcp-client.js";
+import type { BetaRunnableTool } from "@anthropic-ai/sdk/lib/tools/BetaRunnableTool";
+import type { SwiggyMcp } from "./swiggy-mcp.js";
 import type { Rule } from "./rules.js";
 
 export const MODEL = "claude-sonnet-5-5";
@@ -25,7 +30,13 @@ export interface RunResult {
   receiptTxid: string | null;
 }
 
+// discovery only: never buy / pay / invoice tools — `buy` stays on REST behind the purse cap
+const MCP_DISCOVERY = /search|product|detail|catalog/i;
+const MCP_MONEY = /buy|pay|invoice/i;
+
 const SYSTEM = `You are Munim, a household purchasing agent. You buy real products on Bitrefill (India catalog) on behalf of a family, paid from a purse the family funded in shielded Zcash with a spending cap.
+
+You have two catalog surfaces: Bitrefill's MCP tools (prefixed bitrefill_mcp_) and the REST tools; use either for discovery, but prices for the cap check and the \`buy\` call must come from get_product (REST) because buy takes its package id.
 
 Hard rules, in order:
 1. Find the product with search_products, then get_product to read exact packages before any purchase. Each package has: id (pass as package_id), value (label), amount (INR face value — this is value_inr), price (what the operator pays in price_currency, pass it to buy as cost exactly as returned).
@@ -35,6 +46,35 @@ Hard rules, in order:
 5. One invoice per run. If buy fails before an invoice exists (a 400 about arguments), you may retry once with corrected arguments for the same product; never switch products. For fixed packages pass package_id only, never value as well.
 6. You never see redemption codes; buy returns only a hash. Never ask for them.
 7. Finish with 2-3 plain sentences: what was bought, for how much, the invoice id, and the receipt txid if one was sent. If nothing was bought, say why.`;
+
+/** Bitrefill MCP discovery tools; an unreachable MCP only costs us the extra surface, never the run. */
+async function openMcpTools(
+  log: (line: string) => void,
+): Promise<{ tools: BetaRunnableTool<Record<string, unknown>>[]; close: () => Promise<void> }> {
+  let mcp: McpHttp | null = null;
+  try {
+    mcp = bitrefillMcp();
+    // McpHttp has SwiggyMcp's public shape; the cast only bridges SwiggyMcp's private fields
+    const tools = await bridgeTools(mcp as unknown as SwiggyMcp, {
+      prefix: "bitrefill_mcp_",
+      allow: (n) => MCP_DISCOVERY.test(n) && !MCP_MONEY.test(n),
+      log,
+    });
+    return { tools, close: () => mcp!.close() };
+  } catch (e) {
+    log(`bitrefill mcp unavailable, REST tools only: ${e instanceof Error ? e.message : String(e)}`);
+    await mcp?.close().catch(() => undefined);
+    return { tools: [], close: async () => undefined };
+  }
+}
+
+function textOf(final: Anthropic.Beta.BetaMessage): string {
+  return final.content
+    .filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text")
+    .map((b) => b.text)
+    .join("\n")
+    .trim();
+}
 
 export async function runRule(deps: AgentDeps, rule: Rule, reason: string): Promise<RunResult> {
   const { client, purse, bitrefill, log } = deps;
@@ -151,33 +191,37 @@ export async function runRule(deps: AgentDeps, rule: Rule, reason: string): Prom
   });
 
   const budget = await purse.check(0.01);
-  const final = await client.beta.messages.toolRunner({
-    model: MODEL,
-    max_tokens: 4000,
-    output_config: { effort: "medium" },
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
-    system: SYSTEM,
-    tools: [searchProducts, getProduct, purseCheck, buy],
-    max_iterations: 12,
-    messages: [
-      {
-        role: "user",
-        content:
-          `Rule "${rule.id}" fired (${reason}).\n` +
-          `Intent: ${rule.intent}\n` +
-          `Rule max: ₹${rule.maxInr}. Product type: ${rule.productType ?? "any"}. ` +
-          (rule.phone ? `Top-up phone is configured.\n` : `No phone configured.\n`) +
-          `Purse remaining cap: ₹${budget.remainingInr}.\n` +
-          `Do the purchase if it fits, otherwise explain.`,
-      },
-    ],
-  });
-
-  const summary = final.content
-    .filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text")
-    .map((b) => b.text)
-    .join("\n")
-    .trim();
-  return { summary, spend, receiptTxid };
+  const mcp = await openMcpTools(log);
+  try {
+    const final = await client.beta.messages.toolRunner({
+      model: MODEL,
+      max_tokens: 4000,
+      output_config: { effort: "medium" },
+      betas: ["server-side-fallback-2026-07-01"],
+      fallbacks: "default",
+      system: SYSTEM,
+      tools: [searchProducts, getProduct, purseCheck, buy, ...mcp.tools],
+      max_iterations: 12,
+      messages: [
+        {
+          role: "user",
+          content:
+            `Rule "${rule.id}" fired (${reason}).
+` +
+            `Intent: ${rule.intent}
+` +
+            `Rule max: ₹${rule.maxInr}. Product type: ${rule.productType ?? "any"}. ` +
+            (rule.phone ? `Top-up phone is configured.
+` : `No phone configured.
+`) +
+            `Purse remaining cap: ₹${budget.remainingInr}.
+` +
+            `Do the purchase if it fits, otherwise explain.`,
+        },
+      ],
+    });
+    return { summary: textOf(final), spend, receiptTxid };
+  } finally {
+    await mcp.close().catch((e: unknown) => log(`bitrefill mcp close failed: ${e instanceof Error ? e.message : String(e)}`));
+  }
 }

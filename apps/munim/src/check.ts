@@ -4,6 +4,7 @@ import "dotenv/config";
 import { Purse, budget, zatToZec } from "@munim/zcash-purse";
 import { purseConfigFromEnv } from "@munim/zcash-purse/src/config.js";
 import { Bitrefill } from "./bitrefill.js";
+import { bitrefillMcp, productLines } from "./bitrefill-mcp.js";
 
 const out = (k: string, v: unknown) => process.stdout.write(`${k}: ${typeof v === "string" ? v : JSON.stringify(v)}\n`);
 
@@ -17,6 +18,19 @@ out("bitrefill.swiggy", sw.slice(0, 4).map((p) => `${p.id} | ${p.name}`));
 if (jio[0]) {
   const d = await b.product(jio[0].id);
   out(`bitrefill.product(${jio[0].id})`, { packages: d.packages?.slice(0, 5), range: d.range });
+}
+
+try {
+  const mcp = bitrefillMcp();
+  try {
+    out("bitrefill.mcp.tools", String((await mcp.tools()).length));
+    const found = productLines(await mcp.call("search-products", { query: "jio", country: "IN", intent: "catalog discovery for a household purchasing agent" }));
+    out("bitrefill.mcp.search(jio)", found.slice(0, 3).map((l) => l.split(" | ")[0]).join(", "));
+  } finally {
+    await mcp.close();
+  }
+} catch (e) {
+  out("bitrefill.mcp", `ERROR ${e instanceof Error ? e.message : String(e)}`);
 }
 
 const purse = new Purse(purseConfigFromEnv());
