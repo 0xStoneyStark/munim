@@ -1,0 +1,49 @@
+{
+  "videos": {
+    "lap": "D:\\free-society-hack\\walkthrough/clips/lap.mp4"
+  },
+  "scenes": [
+    {
+      "scene": 1,
+      "ctx": "lap",
+      "start": 0,
+      "end": 6004,
+      "caption": "Munim"
+    },
+    {
+      "scene": 2,
+      "ctx": "lap",
+      "start": 6005,
+      "end": 15126,
+      "caption": "A shielded deposit with the cap in the memo."
+    },
+    {
+      "scene": 3,
+      "ctx": "lap",
+      "start": 15126,
+      "end": 25068,
+      "caption": "On the public explorer: a shielded transaction, nothing readable."
+    },
+    {
+      "scene": 12,
+      "ctx": "lap",
+      "start": 25068,
+      "end": 54302,
+      "caption": "Receipts come back as encrypted memos. Anyone holding one can verify it."
+    },
+    {
+      "scene": 17,
+      "ctx": "lap",
+      "start": 54302,
+      "end": 62155,
+      "caption": "What it reveals, to whom."
+    },
+    {
+      "scene": 18,
+      "ctx": "lap",
+      "start": 62155,
+      "end": 72180,
+      "caption": "github.com/0xStoneyStark/munim"
+    }
+  ]
+}

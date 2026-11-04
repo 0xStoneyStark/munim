@@ -8,6 +8,10 @@ Draft by Wed 4 Nov 20:00 IST · finalize by Thu 5 Nov 00:00 IST
 
 Munim is a spending-capped shopping agent for a household: you fund it privately in shielded ZEC with the cap in the memo, it buys real Indian top-ups and gift cards through Bitrefill when a rule fires, and every receipt comes back to your wallet as an encrypted memo.
 
+## Demo video
+
+https://munim.heneryshop.com/demo.mp4 — 3:26. Shot 4 Nov 2026 20:07–20:14 IST: a real 0.05 TAZ deposit with `fund cap=300 INR` (txid `2b0bc48da9a0e9b06a9a50179365eda4ab30289c0f54a02dd4bad4208866723b`), the PWA installed fresh on a Galaxy S24 Ultra over USB (scrcpy), the `topup` rule fired on the phone and bought invoice `726b27d8-fe5b-4f4f-95eb-fcfad260bc05` (₹250 Swiggy Money, $2.76) in ~30 s, the Dubai eSIM proposal raised from a calendar event created minutes earlier, web push enabled and delivered. Voice: the builder's cloned ElevenLabs voice. Source of the cut: `walkthrough/`.
+
 ## Repo
 
 https://github.com/0xStoneyStark/munim

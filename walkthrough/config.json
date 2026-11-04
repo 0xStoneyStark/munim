@@ -1,0 +1,35 @@
+{
+  "name": "munim-demo",
+  "frontend": "https://munim.heneryshop.com",
+  "playwright": "D:/free-society-hack/walkthrough/node_modules/@playwright/test",
+  "view": {
+    "width": 1920,
+    "height": 1080
+  },
+  "accent": "#F4B728",
+  "cleanupCss": "",
+  "voLeadMs": 250,
+  "speed": {
+    "1": 0.9,
+    "4": 1.5,
+    "5": 2.5,
+    "8": 1.25,
+    "11": 1.5,
+    "12": 1.5,
+    "13": 1.3,
+    "16": 0.7
+  },
+  "elevenlabs": {
+    "voiceId": "pHhvR801xGsp88Bquskw",
+    "model": "eleven_multilingual_v2",
+    "voiceSettings": {
+      "stability": 0.5,
+      "similarity_boost": 0.85,
+      "style": 0.2,
+      "use_speaker_boost": true
+    }
+  },
+  "crop": {
+    "16": "498:350:0:385"
+  }
+}

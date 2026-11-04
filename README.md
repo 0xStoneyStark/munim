@@ -8,7 +8,7 @@
 | **Privacy theme(s)** | 1. Private payment rails (capped agent wallet, MCP server) · 3. Privacy beyond the transaction (view-only export, receipts in encrypted memos) |
 | **What it is** | agent + installable web app (PWA) + library with an MCP server (`packages/zcash-purse`) |
 | **Live URL** | https://munim.heneryshop.com (password-protected because purchases are real; ask for the demo password in the mentor chat) |
-| **Demo video** | [to be added before finalising] |
+| **Demo video** | https://munim.heneryshop.com/demo.mp4 (3:26, phone + laptop, every step real) |
 | **Testnet txid** | `0c7247b5c65fd308cad895f9c798583ca12ffe4a90fa7efe25d257319b7291c6` · https://zexplorer.app/testnet/tx/0c7247b5c65fd308cad895f9c798583ca12ffe4a90fa7efe25d257319b7291c6 |
 | **Real purchase invoice ID** (Agentic Commerce) | `7827bbf6-1825-4b00-8598-abbfaa1b92dd` (₹250 Swiggy Money card, delivered) |
 | **Team** | Harsh Agarwal (@0xStoneyStark) + Claude (Fable 5.1 orchestrating the build, Sonnet 5.5 inside the agent, Opus and Sonnet subagents) |
@@ -180,7 +180,7 @@ This is section 5 of the Agentic Commerce template, added here for our dual-trac
   - **eSIMs** need a human **Approve** on the dashboard.
   - **Instamart budget** is `min(rule max, Swiggy Money balance)`, checked against the full bill including fees.
   - **Above the cap**, nobody can approve a purchase. The only way to raise it is a funder sending a new shielded deposit with a new `cap=` memo.
-- **Purchase proof:** invoice `7827bbf6-1825-4b00-8598-abbfaa1b92dd` (delivered, bought unattended by the `topup` rule), then Instamart order `252768923926074` paid with Swiggy Money. Video timestamp: [to be added before finalising].
+- **Purchase proof:** invoice `7827bbf6-1825-4b00-8598-abbfaa1b92dd` (delivered, bought unattended by the `topup` rule), then Instamart order `252768923926074` paid with Swiggy Money. Video timestamps: top-up fired 1:13, delivered 1:29, eSIM proposal from the calendar 1:41, Swiggy Money card and the Instamart order 1:50, receipt verified 2:09, push notification 2:29.
 - **What's new here:** a new **guarantee** (the budget is a private, memo-authorised cap that the model cannot raise, and receipts are encrypted to the funder). A new **trigger** (clock, calendar and signal rules: no prompt). A new **ending**: the card does not stop at "delivered"; it is redeemed and spent on groceries that arrive at the door.
 
 ## 6. How it's built
@@ -238,7 +238,7 @@ This is section 5 of the Agentic Commerce template, added here for our dual-trac
 ## 8. Links
 
 - Repo: https://github.com/0xStoneyStark/munim
-- Demo video: [to be added before finalising]
+- Demo video: https://munim.heneryshop.com/demo.mp4
 - Live app: https://munim.heneryshop.com
 - Slides (optional): N/A
 

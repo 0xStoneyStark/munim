@@ -14,3 +14,9 @@ walkthrough/*.mp4
 walkthrough/*.webm
 walkthrough/timeline.json
 walkthrough/scene-durs.json
+walkthrough/clips/
+walkthrough/segs/
+walkthrough/term.html
+walkthrough/title.html
+walkthrough/_fail*.png
+walkthrough/pw-install.log
