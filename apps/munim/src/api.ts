@@ -26,6 +26,7 @@ import {
 import { handleVerify } from "./verify.js";
 import type { Bitrefill } from "./bitrefill.js";
 import { loadSwiggySession, probe } from "./swiggy-money.js";
+import { publicKey, sendToAll, subscribe, subscriptionSchema, unsubscribe } from "./push.js";
 
 export interface ApiDeps {
   readonly bitrefill: Bitrefill;
@@ -234,9 +235,32 @@ async function probeSwiggyMoney(): Promise<unknown> {
   return { alive, balanceInr, reason };
 }
 
+// ---------------------------------------------------------------------- push
+
+const unsubscribeBody = z.object({ endpoint: z.string().min(1) });
+
+async function postSubscribe(deps: ApiDeps, req: http.IncomingMessage): Promise<unknown> {
+  const sub = await readBody(req, subscriptionSchema);
+  try {
+    return { ok: true, subscriptions: subscribe(sub, deps.dataDir) };
+  } catch (e) {
+    throw badRequest(e instanceof Error ? e.message : String(e));
+  }
+}
+
+async function postUnsubscribe(deps: ApiDeps, req: http.IncomingMessage): Promise<unknown> {
+  const { endpoint } = await readBody(req, unsubscribeBody);
+  return { ok: true, removed: unsubscribe(endpoint, deps.dataDir) };
+}
+
+async function postPushTest(deps: ApiDeps): Promise<unknown> {
+  return sendToAll({ title: "Munim", body: "Notifications are on.", url: "/", tag: "test" }, deps.dataDir);
+}
+
 async function route(req: http.IncomingMessage, url: URL, deps: ApiDeps): Promise<unknown | undefined> {
   const p = url.pathname;
   if (req.method === "GET" && p === "/api") return { ...overview(deps), agentRunning: agentRunning(deps) };
+  if (req.method === "GET" && p === "/push/public-key") return { publicKey: publicKey(deps.dataDir) };
   if (req.method !== "POST") return undefined;
   if (p === "/agent/run") return runAgentPass(deps);
   if (p === "/connections/swiggy-money/probe") return probeSwiggyMoney();
@@ -247,6 +271,9 @@ async function route(req: http.IncomingMessage, url: URL, deps: ApiDeps): Promis
   if (p === "/rules/commit") return postCommit(deps, req);
   if (p === "/rules/delete") return postDelete(deps, req);
   if (p === "/rules/fire") return postFire(deps, req);
+  if (p === "/push/subscribe") return postSubscribe(deps, req);
+  if (p === "/push/unsubscribe") return postUnsubscribe(deps, req);
+  if (p === "/push/test") return postPushTest(deps);
   return undefined;
 }
 

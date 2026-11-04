@@ -1,6 +1,6 @@
 // Munim service worker: network-first, shell cached only as an offline fallback.
 // Never caches API, POST, OAuth, Swiggy, export or verify traffic.
-const CACHE = "munim-shell-v2";
+const CACHE = "munim-shell-v3";
 const SHELL = ["/", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png", "/icon.svg"];
 const NEVER = [/^\/api(\/|$)/, /^\/oauth/, /^\/swiggy/, /^\/export\.csv$/, /^\/verify/, /^\/login/, /^\/logout/, /^\/health/];
 
@@ -38,5 +38,36 @@ self.addEventListener("fetch", (event) => {
       },
       () => caches.match(url.pathname, { ignoreSearch: true }).then((hit) => hit ?? Response.error()),
     ),
+  );
+});
+
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { body: event.data ? event.data.text() : "" };
+  }
+  const title = data.title || "Munim";
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: data.body || "",
+      tag: data.tag,
+      data: { url: data.url || "/" },
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = new URL((event.notification.data && event.notification.data.url) || "/", self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+      const open = windows.find((w) => w.url === target) || windows.find((w) => new URL(w.url).origin === self.location.origin);
+      if (!open) return self.clients.openWindow(target);
+      return open.focus().then((w) => (w && w.url !== target && "navigate" in w ? w.navigate(target) : w));
+    }),
   );
 });

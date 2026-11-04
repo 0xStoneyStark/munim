@@ -16,6 +16,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { loginUrl, exchangeCode } from "./swiggy-oauth.js";
 import { handleApi, type ApiDeps } from "./api.js";
 import { Bitrefill } from "./bitrefill.js";
+import { publicKey, startNotifier } from "./push.js";
 
 const execFileP = promisify(execFile);
 const PORT = parseInt(process.env.DASHBOARD_PORT ?? "8788", 10);
@@ -116,6 +117,7 @@ async function handleAuth(req: http.IncomingMessage, res: http.ServerResponse, p
     res.writeHead(200, { "content-type": pwa.type, "cache-control": "public, max-age=3600", ...pwa.headers }).end(fs.readFileSync(here(pwa.file)));
     return true;
   }
+  if (p === "/push/public-key" && req.method === "GET") return false; // public: the key is not secret, handled by handleApi
   if (!AUTH_ON) return false;
   const authed = validToken(cookieValue(req));
   if (p === "/login" && req.method === "GET") {
@@ -212,3 +214,17 @@ const server = http.createServer(async (req, res) => {
 
 if (!AUTH_ON) process.stdout.write("dashboard: no DASHBOARD_PASSWORD set, auth disabled\n");
 server.listen(PORT, HOST, () => process.stdout.write(`munim dashboard http://${HOST}:${PORT}\n`));
+
+/** Push notifier: skipped with --no-notifier, and a VAPID problem only disables push, never the dashboard. */
+function startPush(): void {
+  const say = (line: string): void => void process.stdout.write(`push notifier: ${line}\n`);
+  if (process.argv.includes("--no-notifier")) return say("disabled (--no-notifier)");
+  try {
+    publicKey(DATA);
+    startNotifier({ dataDir: DATA });
+    say("watching the timeline every 15s");
+  } catch (e) {
+    say(`not started (${e instanceof Error ? e.message : String(e)})`);
+  }
+}
+startPush();
