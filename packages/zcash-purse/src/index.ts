@@ -54,8 +54,15 @@ export class Purse {
     let added = 0;
     for (const tx of txs) {
       if (tx.direction !== "in" || tx.value <= 0) continue;
-      if (ledger.deposits.some((d) => d.txid === tx.txid)) continue;
+      const known = ledger.deposits.find((d) => d.txid === tx.txid);
       const { capInr, replyTo } = parseFundMemo(tx.memo);
+      if (known) {
+        // memo can arrive after the first sighting (sync sees the note, enhance decrypts the memo)
+        if (!known.memo && tx.memo) {
+          ledger = { ...ledger, deposits: ledger.deposits.map((d) => (d.txid === tx.txid ? { ...d, memo: tx.memo, capInr, replyTo } : d)) };
+        }
+        continue;
+      }
       ledger = withDeposit(ledger, {
         txid: tx.txid,
         zatoshis: tx.value,
@@ -134,7 +141,7 @@ export function receiptMemo(s: Spend): string {
     `inv=${s.invoiceId}`,
     `item=${s.productName.slice(0, 40)}`,
     `inr=${s.valueInr}`,
-    `usd=${s.costUsd.toFixed(2)}`,
+    `cost=${s.cost} ${s.costCurrency}`,
     `rule=${s.ruleId}`,
   ];
   if (s.codeHash) parts.push(`code_sha256=${s.codeHash.slice(0, 16)}`);

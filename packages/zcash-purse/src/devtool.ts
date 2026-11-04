@@ -44,8 +44,10 @@ export class Devtool {
     return (stdout || "") + (stderr && !stdout ? stderr : "");
   }
 
+  /** sync scans compact blocks (no memos); enhance fetches full tx data so memos decrypt */
   async sync(): Promise<void> {
     await this.run(["sync", "-s", this.cfg.server ?? "zecrocks"], 600_000);
+    await this.run(["enhance", "-s", this.cfg.server ?? "zecrocks"], 600_000);
   }
 
   async address(): Promise<string> {
@@ -87,45 +89,56 @@ export class Devtool {
     ];
     if (memo) args.push("--memo", memo);
     const out = await this.run(args, 600_000);
-    const m = out.match(/([0-9a-f]{64})/);
-    if (!m) throw new Error("send produced no txid: " + out);
-    return m[1];
+    // the proposal lists input notes (txid:index) first; the sent txid is the last bare 64-hex line
+    const all = [...out.matchAll(/^\s*([0-9a-f]{64})\s*$/gm)];
+    if (all.length === 0) throw new Error("send produced no txid: " + out);
+    return all[all.length - 1][1];
   }
 }
 
 /**
- * `list-tx` prints a block per transaction. We don't rely on an exact layout:
- * we scan for a txid, then collect value / memo / height / address lines that
- * follow it until the next txid. Adjusted against real NU7 testnet output.
+ * `list-tx` text output (zcash-devtool, Nov 2026) looks like:
+ *
+ *   <txid>
+ *        Mined: 4581732 (2026-11-04 10:25:04.0 +00:00:00)
+ *       Amount:   1.00000000 TAZ
+ *     Fee paid: Unknown
+ *     Sent 0 notes, received 1 notes, 0 memos
+ *     Output 0 (Ironwood)
+ *       Value:   1.00000000 TAZ
+ *       Received by account: <uuid> (name)
+ *       To: utest1...
+ *       Memo (text): fund cap=100 INR reply=utest1...
+ *
+ * A bare 64-hex line starts a transaction; `Amount` is the net effect on the
+ * wallet (negative when sent); per-output `Value` lines are ignored.
  */
 export function parseListTx(text: string): TxOutput[] {
   const txs: TxOutput[] = [];
   let cur: TxOutput | null = null;
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.trim();
-    const txid = line.match(/\b([0-9a-f]{64})\b/);
-    if (txid && !/memo/i.test(line)) {
+    const txid = line.match(/^([0-9a-f]{64})$/);
+    if (txid) {
       if (cur) txs.push(cur);
       cur = { txid: txid[1], minedHeight: null, value: 0, memo: null, address: null, direction: "in" };
       continue;
     }
     if (!cur) continue;
-    const height = line.match(/(?:height|mined)[^0-9]*([0-9]{6,})/i);
-    if (height) cur.minedHeight = parseInt(height[1], 10);
-    const value = line.match(/(?:value|amount)[^-0-9]*(-?[0-9]+)\s*(?:zat)?/i) ?? line.match(/(-?[0-9]+\.[0-9]{8})\s*TAZ/);
-    if (value) {
-      const v = value[1].includes(".") ? Math.round(parseFloat(value[1]) * ZAT_PER_ZEC) : parseInt(value[1], 10);
-      if (v !== 0) {
-        cur.value += v;
-        cur.direction = cur.value < 0 ? "out" : "in";
-      }
+    const mined = line.match(/^Mined:\s*([0-9]+)/);
+    if (mined) cur.minedHeight = parseInt(mined[1], 10);
+    const amount = line.match(/^Amount:\s*(-?[0-9]+\.[0-9]+)\s*TAZ/);
+    if (amount) {
+      cur.value = Math.round(parseFloat(amount[1]) * ZAT_PER_ZEC);
+      cur.direction = cur.value < 0 ? "out" : "in";
     }
-    const memo = line.match(/memo[^:]*:\s*(.*)$/i);
-    if (memo && memo[1] && !/^(none|empty|<empty>|\(none\))$/i.test(memo[1].trim())) {
-      cur.memo = memo[1].trim().replace(/^["']|["']$/g, "");
-    }
-    const addr = line.match(/\b(utest1[0-9a-z]{20,}|u1[0-9a-z]{20,})\b/);
-    if (addr) cur.address = addr[1];
+    const sentRecv = line.match(/^Sent ([0-9]+) notes?, received ([0-9]+) notes?/);
+    if (sentRecv && parseInt(sentRecv[1], 10) > 0 && cur.value <= 0) cur.direction = "out";
+    // after `enhance`: `Memo: Memo::Text("fund cap=100 INR ...")`
+    const memo = line.match(/^Memo(?: \(text\))?:\s*(?:Memo::Text\()?"?(.*?)"?\)?\s*$/);
+    if (memo && memo[1].trim() && !/^Memo::Empty/.test(memo[1])) cur.memo = memo[1].trim();
+    const to = line.match(/^To:\s*(utest1[0-9a-z]+|u1[0-9a-z]+)/);
+    if (to) cur.address = to[1];
   }
   if (cur) txs.push(cur);
   return txs;

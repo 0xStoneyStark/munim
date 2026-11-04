@@ -76,7 +76,7 @@
 
   <section>
     <h2>Purchases <span>real Bitrefill invoices · codes never stored, only their hash</span></h2>
-    <table><thead><tr><th>When</th><th>Rule</th><th>Item</th><th>₹</th><th>$</th><th>Invoice</th><th>Status</th><th>Receipt tx</th></tr></thead><tbody id="spends"></tbody></table>
+    <table><thead><tr><th>When</th><th>Rule</th><th>Item</th><th>₹</th><th>Cost</th><th>Invoice</th><th>Status</th><th>Receipt tx</th></tr></thead><tbody id="spends"></tbody></table>
   </section>
 
   <section>
@@ -109,7 +109,7 @@ async function load() {
   $("count").textContent = d.spends.filter((s) => s.status === "delivered").length;
   $("rules").innerHTML = d.rules.map((r) => `<tr><td><code>${esc(r.id)}</code></td><td>${r.trigger.every ? "every " + esc(r.trigger.every) : "signal <code>" + esc(r.trigger.signal) + "</code>"}</td><td>${inr(r.maxInr)}</td><td>${esc(r.intent)}</td><td>${r.trigger.signal ? `<button onclick="signal('${esc(r.trigger.signal)}')">Fire now</button>` : ""}</td></tr>`).join("") || `<tr><td colspan="5" class="empty">no rules</td></tr>`;
   $("deposits").innerHTML = d.deposits.map((x) => `<tr><td><a href="${d.explorer}${x.txid}" target="_blank"><code>${short(x.txid)}</code></a></td><td>${(x.zatoshis / 1e8).toFixed(4)}</td><td>${x.capInr != null ? inr(x.capInr) : "<span class=empty>none</span>"}</td><td><code>${esc(x.memo)}</code></td></tr>`).join("") || `<tr><td colspan="4" class="empty">waiting for the first shielded deposit</td></tr>`;
-  $("spends").innerHTML = d.spends.map((s) => `<tr><td>${new Date(s.at).toLocaleTimeString()}</td><td><code>${esc(s.ruleId)}</code></td><td>${esc(s.productName)}</td><td>${s.valueInr}</td><td>${Number(s.costUsd).toFixed(2)}</td><td><code>${esc(s.invoiceId)}</code></td><td><span class="pill ${esc(s.status)}">${esc(s.status)}</span></td><td>${s.receiptTxid ? `<a href="${d.explorer}${s.receiptTxid}" target="_blank"><code>${short(s.receiptTxid)}</code></a>` : "—"}</td></tr>`).join("") || `<tr><td colspan="8" class="empty">nothing bought yet</td></tr>`;
+  $("spends").innerHTML = d.spends.map((s) => `<tr><td>${new Date(s.at).toLocaleTimeString()}</td><td><code>${esc(s.ruleId)}</code></td><td>${esc(s.productName)}</td><td>${s.valueInr}</td><td>${s.cost} ${esc(s.costCurrency)}</td><td><code>${esc(s.invoiceId)}</code></td><td><span class="pill ${esc(s.status)}">${esc(s.status)}</span></td><td>${s.receiptTxid ? `<a href="${d.explorer}${s.receiptTxid}" target="_blank"><code>${short(s.receiptTxid)}</code></a>` : "—"}</td></tr>`).join("") || `<tr><td colspan="8" class="empty">nothing bought yet</td></tr>`;
   $("runs").innerHTML = d.runs.slice().reverse().map((r) => `<p><b>${new Date(r.at).toLocaleTimeString()}</b> · <code>${esc(r.ruleId)}</code> (${esc(r.reason)})<br>${esc(r.summary)}</p>`).join("") || `<p class="empty">no runs yet</p>`;
 }
 async function signal(name) { await fetch("/signal/" + name, { method: "POST" }); alert("Signal '" + name + "' queued; the agent picks it up on its next pass."); }

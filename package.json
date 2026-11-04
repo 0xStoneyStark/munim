@@ -12,7 +12,8 @@
     "dashboard": "tsx apps/munim/src/dashboard.ts",
     "purse": "tsx packages/zcash-purse/src/cli.ts",
     "purse:mcp": "tsx packages/zcash-purse/src/mcp.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check": "tsx apps/munim/src/check.ts"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

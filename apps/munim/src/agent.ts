@@ -28,8 +28,8 @@ export interface RunResult {
 const SYSTEM = `You are Munim, a household purchasing agent. You buy real products on Bitrefill (India catalog) on behalf of a family, paid from a purse the family funded in shielded Zcash with a spending cap.
 
 Hard rules, in order:
-1. Find the product with search_products, then get_product to read exact packages and their payment_price (USD) before any purchase.
-2. Pick the cheapest package that satisfies the rule's intent. Never exceed the rule's max INR, never exceed the purse's remaining cap.
+1. Find the product with search_products, then get_product to read exact packages before any purchase. Each package has: id (pass as package_id), value (label), amount (INR face value — this is value_inr), price (what the operator pays, in minor units of price_currency — this is cost).
+2. Pick the cheapest package by amount that satisfies the rule's intent. Never exceed the rule's max INR, never exceed the purse's remaining cap.
 3. Call purse_check with the INR value BEFORE buy. If it refuses, stop and explain — do not look for workarounds.
 4. Copy package values exactly as returned (they are case-sensitive, some contain en dashes). Never retype them.
 5. buy exactly once per run. If buy fails, do not retry a different product.
@@ -40,6 +40,8 @@ export async function runRule(deps: AgentDeps, rule: Rule, reason: string): Prom
   const { client, purse, bitrefill, log } = deps;
   let spend: Spend | null = null;
   let receiptTxid: string | null = null;
+  // Bitrefill quotes `price` in minor units of the account's balance currency (sats for BTC, cents for USD)
+  const priceCurrency = (await bitrefill.balance()).currency;
 
   const searchProducts = betaZodTool({
     name: "search_products",
@@ -61,7 +63,7 @@ export async function runRule(deps: AgentDeps, rule: Rule, reason: string): Prom
     inputSchema: z.object({ product_id: z.string() }),
     run: async ({ product_id }) => {
       const p = await bitrefill.product(product_id);
-      return JSON.stringify({ id: p.id, name: p.name, type: p.type, currency: p.currency, packages: p.packages, range: p.range });
+      return JSON.stringify({ id: p.id, name: p.name, type: p.type, currency: p.currency, price_currency: priceCurrency, packages: p.packages, range: p.range });
     },
   });
 
@@ -85,8 +87,9 @@ export async function runRule(deps: AgentDeps, rule: Rule, reason: string): Prom
       product_name: z.string(),
       package_id: z.string().optional().describe("exact package_id from get_product, for fixed packages"),
       value: z.union([z.number(), z.string()]).optional().describe("exact value for range products or string packages"),
-      value_inr: z.number().positive().describe("INR face value of what is bought"),
-      cost_usd: z.number().nonnegative().describe("payment_price from get_product"),
+      value_inr: z.number().positive().describe("INR face value of what is bought (the package's `amount`)"),
+      cost: z.number().nonnegative().describe("the package's `price` from get_product, in minor units of the balance currency"),
+      cost_currency: z.string().describe("balance currency from get_product, e.g. BTC or USD"),
     }),
     run: async (a) => {
       if (spend) return JSON.stringify({ ok: false, reason: "already bought once this run" });
@@ -100,7 +103,8 @@ export async function runRule(deps: AgentDeps, rule: Rule, reason: string): Prom
         productId: a.product_id,
         productName: a.product_name,
         valueInr: a.value_inr,
-        costUsd: a.cost_usd,
+        cost: a.cost,
+        costCurrency: a.cost_currency,
         invoiceId: "pending",
         orderId: null,
       });

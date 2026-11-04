@@ -12,10 +12,13 @@ export interface Product {
   currency: string;
 }
 
+/** Live shape (Nov 2026) differs from the docs: `id` not `package_id`, `amount` is the INR face value,
+ *  `price` is in minor units of the account's balance currency (satoshis for a BTC account). */
 export interface Package {
-  package_id: string;
+  id: string;
   value: number | string;
-  price?: number; // USD, present on details
+  amount?: number;
+  price?: number;
 }
 
 export interface ProductDetails extends Product {
@@ -40,8 +43,9 @@ export interface Order {
 }
 
 interface Envelope<T> {
-  meta?: Record<string, unknown>;
+  meta?: Record<string, unknown>; // on errors, echoes the request (incl. phone number) — never surface it
   data: T;
+  message?: string; // top-level on 4xx, e.g. "Balance too low"
   error?: { code?: string; message?: string };
 }
 
@@ -58,7 +62,8 @@ export class Bitrefill {
     });
     const json = (await res.json().catch(() => ({}))) as Envelope<T>;
     if (!res.ok) {
-      throw new Error(`bitrefill ${method} ${path} -> ${res.status} ${json.error?.code ?? ""} ${json.error?.message ?? JSON.stringify(json).slice(0, 300)}`);
+      const msg = json.message ?? json.error?.message ?? `HTTP ${res.status}`;
+      throw new Error(`bitrefill ${method} ${path} -> ${res.status} ${json.error?.code ?? ""} ${msg}`.trim());
     }
     return json.data;
   }

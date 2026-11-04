@@ -1,8 +1,8 @@
 [
   {
-    "id": "airtel-talktime",
-    "intent": "Keep the household Airtel prepaid topped up: buy the cheapest Airtel India talktime pack available.",
-    "maxInr": 20,
+    "id": "jio-recharge",
+    "intent": "Keep the household Jio prepaid alive: buy the cheapest Jio India recharge pack available (data pack or talktime, whichever is cheapest).",
+    "maxInr": 30,
     "productType": "phone_refill",
     "phone": "$TOPUP_PHONE",
     "trigger": { "every": "24h" }
