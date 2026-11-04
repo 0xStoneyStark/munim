@@ -26,7 +26,9 @@ export class SwiggyMcp {
     if (this.client) return;
     const token = await accessToken();
     if (!token) throw new Error("Swiggy not linked: open the dashboard and click 'Link Swiggy' (or run swiggy-mcp login)");
-    const transport = new StreamableHTTPClientTransport(new URL(`https://mcp.swiggy.com/${this.server}`), {
+    // Swiggy's paths: food → /food, instamart → /im, dineout → /dineout
+    const path = this.server === "instamart" ? "im" : this.server;
+    const transport = new StreamableHTTPClientTransport(new URL(`https://mcp.swiggy.com/${path}`), {
       requestInit: { headers: { Authorization: `Bearer ${token}` } },
     });
     const client = new Client({ name: "munim", version: "0.1.0" });
