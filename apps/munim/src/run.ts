@@ -14,6 +14,9 @@ import { Bitrefill } from "./bitrefill.js";
 import { loadRules, due, type Rule } from "./rules.js";
 import { runRule } from "./agent.js";
 import { buyApproved, loadProposals, saveProposals, scanAndPropose, type Proposal } from "./travel.js";
+import { loadSwiggySession, saveSwiggySession, redeemBitrefillOrder } from "./swiggy-money.js";
+import { SwiggyMcp } from "./swiggy-mcp.js";
+import { orderOnInstamart } from "./instamart.js";
 
 const DATA = path.resolve("data");
 const STATE_FILE = path.join(DATA, "agent-state.json");
@@ -143,6 +146,40 @@ async function buyApprovedEsims(deps: Deps) {
   }
 }
 
+const REDEEMS_FILE = path.join(DATA, "swiggy-redeems.json");
+
+/**
+ * Close the loop on a delivered Swiggy Money card: redeem it into the funder's Swiggy
+ * balance through their saved session. Codes never touch logs; only amounts are kept.
+ */
+async function redeemSwiggyMoney(deps: Deps, orderId: string): Promise<void> {
+  const session = loadSwiggySession();
+  if (!session) {
+    deps.log(`swiggy money: no session saved; redeem the card by hand or run swiggy-money session-from-cookie`);
+    return;
+  }
+  const r = await redeemBitrefillOrder(deps.bitrefill, session, orderId);
+  deps.log(`swiggy money redeem ${orderId}: ${r.ok ? `credited ₹${r.creditedInr}, balance ₹${r.balanceAfterInr}` : r.message}`);
+  if (!r.ok) return;
+  const existing: unknown[] = fs.existsSync(REDEEMS_FILE) ? JSON.parse(fs.readFileSync(REDEEMS_FILE, "utf8")) : [];
+  fs.writeFileSync(REDEEMS_FILE, JSON.stringify([...existing, { at: new Date().toISOString(), orderId, creditedInr: r.creditedInr, balanceAfterInr: r.balanceAfterInr }], null, 2));
+  saveSwiggySession({ ...session, lastBalanceInr: r.balanceAfterInr ?? undefined } as typeof session);
+}
+
+/** Rules with `spend: "instamart"` don't buy on Bitrefill: they spend the Swiggy Money balance through Swiggy's MCP. */
+async function runInstamartRule(deps: Deps, rule: Rule): Promise<{ summary: string }> {
+  const session = loadSwiggySession() as (ReturnType<typeof loadSwiggySession> & { lastBalanceInr?: number }) | null;
+  const mcp = new SwiggyMcp("instamart");
+  try {
+    return await orderOnInstamart(
+      { client: deps.client, mcp, log: deps.log },
+      { intent: rule.intent, maxInr: rule.maxInr, balanceInr: session?.lastBalanceInr ?? null },
+    );
+  } finally {
+    await mcp.close();
+  }
+}
+
 async function pass(deps: Deps, rulesFile: string, extraSignals: Set<string>) {
   const rules = loadRules(rulesFile);
   const { newDeposits, ledger } = await deps.purse.refresh();
@@ -177,9 +214,13 @@ async function pass(deps: Deps, rulesFile: string, extraSignals: Set<string>) {
     state = { ...state, lastRun: { ...state.lastRun, [f.rule.id]: Date.now() } };
     fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
     try {
-      const r = await runRule(deps, f.rule, f.reason);
+      const r = f.rule.spend === "instamart" ? { ...(await runInstamartRule(deps, f.rule)), spend: null, receiptTxid: null } : await runRule(deps, f.rule, f.reason);
       log(`agent: ${r.summary}`);
       state = { ...state, runs: [...state.runs, { at: new Date().toISOString(), ruleId: f.rule.id, reason: f.reason, summary: r.summary, spendId: r.spend?.id ?? null, receiptTxid: r.receiptTxid }] };
+      // a delivered Swiggy Money card is only useful once it sits in the funder's Swiggy balance
+      if (r.spend?.status === "delivered" && r.spend.orderId && /swiggy-money/i.test(r.spend.productId)) {
+        await redeemSwiggyMoney(deps, r.spend.orderId);
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       log(`agent failed: ${msg}`);
