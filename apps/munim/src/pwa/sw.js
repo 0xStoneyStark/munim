@@ -1,6 +1,6 @@
 // Munim service worker: network-first, shell cached only as an offline fallback.
 // Never caches API, POST, OAuth, Swiggy, export or verify traffic.
-const CACHE = "munim-shell-v1";
+const CACHE = "munim-shell-v2";
 const SHELL = ["/", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png", "/icon.svg"];
 const NEVER = [/^\/api(\/|$)/, /^\/oauth/, /^\/swiggy/, /^\/export\.csv$/, /^\/verify/, /^\/login/, /^\/logout/, /^\/health/];
 
@@ -23,6 +23,9 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   if (NEVER.some((re) => re.test(url.pathname))) return;
   const cacheable = SHELL.includes(url.pathname);
+  // everything that is not part of the cached shell goes straight to the network,
+  // untouched: a failed fetch then surfaces as the browser's own error, not ERR_FAILED from us
+  if (!cacheable) return;
   event.respondWith(
     fetch(req).then(
       (res) => {

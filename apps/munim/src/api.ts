@@ -15,6 +15,7 @@ import {
   EXPLORER,
   PRIVACY,
   buildTimeline,
+  connections,
   merchants,
   proposalCards,
   swiggyLinked,
@@ -24,6 +25,7 @@ import {
 } from "./api-views.js";
 import { handleVerify } from "./verify.js";
 import type { Bitrefill } from "./bitrefill.js";
+import { loadSwiggySession, probe } from "./swiggy-money.js";
 
 export interface ApiDeps {
   readonly bitrefill: Bitrefill;
@@ -105,6 +107,7 @@ function overview(deps: ApiDeps): Record<string, unknown> {
     funders: funders(ledger),
     privacy: PRIVACY,
     swiggyLinked: swiggyLinked(deps.dataDir),
+    connections: connections(deps.dataDir),
   };
 }
 
@@ -198,11 +201,20 @@ function runAgentPass(deps: ApiDeps): { started: boolean; reason: string } {
   return { started: true, reason: "agent pass started; the timeline updates as it works" };
 }
 
+/** Live check of the saved Swiggy Money session: the "Test" button on the Connections page. */
+async function probeSwiggyMoney(): Promise<unknown> {
+  const session = loadSwiggySession();
+  if (!session) throw notFound("no Swiggy Money session saved");
+  const { alive, balanceInr, reason } = await probe(session);
+  return { alive, balanceInr, reason };
+}
+
 async function route(req: http.IncomingMessage, url: URL, deps: ApiDeps): Promise<unknown | undefined> {
   const p = url.pathname;
   if (req.method === "GET" && p === "/api") return { ...overview(deps), agentRunning: agentRunning(deps) };
   if (req.method !== "POST") return undefined;
   if (p === "/agent/run") return runAgentPass(deps);
+  if (p === "/connections/swiggy-money/probe") return probeSwiggyMoney();
   if (p.startsWith("/signal/")) return postSignal(deps, p.slice("/signal/".length));
   const proposal = /^\/proposals\/([^/]+)\/(approve|decline)$/.exec(p);
   if (proposal) return decideProposal(decodeURIComponent(proposal[1]), proposal[2] as "approve" | "decline");

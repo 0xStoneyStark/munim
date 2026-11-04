@@ -100,7 +100,8 @@
   .nav { display: flex; align-items: center; gap: 10px 14px; padding: 7px 9px 7px 8px; background: var(--card); border: 1px solid var(--line); border-radius: 999px; position: sticky; top: 12px; z-index: 30; }
   .logo-mark { display: flex; align-items: center; gap: 9px; color: var(--ink); text-decoration: none; font-weight: 700; letter-spacing: -.01em; font-size: 16px; padding-right: 6px; }
   .logo-mark svg { display: block; width: 38px; height: 38px; border-radius: 50%; }
-  .tabs { flex: 1; display: flex; justify-content: center; gap: 6px; min-width: 0; }
+  .tabs { flex: 1; display: flex; justify-content: safe center; gap: 6px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
   .tab { font-weight: 600; font-size: 14px; line-height: 1.2; display: inline-flex; align-items: center; gap: 7px; padding: 8px 17px; border-radius: 999px; background: var(--well); color: var(--ink); text-decoration: none; white-space: nowrap; flex: none; border: 1px solid transparent; transition: background .15s, border-color .15s, color .15s; }
   .tab:hover { border-color: var(--ink); text-decoration: none; }
   .tab[aria-current="page"] { background: var(--solid); color: var(--on-solid); }
@@ -312,6 +313,16 @@
   .priv dd::first-letter { text-transform: uppercase; }
   .priv-note { margin: 12px 0 0; padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; }
 
+  /* connections */
+  .conn-intro { margin: 0 0 18px; color: var(--muted); max-width: 72ch; }
+  .g-conn { grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 960px) { .g-conn { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .conn-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+  .conn-out { font-size: 13.5px; color: var(--muted); overflow-wrap: anywhere; }
+  .conn-out.ok { color: var(--ok); } .conn-out.bad { color: var(--bad); }
+  .howto { margin-top: 10px; padding: 12px 14px; background: var(--well); border: 1px solid var(--line); border-radius: 14px; }
+  .howto pre { margin: 0 0 10px; white-space: pre-wrap; overflow-wrap: anywhere; font: 12.5px/1.55 var(--mono); }
+
   /* rules */
   .rt-wrap { overflow-x: auto; }
   .rt { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -392,7 +403,7 @@
   .toast.bad { background: var(--bad); color: #fff; }
 
   /* phones: container goes edge to edge, 16px gutters */
-  @media (max-width: 860px) {
+  @media (max-width: 1240px) {
     .nav { flex-wrap: wrap; border-radius: 28px; }
     .tabs { order: 3; flex-basis: 100%; justify-content: flex-start; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
     .tabs::-webkit-scrollbar { display: none; }
@@ -449,6 +460,9 @@
   <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
   <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
   <symbol id="i-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.5"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13.5a4.5 4.5 0 0 0 6.4.4l3-3a4.5 4.5 0 0 0-6.4-6.4l-1.7 1.7"/><path d="M14 10.5a4.5 4.5 0 0 0-6.4-.4l-3 3a4.5 4.5 0 0 0 6.4 6.4l1.7-1.7"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 2.5v5M15 2.5v5"/><path d="M6 7.5h12v4a6 6 0 0 1-12 0z"/><path d="M12 17.5v4"/></symbol>
+  <symbol id="i-refresh-cw" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-15.4-6.4L3 8.2"/><path d="M3 3.5v4.7h4.7"/><path d="M3 12a9 9 0 0 0 15.4 6.4l2.6-2.6"/><path d="M21 20.5v-4.7h-4.7"/></symbol>
 </svg>
 <div class="shell">
 
@@ -471,6 +485,7 @@
       <a class="tab" id="tab-rules" href="/rules" data-view="rules">Rules</a>
       <a class="tab" id="tab-wallets" href="/wallets" data-view="wallets">Wallets</a>
       <a class="tab" id="tab-privacy" href="/privacy" data-view="privacy">Privacy</a>
+      <a class="tab" id="tab-connections" href="/connections" data-view="connections">Connections</a>
     </div>
     <div class="nav-r">
       <span id="mockFlag" class="mockflag" hidden>mock data</span>
@@ -706,6 +721,12 @@
   </footer>
     </div>
 
+    <!-- Connections -->
+    <div class="view" id="view-connections" data-view="connections" role="region" aria-label="Connections" hidden>
+      <p class="conn-intro">Everything Munim talks to, and whether each link is alive. Nothing on this page shows a key or a token.</p>
+      <div class="vgrid g-conn" id="connections"></div>
+    </div>
+
   </main>
 </div>
 
@@ -751,7 +772,7 @@ const MOCK = new URLSearchParams(location.search).get("mock") === "1";
 const ico = (name, cls) => `<svg class="ico${cls ? " " + cls : ""}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const KIND_ICON = { deposit: "lock", trigger: "clock", decision: "sparkles", purchase: "receipt", receipt: "corner-up-left", refusal: "ban", proposal: "plane", redeem: "credit-card" };
 const TONE_OK = new Set(["delivered", "complete", "completed", "paid", "linked", "active", "approved", "bought", "sent", "confirmed", "ok", "alive"]);
-const TONE_WARN = new Set(["pending", "reserved", "unpaid", "proposed", "processing", "queued"]);
+const TONE_WARN = new Set(["pending", "reserved", "unpaid", "proposed", "processing", "queued", "attention"]);
 const TONE_BAD = new Set(["failed", "refused", "error", "expired", "rejected"]);
 const PRIV_ROWS = [
   ["onchain", "On-chain", "amounts, sender and receiver of every deposit and receipt are shielded"],
@@ -1157,6 +1178,17 @@ const MOCK_DATA = (() => {
       anthropic: "shopping intents and catalog results — never keys or codes",
     },
     swiggyLinked: false,
+    connections: [
+      { id: "swiggy-mcp", name: "Swiggy (official MCP)", group: "merchant", status: "linked", detail: "expires 2026-11-09", action: { kind: "relink", label: "Re-link", href: "/swiggy/login" } },
+      { id: "bitrefill", name: "Bitrefill", group: "merchant", status: "linked", detail: "API key set · MCP + REST", action: { kind: "external", label: "Get an API key", href: "https://www.bitrefill.com/account/developers" } },
+      { id: "swiggy-money", name: "Swiggy Money session", group: "money", status: "attention", detail: "captured 2026-10-18 · balance ₹50", action: { kind: "instructions", label: "How to", text: "Capture the Swiggy Money session on the machine that runs Munim:\n1. In Chrome, sign in at https://webviews.swiggy.com/swiggy-money/voucher\n2. DevTools -> Network -> pick any chkout.swiggy.com request -> right-click -> Copy -> Copy as cURL\n3. Take the Cookie header from that cURL and run:\n   npx tsx apps/munim/src/swiggy-money.ts session-from-cookie \"<cookie>\"" } },
+      { id: "google-calendar", name: "Google Calendar", group: "calendar", status: "linked", detail: "tokens from 2026-11-03", action: { kind: "instructions", label: "How to", text: "Google consent opens a browser on the machine hosting Munim, so it cannot be finished from a phone.\n1. On the Munim machine run: npx tsx apps/munim/src/google-mcp.ts auth\n2. Copy the token files across with deploy/sync-from-laptop.sh (or .ps1)." } },
+      { id: "gmail", name: "Gmail", group: "calendar", status: "not_linked", detail: "no OAuth client file", action: { kind: "instructions", label: "How to", text: "Google consent opens a browser on the machine hosting Munim, so it cannot be finished from a phone.\n1. On the Munim machine run: npx tsx apps/munim/src/google-mcp.ts auth\n2. Copy the token files across with deploy/sync-from-laptop.sh (or .ps1)." } },
+      { id: "anthropic", name: "Claude (Sonnet 5.5)", group: "ai", status: "linked", detail: "API key set" },
+      { id: "telegram", name: "Telegram bot", group: "chat", status: "attention", detail: "send /start to the bot", action: { kind: "instructions", label: "How to", text: "1. In Telegram, message @BotFather and send /newbot, then follow the prompts.\n2. Put the token it gives you in .env as TELEGRAM_BOT_TOKEN and restart Munim.\n3. Open your new bot and send /start." } },
+      { id: "noir", name: "Noir Wallet", group: "wallet", status: "unknown", detail: "desktop Chrome extension — detected in the browser, not on the server", action: { kind: "external", label: "Get the extension", href: "https://github.com/NoirWallet/noir-wallet-sdk/releases" } },
+      { id: "zcash-purse", name: "Zcash purse (testnet)", group: "wallet", status: "linked", detail: "utest1mo…8c4 · via zec.rocks over Tor" },
+    ],
   };
 })();
 
@@ -1164,6 +1196,7 @@ async function mockApi(path, opts) {
   await new Promise((r) => setTimeout(r, 120));
   const body = opts && opts.body ? JSON.parse(opts.body) : {};
   if (path === "/api") return JSON.parse(JSON.stringify(MOCK_DATA));
+  if (path === "/connections/swiggy-money/probe") return { alive: true, balanceInr: 50, reason: null };
   if (path.startsWith("/signal/")) {
     MOCK_DATA.timeline.push({ at: new Date().toISOString(), kind: "trigger", title: `Signal ${decodeURIComponent(path.slice(8))} fired`, detail: "mock" });
     return { ok: true };
@@ -1479,8 +1512,92 @@ function renderReceipts(d) {
 }
 
 function renderExtras(d) {
-  renderChrome(d); renderPurse(d); renderSpending(d); renderArc(d); renderReceipts(d);
+  renderChrome(d); renderPurse(d); renderSpending(d); renderArc(d); renderReceipts(d); renderConnections(d);
 }
+
+/* ---------- connections page ---------- */
+const CONN_GROUPS = [["merchant", "Merchants", "credit-card"], ["money", "Money", "wallet"], ["calendar", "Calendar & mail", "clock"], ["ai", "AI", "sparkles"], ["chat", "Chat", "send"], ["wallet", "Wallets", "lock"]];
+const connOpen = new Set();      // "How to" panels the user opened; kept across the 10 s re-render
+const connProbe = {};            // id -> { busy, ok, text }
+let connList = [];
+
+/* Noir is a desktop Chrome extension: only the browser can see it, so the page overrides the server's "unknown". */
+function connWithBrowser(c) {
+  if (c.id !== "noir") return c;
+  return window.noirwallet
+    ? { ...c, status: "linked", detail: "detected in this browser" }
+    : { ...c, status: "not_linked", detail: "install the testnet build in desktop Chrome" };
+}
+
+function connActionHtml(c) {
+  const a = c.action;
+  if (!a) return "";
+  if (a.kind === "link" || a.kind === "relink") {
+    return aTag(a.href, ico(a.kind === "link" ? "link" : "refresh-cw") + esc(a.label || "Link"), a.kind === "link" ? "btn sm" : "btn ghost sm");
+  }
+  if (a.kind === "external") return aTag(a.href, esc(a.label || "Open") + ico("external-link"), "btn ghost sm");
+  if (a.kind === "instructions" && a.text) {
+    const open = connOpen.has(c.id);
+    return `<button class="btn ghost sm" type="button" data-howto="${esc(c.id)}" aria-expanded="${open}" aria-controls="howto-${esc(c.id)}">${ico(open ? "chevron-down" : "chevron-right")}${esc(a.label || "How to")}</button>`;
+  }
+  return "";
+}
+
+function connRowHtml(c) {
+  const pr = connProbe[c.id];
+  const test = c.id === "swiggy-money" && c.status !== "not_linked"
+    ? `<button class="btn ghost sm" type="button" data-probe="swiggy-money"${pr && pr.busy ? " disabled" : ""}>${ico("plug")}${pr && pr.busy ? "Testing…" : "Test"}</button>`
+      + `<span class="conn-out${pr && pr.text ? (pr.ok ? " ok" : " bad") : ""}" role="status">${pr && pr.text ? esc(pr.text) : ""}</span>` : "";
+  const acts = connActionHtml(c) + test;
+  const a = c.action;
+  const howto = a && a.kind === "instructions" && a.text
+    ? `<div class="howto" id="howto-${esc(c.id)}"${connOpen.has(c.id) ? "" : " hidden"}><pre>${esc(a.text)}</pre><button class="btn ghost sm" type="button" data-copy="${esc(c.id)}">${ico("copy")}Copy</button></div>` : "";
+  return `<article class="mcard" data-conn="${esc(c.id)}"><div class="m-top"><span class="m-label">${esc(c.name)}</span>${chip(c.status)}</div>`
+    + (c.detail ? `<div class="m-detail">${esc(c.detail)}</div>` : "")
+    + (acts ? `<div class="conn-acts">${acts}</div>` : "") + howto + `</article>`;
+}
+
+function renderConnections(d) {
+  connList = arr(d.connections).map(connWithBrowser);
+  $("connections").innerHTML = CONN_GROUPS.map(([g, label, icon]) => {
+    const rows = connList.filter((c) => c.group === g);
+    if (!rows.length) return "";
+    const linked = rows.filter((c) => c.status === "linked").length;
+    return `<section class="card" aria-labelledby="h-conn-${g}"><div class="card-h"><h2 id="h-conn-${g}">${ico(icon)}${esc(label)}</h2><span class="meta">${linked} of ${rows.length} linked</span></div>`
+      + `<div class="mlist">${rows.map(connRowHtml).join("")}</div></section>`;
+  }).join("") || `<p class="empty">No connection data yet.</p>`;
+}
+
+$("connections").addEventListener("click", async (ev) => {
+  const how = ev.target.closest("button[data-howto]");
+  if (how) {
+    const id = how.dataset.howto;
+    if (connOpen.has(id)) connOpen.delete(id); else connOpen.add(id);
+    if (data) renderConnections(data);
+    return;
+  }
+  const cp = ev.target.closest("button[data-copy]");
+  if (cp) {
+    const c = connList.find((x) => x.id === cp.dataset.copy);
+    try { await navigator.clipboard.writeText(c && c.action ? c.action.text || "" : ""); toast("Copied."); }
+    catch (e) { toast("Copy failed. Select the text and copy it by hand.", true); }
+    return;
+  }
+  const pb = ev.target.closest("button[data-probe]");
+  if (!pb) return;
+  const id = pb.dataset.probe;
+  connProbe[id] = { busy: true, ok: false, text: "" };
+  renderConnections(data || {});
+  try {
+    const r = await post(`/connections/${encodeURIComponent(id)}/probe`);
+    connProbe[id] = r && r.alive
+      ? { busy: false, ok: true, text: `alive · balance ${r.balanceInr == null ? "unknown" : inr(r.balanceInr)}` }
+      : { busy: false, ok: false, text: `not alive · ${(r && r.reason) || "no reason given"}` };
+  } catch (e) {
+    connProbe[id] = { busy: false, ok: false, text: e.message || "Test failed" };
+  }
+  renderConnections(data || {});
+});
 
 /* timeline search: client-side, survives every re-render */
 const tlSearch = $("tlSearch");
@@ -1512,8 +1629,8 @@ renderTimeline = function (d) { baseRenderTimeline(d); applyTlFilter(); };
 const baseRender = render;
 render = function (d) { baseRender(d); try { renderExtras(d); } catch (e) { console.error("extras failed", e); } };
 
-/* pages: /, /approvals, /rules, /wallets, /privacy all serve this file; the path picks the one view that is shown */
-const VIEW_PATHS = { timeline: "/", approvals: "/approvals", rules: "/rules", wallets: "/wallets", privacy: "/privacy" };
+/* pages: /, /approvals, /rules, /wallets, /privacy, /connections all serve this file; the path picks the one view that is shown */
+const VIEW_PATHS = { timeline: "/", approvals: "/approvals", rules: "/rules", wallets: "/wallets", privacy: "/privacy", connections: "/connections" };
 const viewFromPath = (p) => {
   const seg = String(p || "/").replace(/\/+$/, "").split("/").pop().toLowerCase();
   return Object.prototype.hasOwnProperty.call(VIEW_PATHS, seg) ? seg : "timeline";

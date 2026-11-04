@@ -323,3 +323,167 @@ export function merchants(dataDir: string, ledger: Ledger): Merchant[] {
 export function swiggyLinked(dataDir: string): boolean {
   return fs.existsSync(path.join(dataDir, "swiggy-tokens.json"));
 }
+
+// --------------------------------------------------------------- connections
+
+export type ConnectionGroup = "merchant" | "money" | "calendar" | "ai" | "chat" | "wallet";
+export type ConnectionStatus = "linked" | "not_linked" | "attention" | "unknown";
+
+export interface ConnectionAction {
+  kind: "link" | "relink" | "instructions" | "external";
+  label: string;
+  href?: string;
+  text?: string;
+}
+
+export interface Connection {
+  id: string;
+  name: string;
+  group: ConnectionGroup;
+  status: ConnectionStatus;
+  /** One line for the page. Never contains a secret or token value. */
+  detail: string;
+  action?: ConnectionAction;
+}
+
+const DAY_MS = 86_400_000;
+const SWIGGY_SESSION_STALE_DAYS = 14;
+const GOOGLE_TOKEN_STALE_DAYS = 6; // Google test-mode refresh tokens expire after 7 days
+const ADDR_HEAD = 8;
+const BITREFILL_DEV_URL = "https://www.bitrefill.com/account/developers";
+const NOIR_RELEASES_URL = "https://github.com/NoirWallet/noir-wallet-sdk/releases";
+
+const SWIGGY_SESSION_HOWTO = [
+  "Capture the Swiggy Money session on the machine that runs Munim:",
+  "1. In Chrome, sign in at https://webviews.swiggy.com/swiggy-money/voucher",
+  "2. DevTools -> Network -> pick any chkout.swiggy.com request -> right-click -> Copy -> Copy as cURL",
+  "3. Take the Cookie header from that cURL and run:",
+  '   npx tsx apps/munim/src/swiggy-money.ts session-from-cookie "<cookie>"',
+].join("\n");
+
+const GOOGLE_HOWTO = [
+  "Google consent opens a browser on the machine hosting Munim (callbacks on localhost:3500 and :3000), so it cannot be finished from a phone.",
+  "1. On the Munim machine run: npx tsx apps/munim/src/google-mcp.ts auth",
+  "2. Approve Calendar and Gmail in the browser window that opens.",
+  "3. If Munim runs on a server, copy the new token files across with deploy/sync-from-laptop.sh (or .ps1).",
+  "Google test-mode tokens expire after 7 days, so repeat this weekly.",
+].join("\n");
+
+const TELEGRAM_HOWTO = [
+  "1. In Telegram, message @BotFather and send /newbot, then follow the prompts.",
+  "2. Put the token it gives you in .env as TELEGRAM_BOT_TOKEN and restart Munim.",
+  "3. Open your new bot and send /start. The first chat to do so becomes the only one allowed.",
+].join("\n");
+
+const dayOf = (ms: number): string => isoDay(new Date(ms));
+const isSet = (name: string): boolean => (process.env[name] ?? "").trim() !== "";
+
+function readJsonObject(file: string): Record<string, unknown> | null {
+  try {
+    const parsed: unknown = JSON.parse(fs.readFileSync(file, "utf8"));
+    return typeof parsed === "object" && parsed !== null ? (parsed as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
+}
+
+function swiggyMcpConnection(dataDir: string): Connection {
+  const base = { id: "swiggy-mcp", name: "Swiggy (official MCP)", group: "merchant" } as const;
+  const tokens = readJsonObject(path.join(dataDir, "swiggy-tokens.json"));
+  if (!tokens) return { ...base, status: "not_linked", detail: "sign in with your Swiggy OTP once", action: { kind: "link", label: "Link", href: "/swiggy/login" } };
+  const expiresAt = typeof tokens.expires_at === "number" ? tokens.expires_at : null;
+  // accessToken() refreshes on demand, so only an expired token with nothing to refresh it needs the human.
+  const dead = expiresAt !== null && expiresAt < Date.now() && !tokens.refresh_token;
+  return {
+    ...base,
+    status: dead ? "attention" : "linked",
+    detail: expiresAt === null ? "linked" : `${dead ? "expired" : "expires"} ${dayOf(expiresAt)}`,
+    action: { kind: "relink", label: "Re-link", href: "/swiggy/login" },
+  };
+}
+
+function swiggyMoneyConnection(dataDir: string): Connection {
+  const base = { id: "swiggy-money", name: "Swiggy Money session", group: "money" } as const;
+  const action: ConnectionAction = { kind: "instructions", label: "How to", text: SWIGGY_SESSION_HOWTO };
+  const session = readJsonObject(path.join(dataDir, "swiggy-session.json"));
+  if (!session) return { ...base, status: "not_linked", detail: "no session captured yet", action };
+  const captured = typeof session.capturedAt === "string" ? Date.parse(session.capturedAt) : NaN;
+  const parts = [Number.isNaN(captured) ? "captured (date unknown)" : `captured ${dayOf(captured)}`];
+  if (typeof session.lastBalanceInr === "number") parts.push(`balance ₹${session.lastBalanceInr}`);
+  const stale = !Number.isNaN(captured) && Date.now() - captured > SWIGGY_SESSION_STALE_DAYS * DAY_MS;
+  return { ...base, status: stale ? "attention" : "linked", detail: parts.join(" · "), action };
+}
+
+interface GoogleSpec {
+  id: string;
+  name: string;
+  tokenEnv: string;
+  tokenFile: string;
+}
+
+function googleConnection(dataDir: string, spec: GoogleSpec): Connection {
+  const base = { id: spec.id, name: spec.name, group: "calendar" } as const;
+  const action: ConnectionAction = { kind: "instructions", label: "How to", text: GOOGLE_HOWTO };
+  const credentials = process.env.GOOGLE_OAUTH_CREDENTIALS || path.join(dataDir, "google-credentials.json");
+  if (!fs.existsSync(credentials)) return { ...base, status: "not_linked", detail: "no OAuth client file", action };
+  const tokenFile = process.env[spec.tokenEnv] || path.join(dataDir, spec.tokenFile);
+  if (!fs.existsSync(tokenFile) || fs.statSync(tokenFile).size === 0) return { ...base, status: "not_linked", detail: "not authorised yet", action };
+  const mtime = fs.statSync(tokenFile).mtimeMs;
+  const stale = Date.now() - mtime > GOOGLE_TOKEN_STALE_DAYS * DAY_MS;
+  return { ...base, status: stale ? "attention" : "linked", detail: `tokens from ${dayOf(mtime)}${stale ? " · likely expired, re-run consent" : ""}`, action };
+}
+
+function telegramConnection(dataDir: string): Connection {
+  const base = { id: "telegram", name: "Telegram bot", group: "chat" } as const;
+  const action: ConnectionAction = { kind: "instructions", label: "How to", text: TELEGRAM_HOWTO };
+  if (!isSet("TELEGRAM_BOT_TOKEN")) return { ...base, status: "not_linked", detail: "TELEGRAM_BOT_TOKEN not set", action };
+  const stateFile = process.env.TELEGRAM_STATE_FILE || path.join(dataDir, "telegram-state.json");
+  const chats = readJsonObject(stateFile)?.chats;
+  if (Array.isArray(chats) && chats.length > 0) return { ...base, status: "linked", detail: `bot token set · ${chats.length} chat${chats.length === 1 ? "" : "s"} registered`, action };
+  return { ...base, status: "attention", detail: "send /start to the bot", action };
+}
+
+function purseConnection(dataDir: string): Connection {
+  const base = { id: "zcash-purse", name: "Zcash purse (testnet)", group: "wallet" } as const;
+  const address = readJsonObject(path.join(dataDir, "ledger.json"))?.address;
+  if (typeof address !== "string" || address === "") return { ...base, status: "not_linked", detail: "agent not started yet, no purse address" };
+  const short = `${address.slice(0, ADDR_HEAD)}…${address.slice(-ADDR_TAIL)}`;
+  return { ...base, status: "linked", detail: `${short} · via zec.rocks${process.env.PURSE_CONNECTION === "tor" ? " over Tor" : ""}` };
+}
+
+/** Every external link Munim depends on, with a one-line state. Reads files and env only; never returns a secret. */
+export function connections(dataDir: string): Connection[] {
+  const bitrefillSet = isSet("BITREFILL_API_KEY");
+  const anthropicSet = isSet("ANTHROPIC_API_KEY");
+  return [
+    swiggyMcpConnection(dataDir),
+    {
+      id: "bitrefill",
+      name: "Bitrefill",
+      group: "merchant",
+      status: bitrefillSet ? "linked" : "not_linked",
+      detail: bitrefillSet ? "API key set · MCP + REST" : "BITREFILL_API_KEY not set",
+      action: { kind: "external", label: "Get an API key", href: BITREFILL_DEV_URL },
+    },
+    swiggyMoneyConnection(dataDir),
+    googleConnection(dataDir, { id: "google-calendar", name: "Google Calendar", tokenEnv: "GOOGLE_CALENDAR_MCP_TOKEN_PATH", tokenFile: "google-calendar-tokens.json" }),
+    googleConnection(dataDir, { id: "gmail", name: "Gmail", tokenEnv: "GMAIL_CREDENTIALS_PATH", tokenFile: "gmail-credentials.json" }),
+    {
+      id: "anthropic",
+      name: "Claude (Sonnet 5.5)",
+      group: "ai",
+      status: anthropicSet ? "linked" : "not_linked",
+      detail: anthropicSet ? "API key set" : "ANTHROPIC_API_KEY not set",
+    },
+    telegramConnection(dataDir),
+    {
+      id: "noir",
+      name: "Noir Wallet",
+      group: "wallet",
+      status: "unknown",
+      detail: "desktop Chrome extension — detected in the browser, not on the server",
+      action: { kind: "external", label: "Get the extension", href: NOIR_RELEASES_URL },
+    },
+    purseConnection(dataDir),
+  ];
+}
