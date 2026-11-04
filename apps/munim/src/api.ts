@@ -105,7 +105,7 @@ function overview(deps: ApiDeps): Record<string, unknown> {
     runs,
     lastRun: readJson<{ lastRun?: Record<string, number> }>(path.join(deps.dataDir, "agent-state.json"), {}).lastRun ?? {},
     timeline: buildTimeline({ ledger, runs, proposals, redeems }),
-    proposals: proposalCards(proposals),
+    proposals: [...proposalCards(proposals), ...chatCards(deps, ledger)],
     merchants: merchants(deps.dataDir, ledger),
     funders: funders(ledger),
     privacy: PRIVACY,
@@ -305,6 +305,68 @@ async function deleteAddress(req: http.IncomingMessage): Promise<unknown> {
   return { ok: /success/i.test(text), raw: text.slice(0, 300) };
 }
 
+// ---------------------------------------------------------------------- chat proposals (shop from chat)
+// A chat line becomes a one-off rule with a private signal trigger plus a card in Approvals.
+// Approve fires that signal: the normal agent pass, cap check, Bitrefill and receipt path do the rest.
+
+interface ChatProposal {
+  id: string;
+  createdAt: string;
+  text: string;
+  readback: string;
+  ruleId: string;
+  maxInr: number;
+  status: "proposed" | "approved" | "declined";
+  decidedAt?: string;
+}
+
+function chatFile(deps: ApiDeps): string { return path.join(deps.dataDir, "chat-proposals.json"); }
+function loadChat(deps: ApiDeps): ChatProposal[] { return readJson<ChatProposal[]>(chatFile(deps), []); }
+function saveChat(deps: ApiDeps, list: ChatProposal[]): void { fs.writeFileSync(chatFile(deps), JSON.stringify(list, null, 2)); }
+
+const chatBody = z.object({ text: z.string().trim().min(3).max(400) });
+
+async function postChat(deps: ApiDeps, req: http.IncomingMessage): Promise<unknown> {
+  const { text } = await readBody(req, chatBody);
+  const existing = readRules(deps.rulesFile);
+  let proposal;
+  try {
+    proposal = await proposeRule(deps.client, `${text}. Do this once, when I say so.`, existing);
+  } catch (e) {
+    throw new ApiError(502, e instanceof Error ? e.message : String(e));
+  }
+  const id = `chat-${Date.now().toString(36)}`;
+  const rule = { ...proposal.rule, id, trigger: { signal: id } };
+  saveRules(deps.rulesFile, [...existing.filter((r) => r.id !== id), rule]);
+  const entry: ChatProposal = { id, createdAt: new Date().toISOString(), text, readback: proposal.readback, ruleId: id, maxInr: Number(rule.maxInr) || 0, status: "proposed" };
+  saveChat(deps, [...loadChat(deps), entry]);
+  return { ok: true, proposal: entry, warnings: proposal.warnings ?? [] };
+}
+
+function decideChat(deps: ApiDeps, id: string, action: "approve" | "decline"): unknown {
+  const list = loadChat(deps);
+  const entry = list.find((p) => p.id === id);
+  if (!entry) throw notFound(`no chat proposal ${id}`);
+  if (entry.status !== "proposed") throw badRequest(`already ${entry.status}`);
+  const next: ChatProposal = { ...entry, status: action === "approve" ? "approved" : "declined", decidedAt: new Date().toISOString() };
+  saveChat(deps, list.map((p) => (p.id === id ? next : p)));
+  if (action === "approve") {
+    const fired = fireRule(deps, entry.ruleId) as { started: boolean; reason: string };
+    return { ok: true, proposal: next, fired };
+  }
+  saveRules(deps.rulesFile, readRules(deps.rulesFile).filter((r) => r.id !== entry.ruleId));
+  return { ok: true, proposal: next };
+}
+
+/** Cards in the same shape the Approvals page already renders for eSIM proposals. */
+function chatCards(deps: ApiDeps, ledger: Ledger): Array<Record<string, unknown>> {
+  return loadChat(deps).map((p) => {
+    const spend = ledger.spends.find((s) => (s as { ruleId?: string }).ruleId === p.ruleId && s.status === "delivered");
+    const status = p.status === "approved" && spend ? "bought" : p.status;
+    return { id: p.id, createdAt: p.createdAt, kind: "chat", title: p.readback, sub: `you said: “${p.text}”`, detail: `you said: “${p.text}”`, price: p.maxInr ? `up to ₹${p.maxInr}` : "inside the cap", status, invoiceId: spend?.invoiceId };
+  });
+}
+
 async function route(req: http.IncomingMessage, url: URL, deps: ApiDeps): Promise<unknown | undefined> {
   const p = url.pathname;
   if (req.method === "GET" && p === "/api") return { ...overview(deps), agentRunning: agentRunning(deps) };
@@ -317,7 +379,8 @@ async function route(req: http.IncomingMessage, url: URL, deps: ApiDeps): Promis
   if (p === "/connections/swiggy/addresses/delete") return deleteAddress(req);
   if (p.startsWith("/signal/")) return postSignal(deps, p.slice("/signal/".length));
   const proposal = /^\/proposals\/([^/]+)\/(approve|decline)$/.exec(p);
-  if (proposal) return decideProposal(decodeURIComponent(proposal[1]), proposal[2] as "approve" | "decline");
+  if (proposal) { const pid = decodeURIComponent(proposal[1]); const verb = proposal[2] as "approve" | "decline"; return pid.startsWith("chat-") ? decideChat(deps, pid, verb) : decideProposal(pid, verb); }
+  if (p === "/chat") return postChat(deps, req);
   if (p === "/rules/propose") return postPropose(deps, req);
   if (p === "/rules/commit") return postCommit(deps, req);
   if (p === "/rules/delete") return postDelete(deps, req);

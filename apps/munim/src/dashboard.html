@@ -626,6 +626,12 @@
 
     <!-- Approvals: its own page, full width -->
     <div class="view" id="view-approvals" data-view="approvals" role="region" aria-label="Approvals" hidden>
+      <section class="card" id="chatSec" aria-labelledby="h-chat">
+        <div class="card-h"><h2 id="h-chat"><svg class="ico" aria-hidden="true"><use href="#i-send"/></svg>Ask Munim</h2><span class="meta">shop from chat · one approval, inside the cap</span></div>
+        <p class="hint">Say what to buy. Munim drafts the exact purchase as a card below; nothing is bought until you tap Approve.</p>
+        <textarea id="chatText" class="in" rows="2" placeholder="Send Riya a ₹200 Zomato card"></textarea>
+        <div class="add-row"><button id="chatSend" class="btn" type="button">Draft it</button><span id="chatMsg" class="msg" role="alert"></span></div>
+      </section>
       <section class="card c-inbox" id="inboxSec" aria-labelledby="h-inbox">
         <div class="card-h" id="apprTile">
           <h2 id="h-inbox"><svg class="ico" aria-hidden="true"><use href="#i-bell"/></svg>Approvals <span class="badge" id="apprBadge">0</span></h2>
@@ -2177,6 +2183,20 @@ $("addrList") && $("addrList").addEventListener("click", async (ev) => {
   b.disabled = true;
   try { await post("/connections/swiggy/addresses/delete", { addressId: b.dataset.addrDel }); toast("Address deleted."); await loadAddresses(true); }
   catch (e) { b.disabled = false; toast("Could not delete: " + (e.message || e), true); }
+});
+/* ---------- shop from chat: a line of text becomes a proposal in Approvals ---------- */
+$("chatSend") && $("chatSend").addEventListener("click", async () => {
+  const text = $("chatText").value.trim(); const msg = $("chatMsg");
+  if (!text) { msg.textContent = "Say what to buy."; return; }
+  $("chatSend").disabled = true; msg.textContent = "Drafting…";
+  try {
+    if (MOCK) { toast("Drafted (mock)."); msg.textContent = ""; return; }
+    const r = await post("/chat", { text });
+    msg.textContent = ""; $("chatText").value = "";
+    toast("Drafted. Approve it below to buy.");
+    await load();
+  } catch (e) { msg.textContent = e.message || "failed"; toast("Could not draft: " + (e.message || e), true); }
+  finally { $("chatSend").disabled = false; }
 });
 function showView(name, scroll) {
   if (name === "rules") loadAddresses(false);
