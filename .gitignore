@@ -5,3 +5,12 @@ wallets/
 tools/
 data/
 *.log
+
+walkthrough/node_modules/
+walkthrough/out/
+walkthrough/vo/
+walkthrough/verify/
+walkthrough/*.mp4
+walkthrough/*.webm
+walkthrough/timeline.json
+walkthrough/scene-durs.json

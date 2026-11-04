@@ -17,7 +17,7 @@ const PHONE_LOCAL_DIGITS = 10;
 const DEFAULT_COUNTRY_CODE = "91";
 const SWIGGY_FUND_HINT = "redeem a Swiggy Money card to fund";
 
-export type TimelineKind = "deposit" | "purchase" | "receipt" | "trigger" | "decision" | "refusal" | "proposal" | "redeem";
+export type TimelineKind = "deposit" | "purchase" | "receipt" | "trigger" | "decision" | "refusal" | "proposal" | "redeem" | "order";
 
 export interface TimelineItem {
   at: string;
@@ -108,17 +108,41 @@ function isRefusal(summary: string): boolean {
   return lower.includes("exceeds remaining cap") || lower.includes("refused");
 }
 
+// An Instamart order shows up only in the agent's prose summary, so it is read back out of it.
+const DECISION_DETAIL_CHARS = 160;
+const ORDER_ID_PRIMARY = /Order ID:?\s*([0-9]{8,})/i;
+const ORDER_ID_FALLBACK = /order (?:id|ref)\W*([A-Za-z0-9-]{6,})/i;
+const ORDER_TOTAL = /(?:total|bill|amount|paid|to pay)\b[^₹\n\d]{0,25}(?:₹|Rs\.?|INR)\s?([0-9][0-9,]*(?:\.[0-9]+)?)/i;
+const ORDER_TOTAL_AFTER_ORDER = /order[^.\n₹]{0,40}?(?:₹|Rs\.?|INR)\s?([0-9][0-9,]*(?:\.[0-9]+)?)/i;
+const ORDER_ITEM = /\b(\d{1,3})\s*[×x]\s+([^,;.\n(]{2,50}?)(?=\s+and\s+\d|\s+(?:on|from|via|with|paid|for|at)\b|\s*[,;.(\n]|$)/g;
+const ORDER_ITEMS_MAX = 3;
+const SWIGGY_MONEY = /swiggy\s*money|swiggy\s*pay/i;
+
+function orderIdOf(summary: string): string | null {
+  if (!/instamart/i.test(summary)) return null;
+  return (ORDER_ID_PRIMARY.exec(summary) ?? ORDER_ID_FALLBACK.exec(summary))?.[1] ?? null;
+}
+
+function orderDetail(summary: string): string {
+  const items = [...summary.matchAll(ORDER_ITEM)].slice(0, ORDER_ITEMS_MAX).map((m) => `${m[1]} × ${m[2]!.trim()}`);
+  const total = (ORDER_TOTAL.exec(summary) ?? ORDER_TOTAL_AFTER_ORDER.exec(summary))?.[1];
+  const parts = [...(items.length ? [items.join(", ")] : []), ...(total ? [`₹${total}`] : []), ...(SWIGGY_MONEY.test(summary) ? ["paid with Swiggy Money"] : [])];
+  return parts.length ? parts.join(" · ") : "placed on Instamart";
+}
+
+const clip = (text: string, max: number): string => (text.length > max ? `${text.slice(0, max).trimEnd()}…` : text);
+
 function runItems(runs: AgentRun[]): Ranked[] {
-  return runs.flatMap((r): Ranked[] => [
-    { at: r.at, kind: "trigger", title: `Rule ${r.ruleId} fired (${r.reason})`, detail: "", rank: 0 },
-    {
-      at: r.at,
-      kind: isRefusal(r.summary) ? "refusal" : "decision",
-      title: `Rule ${r.ruleId}`,
-      detail: r.summary,
-      rank: 1,
-    },
-  ]);
+  return runs.flatMap((r): Ranked[] => {
+    const orderId = isRefusal(r.summary) ? null : orderIdOf(r.summary);
+    const trigger: Ranked = { at: r.at, kind: "trigger", title: `Rule ${r.ruleId} fired (${r.reason})`, detail: "", rank: 0 };
+    if (orderId === null) return [trigger, { at: r.at, kind: isRefusal(r.summary) ? "refusal" : "decision", title: `Rule ${r.ruleId}`, detail: r.summary, rank: 1 }];
+    return [
+      trigger,
+      { at: r.at, kind: "decision", title: `Rule ${r.ruleId}`, detail: clip(r.summary, DECISION_DETAIL_CHARS), rank: 1 },
+      { at: r.at, kind: "order", title: `Instamart order ${orderId}`, detail: orderDetail(r.summary), status: "placed", rank: 2 },
+    ];
+  });
 }
 
 function proposalItems(proposals: Proposal[]): Ranked[] {

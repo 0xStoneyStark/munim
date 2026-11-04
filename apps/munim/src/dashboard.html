@@ -441,7 +441,55 @@
     .nav-r [aria-label="Settings"] { display: none; }
     .mockflag { padding: 0 7px; font-size: 10px; }
   }
+  /* agent running: header pill, button spinner, approved-card state, order glyph */
+  .agent { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; color: var(--ink); background: color-mix(in srgb, var(--gold) 20%, transparent); border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent); }
+  .agent::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--gold); animation: agentPulse 1.4s ease-out infinite; }
+  @keyframes agentPulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--gold) 70%, transparent); } 100% { box-shadow: 0 0 0 9px color-mix(in srgb, var(--gold) 0%, transparent); } }
+  .spin { width: 14px; height: 14px; flex: none; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; display: inline-block; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .btn.busy[disabled] { opacity: .85; cursor: progress; }
+  .toast { border-radius: 22px; }
+  .pcard.decided { border-left: 4px solid var(--warn); }
+  .pcard.decided.done { border-left-color: var(--ok); }
+  .p-state { margin-top: 12px; }
+  .p-state .chip { white-space: normal; text-transform: none; letter-spacing: 0; font-size: 12.5px; line-height: 1.3; padding: 6px 12px 6px 10px; border-radius: 14px; }
+  .p-state .chip .spin { width: 12px; height: 12px; border-width: 2px; }
+  .k-order .glyph { color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, var(--card)); border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); }
+
+  /* Swiggy Money wallet card: the purse card's twin, in the brand orange */
+  .vc-swg { background: linear-gradient(155deg, #FC8019, #E5600A); color: #FFFFFF; }
+  .vc-swg::before, .vc-swg::after { border-color: rgba(255, 255, 255, .16); }
+  .vc-swg .vc-brand { color: #FFFFFF; font-size: 12px; line-height: 1.25; }
+  .swg-bal .num { margin-top: 2px; }
+  .swg-bad { color: var(--warn); font-size: 14px; font-weight: 600; line-height: 1.35; margin-top: 4px; }
+  .swg-rows { margin-top: 16px; border-top: 1px solid var(--line); }
+  .swg-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 11px 2px; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .swg-row .k { flex: none; color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  .swg-row .v { min-width: 0; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .swg-row .v.none { color: var(--muted); font-weight: 400; }
+  .swg-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
+  /* phone tab bar: under 720px the top pills give way to a fixed bottom bar */
+  .tabbar, .sheet, .sheet-back { display: none; }
+  @media (max-width: 719.98px) {
+    .tabs { display: none; }
+    .live .lt, .rbtn.avatar { display: none; }
+    body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)); }
+    .toast { bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
+    .tabbar { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: var(--card); border-top: 1px solid var(--line); padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px)); }
+    .bar-i { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 56px; padding: 4px 2px 9px; font: inherit; font-size: 11px; font-weight: 600; line-height: 1.1; color: var(--muted); background: none; border: 0; border-radius: 14px; text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .bar-i .ico { width: 22px; height: 22px; }
+    .bar-i:hover { color: var(--ink); text-decoration: none; }
+    .bar-i[aria-current="page"], .bar-i.on, .bar-i[aria-expanded="true"] { color: var(--ink); }
+    .bar-i[aria-current="page"]::after, .bar-i.on::after { content: ""; position: absolute; bottom: 2px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--gold); }
+    .bar-i .tcount { position: absolute; top: 3px; left: calc(50% + 6px); min-width: 17px; height: 17px; font-size: 10px; }
+    .sheet-back { display: block; position: fixed; inset: 0; z-index: 44; background: rgba(17, 18, 20, .45); }
+    .sheet { display: grid; gap: 2px; position: fixed; left: 8px; right: 8px; bottom: calc(80px + env(safe-area-inset-bottom, 0px)); z-index: 45; padding: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 20px 50px -16px rgba(0, 0, 0, .45); }
+    .sheet a { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 12px 14px; border-radius: 14px; color: var(--ink); font-weight: 600; text-decoration: none; }
+    .sheet a:hover, .sheet a[aria-current="page"] { background: var(--well); }
+  }
   @media (prefers-reduced-motion: reduce) {
+    .agent::before, .spin { animation: none !important; }
     html { scroll-behavior: auto; }
     *, *::before, *::after { transition: none !important; }
   }
@@ -473,6 +521,9 @@
   <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></symbol>
   <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
   <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-shopping-cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></symbol>
+  <symbol id="i-sliders-horizontal" viewBox="0 0 24 24"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/></symbol>
+  <symbol id="i-ellipsis" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
   <symbol id="i-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.5"/></symbol>
   <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13.5a4.5 4.5 0 0 0 6.4.4l3-3a4.5 4.5 0 0 0-6.4-6.4l-1.7 1.7"/><path d="M14 10.5a4.5 4.5 0 0 0-6.4-.4l-3 3a4.5 4.5 0 0 0 6.4 6.4l1.7-1.7"/></symbol>
   <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 2.5v5M15 2.5v5"/><path d="M6 7.5h12v4a6 6 0 0 1-12 0z"/><path d="M12 17.5v4"/></symbol>
@@ -503,6 +554,7 @@
     </div>
     <div class="nav-r">
       <span id="mockFlag" class="mockflag" hidden>mock data</span>
+      <span id="agentPill" class="agent" role="status" hidden>Agent working…</span>
       <span id="live" class="live" role="status">connecting</span>
       <button class="rbtn" type="button" aria-label="Settings" title="Settings"><svg class="ico" aria-hidden="true"><use href="#i-gear"/></svg></button>
       <a class="rbtn bell" id="bell" href="/approvals" aria-label="Approvals inbox" title="Approvals"><svg class="ico" aria-hidden="true"><use href="#i-bell"/></svg></a>
@@ -647,6 +699,31 @@
       </div>
     </section>
 
+    <section class="card c-swiggy" id="swgCard" aria-labelledby="h-swg">
+      <div class="card-h"><h2 id="h-swg"><svg class="ico" aria-hidden="true"><use href="#i-shopping-cart"/></svg>Swiggy Money</h2><span class="meta">Instamart wallet</span></div>
+      <div class="vcard">
+        <div class="vc-gold vc-swg">
+          <span class="vc-brand">Swiggy Money · household balance</span>
+          <svg class="vc-nfc" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-shopping-cart"/></svg>
+        </div>
+        <div class="vc-white swg-bal">
+          <div>
+            <div class="lbl">Balance</div>
+            <div class="num sm" id="swgBal" aria-live="polite">—</div>
+            <div class="swg-bad" id="swgBad" hidden></div>
+          </div>
+        </div>
+      </div>
+      <div class="swg-rows">
+        <div class="swg-row"><span class="k">Last redeem</span><span class="v none" id="swgRedeem">none yet</span></div>
+        <div class="swg-row"><span class="k">Last order</span><span class="v none" id="swgOrder">none yet</span></div>
+      </div>
+      <div class="swg-acts">
+        <button class="btn ghost sm" type="button" id="swgRefresh"><svg class="ico" aria-hidden="true"><use href="#i-refresh-cw"/></svg>Refresh</button>
+        <button class="btn sm" type="button" id="swgTopup" hidden>Top up</button>
+      </div>
+    </section>
+
     <section class="card c-spend" aria-labelledby="h-spend">
       <div class="card-h"><h2 id="h-spend">Spending</h2><span class="meta">by product</span></div>
       <div class="num" id="spent">—</div>
@@ -738,6 +815,10 @@
     <!-- Connections -->
     <div class="view" id="view-connections" data-view="connections" role="region" aria-label="Connections" hidden>
       <p class="conn-intro">Everything Munim talks to, and whether each link is alive. Nothing on this page shows a key or a token.</p>
+      <section class="card" id="push-card" aria-labelledby="h-push"><div class="card-h"><h2 id="h-push"><svg class="ico" aria-hidden="true"><use href="#i-bell"/></svg>Notifications</h2><span class="meta" id="push-meta">checking…</span></div>
+        <div class="m-detail" id="push-detail">Get a notification on this phone when a rule fires, a purchase lands or something needs your approval.</div>
+        <div class="conn-acts"><button class="btn sm" type="button" id="push-enable" hidden>Enable notifications</button><button class="btn ghost sm" type="button" id="push-test" hidden>Send a test</button></div>
+      </section>
       <div class="vgrid g-conn" id="connections"></div>
     </div>
 
@@ -771,6 +852,19 @@
   </div>
 </dialog>
 
+<nav class="tabbar" id="bar" aria-label="Primary, phone">
+  <a class="bar-i" id="bar-timeline" href="/" data-view="timeline"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span>Timeline</span></a>
+  <a class="bar-i" id="bar-approvals" href="/approvals" data-view="approvals"><svg class="ico" aria-hidden="true"><use href="#i-bell"/></svg><span>Approvals</span><span class="tcount" id="barBadge" hidden>0</span></a>
+  <a class="bar-i" id="bar-rules" href="/rules" data-view="rules"><svg class="ico" aria-hidden="true"><use href="#i-sliders-horizontal"/></svg><span>Rules</span></a>
+  <a class="bar-i" id="bar-wallets" href="/wallets" data-view="wallets"><svg class="ico" aria-hidden="true"><use href="#i-wallet"/></svg><span>Wallets</span></a>
+  <button class="bar-i" id="barMore" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="moreSheet"><svg class="ico" aria-hidden="true"><use href="#i-ellipsis"/></svg><span>More</span></button>
+</nav>
+<div class="sheet-back" id="sheetBack" hidden></div>
+<div class="sheet" id="moreSheet" role="dialog" aria-label="More pages" hidden>
+  <a href="/privacy" data-view="privacy"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg>Privacy</a>
+  <a href="/connections" data-view="connections"><svg class="ico" aria-hidden="true"><use href="#i-plug"/></svg>Connections</a>
+</div>
+
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -784,8 +878,8 @@ const short = (h) => (h && String(h).length > 18 ? String(h).slice(0, 8) + "…"
 const MOCK = new URLSearchParams(location.search).get("mock") === "1";
 
 const ico = (name, cls) => `<svg class="ico${cls ? " " + cls : ""}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
-const KIND_ICON = { deposit: "lock", trigger: "clock", decision: "sparkles", purchase: "receipt", receipt: "corner-up-left", refusal: "ban", proposal: "plane", redeem: "credit-card" };
-const TONE_OK = new Set(["delivered", "complete", "completed", "paid", "linked", "active", "approved", "bought", "sent", "confirmed", "ok", "alive"]);
+const KIND_ICON = { deposit: "lock", trigger: "clock", decision: "sparkles", purchase: "receipt", receipt: "corner-up-left", refusal: "ban", proposal: "plane", redeem: "credit-card", order: "shopping-cart" };
+const TONE_OK = new Set(["delivered", "complete", "completed", "paid", "linked", "active", "approved", "bought", "sent", "confirmed", "ok", "alive", "placed"]);
 const TONE_WARN = new Set(["pending", "reserved", "unpaid", "proposed", "processing", "queued", "attention"]);
 const TONE_BAD = new Set(["failed", "refused", "error", "expired", "rejected"]);
 const PRIV_ROWS = [
@@ -801,6 +895,17 @@ let tlLimit = 30;
 let armed = null;
 let armTimer = null;
 let pendingRule = null;
+let agentRunning = false;   // the server's lock file: a pass is in flight
+let wasRunning = false;     // previous poll's value, to catch the true -> false edge
+let topBeforeRun = "";      // newest timeline key while idle, to tell "something new" from "nothing new"
+let firing = null;          // which button started the pass ("rule:<id>" / "approve:<id>"), for its spinner
+const decided = new Set();  // proposal ids approved on this page; their card stays until bought
+let pollTimer = null;
+const POLL_IDLE_MS = 10000;
+const POLL_BUSY_MS = 3000;
+const TOAST_DONE_MS = 6500;
+const TOAST_CHARS = 140;
+const swg = { busy: false, alive: null, balanceInr: null, reason: "" }; /* Swiggy Money wallet card: last probe result */
 
 /* ---------- helpers ---------- */
 const tone = (s) => { s = String(s || "").toLowerCase(); return TONE_OK.has(s) ? "ok" : TONE_WARN.has(s) ? "warn" : TONE_BAD.has(s) ? "bad" : "neutral"; };
@@ -909,11 +1014,11 @@ function scheduleLine(t, lastMs) {
 }
 
 let toastTimer = null;
-function toast(msg, bad) {
+function toast(msg, bad, ms) {
   const t = $("toast");
   t.textContent = msg; t.className = "toast show" + (bad ? " bad" : "");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.className = "toast"; }, 4200);
+  toastTimer = setTimeout(() => { t.className = "toast"; }, ms || 4200);
 }
 
 /* ---------- data layer (live or mock) ---------- */
@@ -940,7 +1045,8 @@ function renderHero(d) {
   $("remNote").textContent = num(b.capInr) > 0 ? `${Math.max(0, Math.round(100 * num(b.remainingInr) / num(b.capInr)))}% of the cap left` : " ";
   $("count").textContent = String(delivered);
   const failed = spends.filter((s) => s.status === "failed").length;
-  $("countNote").textContent = `${spends.length} invoice${spends.length === 1 ? "" : "s"}${failed ? `, ${failed} failed` : ""}`;
+  const orders = arr(d.timeline).filter((x) => x.kind === "order").length;
+  $("countNote").textContent = `· ${spends.length} invoice${spends.length === 1 ? "" : "s"}${failed ? `, ${failed} failed` : ""}${orders ? ` · ${orders} Instamart order${orders === 1 ? "" : "s"}` : ""}`;
 
   let left = num(b.spentInr);
   $("gauge").innerHTML = deps.length
@@ -1006,14 +1112,24 @@ function renderInbox(d) {
   const ps = arr(d.proposals).slice().sort((a, b) => (when(b.createdAt) || 0) - (when(a.createdAt) || 0));
   const open = ps.filter((p) => p.status === "proposed");
   const installs = ps.filter((p) => p.status === "bought" && p.lpa);
-  const done = ps.filter((p) => p.status !== "proposed" && !installs.includes(p)).slice(0, 5);
+  const live = ps.filter((p) => decided.has(p.id) && (p.status === "approved" || p.status === "bought"));
+  const done = ps.filter((p) => p.status !== "proposed" && !installs.includes(p) && !live.includes(p)).slice(0, 5);
   $("inboxMeta").textContent = open.length ? `${open.length} waiting` : "all clear";
   const cards = open.map((p) => `<article class="pcard"><div class="p-top"><div style="min-width:0"><div class="lbl">${ico(p.kind === "esim" ? "plane" : "credit-card")}${esc(p.kind === "esim" ? "eSIM" : p.kind || "purchase")}</div><div class="p-title">${esc(p.title)}</div><div class="p-sub">${esc(p.subtitle)}</div></div><div class="price">${esc(p.price)}</div></div>`
     + `<div class="p-actions"><button class="btn" type="button" data-act="approve" data-id="${esc(p.id)}">${ico("check")}Approve</button><button class="btn ghost" type="button" data-act="decline" data-id="${esc(p.id)}">${ico("x")}Decline</button></div></article>`).join("");
   const resolved = done.length
     ? `<div class="lbl" style="margin-top:6px">Recently resolved</div><ul class="resolved" aria-label="Recently resolved">${done.map((p) => `<li><span>${esc(p.title)} · ${esc(p.price)}</span>${chip(p.status)}</li>`).join("")}</ul>` : "";
-  const empty = installs.length ? "" : `<p class="empty">Nothing is waiting. Bigger buys, like eSIMs, land here for your yes or no.</p>`;
-  $("inbox").innerHTML = (cards || empty) + installs.map(esimHtml).join("") + resolved;
+  const empty = installs.length || live.length ? "" :`<p class="empty">Nothing is waiting. Bigger buys, like eSIMs, land here for your yes or no.</p>`;
+  $("inbox").innerHTML = (cards || empty) + live.map(decidedHtml).join("") + installs.map(esimHtml).join("") + resolved;
+}
+
+/* an approved card stays put, amber until the agent buys it, then green */
+function decidedHtml(p) {
+  const bought = p.status === "bought";
+  const label = bought ? "approved · bought" : "approved · buys on the next pass, inside the cap";
+  const wait = !bought && agentRunning ? `<span class="spin" aria-hidden="true"></span>` : "";
+  return `<article class="pcard decided${bought ? " done" : ""}"><div class="p-top"><div style="min-width:0"><div class="lbl">${ico(p.kind === "esim" ? "plane" : "credit-card")}${esc(p.kind === "esim" ? "eSIM" : p.kind || "purchase")}</div><div class="p-title">${esc(p.title)}</div><div class="p-sub">${esc(p.subtitle)}</div></div><div class="price">${esc(p.price)}</div></div>`
+    + `<div class="p-state"><span class="chip ${bought ? "ok" : "warn"}">${wait}${esc(label)}</span></div></article>`;
 }
 
 /* bought eSIM: the LPA string drawn as a QR, client-side. The LPA is never logged. */
@@ -1077,6 +1193,12 @@ function renderPrivacy(d) {
   $("privacy").innerHTML = PRIV_ROWS.map(([k, label, fallback]) => `<div><dt>${esc(label)}</dt><dd>${esc(p[k] || fallback)}</dd></div>`).join("");
 }
 
+const passBusy = () => agentRunning || firing !== null;
+function fireBtn(id) {
+  const mine = firing === "rule:" + id;
+  return `<button class="btn sm ghost${mine ? " busy" : ""}" type="button" data-fire-rule="${esc(id)}"${passBusy() ? " disabled" : ""}>${mine ? `<span class="spin" aria-hidden="true"></span>Running…` : "Fire now"}</button>`;
+}
+
 function renderRules(d) {
   const rs = arr(d.rules);
   $("rulesMeta").textContent = rs.length ? `${rs.length} rule${rs.length === 1 ? "" : "s"} · no prompt needed to fire` : "what starts a purchase, no prompt needed";
@@ -1088,7 +1210,7 @@ function renderRules(d) {
       + `<td data-l="Trigger"><div class="cv"><span class="trig-text">${esc(describeTrigger(r.trigger) || v)}</span><div class="sched">${esc(scheduleLine(r.trigger, lastRun[r.id]))}</div></div></td>`
       + `<td data-l="Max"><div class="cv money">${inr(r.maxInr)}</div></td>`
       + `<td data-l="Intent"><div class="cv">${esc(r.intent)}${r.productType ? `<span class="tag">${esc(r.productType)}</span>` : ""}</div></td>`
-      + `<td class="acts"><div class="cv acts-in"><button class="btn sm ghost" type="button" data-fire-rule="${esc(r.id)}">Fire now</button>`
+      + `<td class="acts"><div class="cv acts-in">${fireBtn(r.id)}`
       + `<button class="btn sm ghost" type="button" data-edit="${esc(r.id)}">Edit</button>`
       + `<button class="btn sm danger${isArmed ? " armed" : ""}" type="button" data-del="${esc(r.id)}">${isArmed ? "Confirm delete" : "Delete"}</button></div></td></tr>`;
   }).join("") || `<tr><td colspan="5" class="empty" style="padding:16px 0">No rules yet. Describe one below.</td></tr>`;
@@ -1104,27 +1226,90 @@ function render(d) {
 function setLive(ok) {
   const el = $("live");
   el.className = "live " + (ok ? "on" : "off");
-  el.textContent = ok ? "live · " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "offline · retrying";
+  if (ok) el.innerHTML = `live<span class="lt"> · ${esc(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }))}</span>`;
+  else el.textContent = "offline · retrying";
 }
 async function load() {
   let d;
-  try { d = await api("/api"); } catch (e) { setLive(false); return; }
+  try { d = await api("/api"); } catch (e) { setLive(false); schedulePoll(); return; }
   data = d; setLive(true);
+  syncAgent(d);
   try { render(d); } catch (e) { console.error("render failed", e); }
+  schedulePoll();
+}
+
+/* ---------- agent pass state: header pill, faster polling, "done" toast ---------- */
+const sentence = (s) => { s = String(s || "").trim(); return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; };
+const clipText = (s, n) => (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s);
+function newestItem(d) {
+  let best = null, bestMs = -Infinity;
+  for (const x of arr(d.timeline)) { const t = when(x.at); const ms = t ? t.getTime() : -Infinity; if (ms > bestMs) { best = x; bestMs = ms; } }
+  return best;
+}
+const topKey = (d) => { const t = newestItem(d); return t ? `${t.at}|${t.title}` : ""; };
+function renderAgent() { $("agentPill").hidden = !agentRunning; }
+function renderBusy() { renderAgent(); if (data) { renderRules(data); renderInbox(data); renderSwiggy(data); } }
+function syncAgent(d) {
+  const running = d.agentRunning === true;
+  if (wasRunning && !running) { announceDone(d); firing = null; probeSwiggy(); }
+  if (!running) topBeforeRun = topKey(d);
+  wasRunning = running; agentRunning = running;
+  renderAgent();
+}
+function announceDone(d) {
+  const t = newestItem(d);
+  if (!t || topKey(d) === topBeforeRun) { toast("Agent pass finished. Nothing new on the timeline.", false, TOAST_DONE_MS); return; }
+  toast(clipText(t.detail ? `${t.title} · ${t.detail}` : t.title, TOAST_CHARS), false, TOAST_DONE_MS);
+}
+function markStarted() { agentRunning = true; wasRunning = true; renderBusy(); schedulePoll(); }
+function schedulePoll() {
+  clearTimeout(pollTimer);
+  pollTimer = setTimeout(() => { if (document.hidden) schedulePoll(); else load(); }, agentRunning ? POLL_BUSY_MS : POLL_IDLE_MS);
 }
 
 /* ---------- actions ---------- */
 async function guard(btn, fn, okMsg) {
   btn.disabled = true;
-  try { await fn(); if (okMsg) toast(okMsg); } catch (e) { toast(e.message || "Request failed", true); }
+  try { const r = await fn(); if (okMsg && r !== false) toast(okMsg); } catch (e) { toast(e.message || "Request failed", true); }
   finally { btn.disabled = false; }
 }
+const spinBtn = (b) => { const i = b.querySelector("svg"); if (i) i.replaceWith(Object.assign(document.createElement("span"), { className: "spin" })); };
 
+/* start a pass on its own (Approve): false when one is already running */
+async function startPass(key) {
+  firing = key; renderBusy();
+  let r;
+  try { r = await post("/agent/run"); } catch (e) { firing = null; renderBusy(); throw e; }
+  if (r && r.started === false) { firing = null; renderBusy(); toast(`${sentence(r.reason || "an agent pass is already running")}. It buys on the next pass.`); return false; }
+  markStarted();
+  return true;
+}
+/* Fire now: the server drops the rule's signal and starts the pass; false when the pass could not start */
+async function fireRuleNow(id) {
+  firing = "rule:" + id; renderBusy();
+  let r;
+  try { r = await post("/rules/fire", { id }); } catch (e) { firing = null; renderBusy(); throw e; }
+  if (r && r.started === false) { firing = null; renderBusy(); toast(`${sentence(r.reason || "the agent is busy")} — "${id}" will run on the next pass.`); return false; }
+  markStarted();
+  await load();
+  return true;
+}
+
+const APPROVED_MSG = "Approved. Buys on the next pass, inside the cap.";
 $("inbox").addEventListener("click", (ev) => {
   const b = ev.target.closest("button[data-act]");
   if (!b) return;
-  const verb = b.dataset.act;
-  guard(b, async () => { await post(`/proposals/${encodeURIComponent(b.dataset.id)}/${verb}`); await load(); }, verb === "approve" ? "Approved. The agent will buy it on its next pass." : "Declined.");
+  const verb = b.dataset.act, id = b.dataset.id;
+  if (verb === "approve") spinBtn(b);
+  guard(b, async () => {
+    await post(`/proposals/${encodeURIComponent(id)}/${verb}`);
+    if (verb === "decline") { await load(); return true; }
+    decided.add(id);
+    toast(APPROVED_MSG);
+    await load();
+    await startPass("approve:" + id);
+    return false;
+  }, "Declined.");
 });
 
 $("inbox").addEventListener("click", async (ev) => {
@@ -1146,11 +1331,7 @@ $("rules").addEventListener("click", (ev) => {
   const fireRule = ev.target.closest("button[data-fire-rule]");
   if (fireRule) {
     const id = fireRule.dataset.fireRule;
-    guard(fireRule, async () => {
-      const r = await post("/rules/fire", { id });
-      await load();
-      if (r && r.started === false) throw new Error(`${r.reason || "The agent is busy"} — "${id}" will run on the next pass.`);
-    }, `Running ${id} now — watch the Timeline (30–90 s)`);
+    guard(fireRule, () => fireRuleNow(id), `Running ${id} now — watch the Timeline (30–90 s)`);
     return;
   }
   const edit = ev.target.closest("button[data-edit]");
@@ -1320,9 +1501,11 @@ const MOCK_DATA = (() => {
       { id: "weekday-chai", intent: "Order the usual chai and biscuits from Instamart", maxInr: 120, productType: "gift_card", trigger: { at: "07:30", days: ["mon", "tue", "wed", "thu", "fri"] } },
       { id: "sunday-treat", intent: "Sunday breakfast treat for the family", maxInr: 250, productType: "gift_card", trigger: { at: "08:00", days: ["sun"] } },
       { id: "daily-milk", intent: "Top up the Instamart wallet for the morning milk", maxInr: 60, productType: "gift_card", trigger: { at: "09:00" } },
+      { id: "topup", intent: "Buy a Swiggy Money card when the Instamart balance runs low", maxInr: 250, productType: "gift_card", trigger: { signal: "topup" } },
     ],
     lastRun: { "weekly-airtel": Date.now() - 150 * 60000, "low-data": Date.now() - 60 * 60000, "weekday-chai": Date.now() - 2 * 3600000, "sunday-treat": Date.now() - 3600000, "daily-milk": Date.now() - 3 * 3600000 },
     runs: [],
+    agentRunning: false,
     timeline: [
       { at: ago(320), kind: "deposit", title: "Deposit received · 0.0500 TAZ", detail: "Cap ₹50, receipts go to the reply address", mono: tx("a1"), link: "https://explorer.example/tx/" + tx("a1") },
       { at: ago(160), kind: "trigger", title: "Rule weekly-airtel fired", detail: "every 7d" },
@@ -1331,7 +1514,10 @@ const MOCK_DATA = (() => {
       { at: ago(148), kind: "receipt", title: "Receipt sent to funder", detail: "Encrypted memo to the reply address", mono: tx("c3") },
       { at: ago(95), kind: "refusal", title: "Refused: Jio Postpaid ₹300", detail: "Above the rule max of ₹100 and the remaining cap.", status: "refused" },
       { at: ago(40), kind: "proposal", title: "Proposed: Airalo Singapore eSIM", detail: "Waiting for your approval", status: "proposed" },
-      { at: ago(5), kind: "redeem", title: "Swiggy Money card redeemed", detail: "₹500 balance now usable on Instamart" },
+      { at: ago(18), kind: "redeem", title: "Swiggy Money +₹250", detail: "order 6aeb0e027073473b2edcb9d5 · balance ₹300" },
+      { at: ago(5), kind: "trigger", title: "Rule weekday-chai fired (at 07:30)", detail: "" },
+      { at: ago(5), kind: "order", title: "Instamart order 252768923926074", detail: "2 × Diet Coke, 1 × Lay's Classic · ₹250 · paid with Swiggy Money", status: "placed" },
+      { at: ago(5), kind: "decision", title: "Rule weekday-chai", detail: "I ordered 2 × Diet Coke and 1 × Lay's Classic on Instamart, paid with Swiggy Money. Order ID: 252768923926074. The total was ₹250…" },
     ],
     proposals: [
       { id: "p1", kind: "esim", title: "Airalo Singapore eSIM, 5 GB / 30 days", subtitle: "For the March trip, delivered as a QR code to the funder", price: "₹1,150", status: "proposed", createdAt: ago(40) },
@@ -1368,7 +1554,7 @@ async function mockApi(path, opts) {
   await new Promise((r) => setTimeout(r, 120));
   const body = opts && opts.body ? JSON.parse(opts.body) : {};
   if (path === "/api") return JSON.parse(JSON.stringify(MOCK_DATA));
-  if (path === "/connections/swiggy-money/probe") return { alive: true, balanceInr: 50, reason: null };
+  if (path === "/connections/swiggy-money/probe") return { alive: true, balanceInr: 300, reason: null };
   if (path.startsWith("/signal/")) {
     MOCK_DATA.timeline.push({ at: new Date().toISOString(), kind: "trigger", title: `Signal ${decodeURIComponent(path.slice(8))} fired`, detail: "mock" });
     return { ok: true };
@@ -1399,13 +1585,30 @@ async function mockApi(path, opts) {
     if (!MOCK_DATA.rules.some((x) => x.id === body.id)) throw new Error(`no rule ${body.id}`);
     MOCK_DATA.lastRun[body.id] = Date.now();
     MOCK_DATA.timeline.push({ at: new Date().toISOString(), kind: "trigger", title: `Rule ${body.id} fired`, detail: "manual (mock)" });
-    return { ok: true, started: true, reason: "agent pass started; the timeline updates as it works" };
+    return mockStartPass();
   }
   if (path === "/rules/delete") {
     MOCK_DATA.rules = MOCK_DATA.rules.filter((x) => x.id !== body.id);
     return { ok: true, rules: JSON.parse(JSON.stringify(MOCK_DATA.rules)) };
   }
+  if (path === "/agent/run") return mockStartPass();
   throw new Error("mock: no route for " + path);
+}
+
+/* mock agent pass: the lock flips on, and a few seconds later off with one new purchase (approved eSIMs get bought) */
+const MOCK_PASS_MS = 6000;
+function mockStartPass() {
+  if (MOCK_DATA.agentRunning) return { ok: true, started: false, reason: "an agent pass is already running" };
+  MOCK_DATA.agentRunning = true;
+  setTimeout(() => {
+    const approved = MOCK_DATA.proposals.filter((p) => p.status === "approved");
+    approved.forEach((p) => { Object.assign(p, { status: "bought", destination: "Singapore", departs: new Date(Date.now() + 20 * 86400000).toISOString(), invoiceId: "inv_mock_esim02", lpa: "LPA:1$smdp.example.org$MOCK-ESIM-SG-2B7K" }); });
+    MOCK_DATA.timeline.push(approved.length
+      ? { at: new Date().toISOString(), kind: "purchase", title: `Bought ${approved[0].price} eSIM · Singapore`, detail: "delivered", status: "delivered", mono: "inv_mock_esim02" }
+      : { at: new Date().toISOString(), kind: "purchase", title: "Bought ₹250 Swiggy Money", detail: "delivered", status: "delivered", mono: "inv_mock_swg01" });
+    MOCK_DATA.agentRunning = false;
+  }, MOCK_PASS_MS);
+  return { ok: true, started: true, reason: "agent pass started; the timeline updates as it works" };
 }
 
 /* ---------- QR encoder: byte mode, error correction M, versions 1-10 (no library) ---------- */
@@ -1599,6 +1802,9 @@ function syncStats(d) {
   $("apprStat").classList.toggle("has", n > 0);
   $("tabBadge").textContent = String(n);
   $("tabBadge").hidden = n === 0;
+  $("barBadge").textContent = String(n);
+  $("barBadge").hidden = n === 0;
+  $("bar-approvals").setAttribute("aria-label", n ? `Approvals, ${n} waiting` : "Approvals");
   $("tab-approvals").setAttribute("aria-label", n ? `Approvals, ${n} waiting` : "Approvals");
 }
 
@@ -1690,10 +1896,109 @@ function renderReceipts(d) {
 }
 
 function renderExtras(d) {
-  renderChrome(d); renderPurse(d); renderSpending(d); renderArc(d); renderReceipts(d); renderConnections(d);
+  renderChrome(d); renderPurse(d); renderSpending(d); renderArc(d); renderReceipts(d); renderConnections(d); renderSwiggy(d);
 }
 
+/* ---------- Swiggy Money wallet card (Wallets page) ---------- */
+const latestOf = (d, kind) => arr(d.timeline).map((x) => ({ x, t: when(x.at) })).filter((o) => o.t && o.x.kind === kind).sort((a, b) => b.t - a.t)[0];
+function renderSwiggy(d) {
+  d = d || data;
+  if (!d) return;
+  const bal = $("swgBal"), bad = $("swgBad");
+  let msg = "";
+  if (swg.alive === true) {
+    bal.innerHTML = swg.balanceInr == null ? "—" : `<span class="cur">₹</span>${esc(num(swg.balanceInr).toLocaleString("en-IN"))}`;
+    if (swg.balanceInr == null) msg = "balance unknown";
+  } else {
+    bal.textContent = "—";
+    if (swg.alive === false) msg = `session expired — re-link on <a href="/connections${esc(location.search)}" data-goto="connections">Connections</a>`;
+    else if (swg.failed) msg = `couldn't check the balance${swg.reason ? ": " + esc(swg.reason) : ""}`;
+    else if (swg.busy) msg = "checking…";
+  }
+  bad.innerHTML = msg; bad.hidden = !msg;
+  const rd = latestOf(d, "redeem"), od = latestOf(d, "order");
+  const row = (id, o, text) => { const el = $(id); el.className = "v" + (o ? "" : " none"); el.textContent = o ? `${text(o.x)} · ${fmtTime(o.t)}` : "none yet"; };
+  row("swgRedeem", rd, (x) => { const m = /\+\s*₹\s*([0-9][0-9,.]*)/.exec(x.title || ""); return m ? `+₹${m[1]}` : x.title; });
+  row("swgOrder", od, (x) => { const m = /order\s+(\S+)/i.exec(x.title || ""); return `order ${m ? m[1] : x.title}`; });
+  const rf = $("swgRefresh");
+  rf.disabled = swg.busy;
+  rf.innerHTML = swg.busy ? `<span class="spin" aria-hidden="true"></span>Checking…` : `${ico("refresh-cw")}Refresh`;
+  const top = $("swgTopup");
+  top.hidden = !arr(d.rules).some((r) => r.id === "topup");
+  top.disabled = passBusy();
+  top.innerHTML = firing === "rule:topup" ? `<span class="spin" aria-hidden="true"></span>Running…` : "Top up";
+}
+async function probeSwiggy() {
+  if (swg.busy) return;
+  swg.busy = true; renderSwiggy();
+  try {
+    const r = await post("/connections/swiggy-money/probe");
+    swg.alive = !!(r && r.alive); swg.balanceInr = r && r.balanceInr != null ? r.balanceInr : null; swg.reason = (r && r.reason) || ""; swg.failed = false;
+  } catch (e) {
+    swg.reason = e.message || "";
+    swg.balanceInr = null;
+    swg.failed = !/session/i.test(swg.reason); /* "no Swiggy Money session saved" is an expired link, anything else is a failed check */
+    swg.alive = swg.failed ? null : false;
+  }
+  swg.busy = false; renderSwiggy();
+}
+$("swgRefresh").addEventListener("click", probeSwiggy);
+$("swgTopup").addEventListener("click", () => {
+  guard($("swgTopup"), () => fireRuleNow("topup"), "Running topup now — watch the Timeline (30–90 s)").then(() => renderSwiggy());
+});
+$("swgCard").addEventListener("click", (ev) => {
+  const a = ev.target.closest("a[data-goto]");
+  if (!a || ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+  ev.preventDefault();
+  history.pushState(null, "", VIEW_PATHS[a.dataset.goto] + location.search);
+  showView(a.dataset.goto, true);
+});
+
 /* ---------- connections page ---------- */
+/* web push: the server holds the VAPID key pair; the page only needs the public key to subscribe this browser */
+function b64urlToBytes(b64) {
+  const pad = "=".repeat((4 - (b64.length % 4)) % 4);
+  const raw = atob((b64 + pad).replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from(raw, (c) => c.charCodeAt(0));
+}
+async function pushState() {
+  if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return { supported: false };
+  const reg = await navigator.serviceWorker.getRegistration();
+  const sub = reg ? await reg.pushManager.getSubscription() : null;
+  return { supported: true, permission: Notification.permission, subscribed: !!sub };
+}
+async function renderPush() {
+  const meta = $("push-meta"), en = $("push-enable"), test = $("push-test");
+  if (!meta) return;
+  let st;
+  try { st = await pushState(); } catch (e) { st = { supported: false }; }
+  if (!st.supported) { meta.textContent = "not available in this browser"; en.hidden = true; test.hidden = true; return; }
+  if (st.permission === "denied") { meta.textContent = "blocked in browser settings"; en.hidden = true; test.hidden = true; return; }
+  if (st.subscribed) { meta.textContent = "on for this device"; en.hidden = true; test.hidden = false; return; }
+  meta.textContent = "off"; en.hidden = false; test.hidden = true;
+}
+async function enablePush() {
+  const en = $("push-enable");
+  en.disabled = true;
+  try {
+    if (MOCK) { toast("Notifications are on (mock)."); return; }
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted") { toast("Notifications were not allowed.", true); return; }
+    const reg = await navigator.serviceWorker.register("/sw.js");
+    await navigator.serviceWorker.ready;
+    const { publicKey } = await api("/push/public-key");
+    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64urlToBytes(publicKey) });
+    await post("/push/subscribe", sub.toJSON());
+    toast("Notifications are on for this device.");
+  } catch (e) { toast("Could not enable notifications: " + (e && e.message ? e.message : e), true); }
+  finally { en.disabled = false; renderPush(); }
+}
+$("push-enable").addEventListener("click", enablePush);
+$("push-test").addEventListener("click", async () => {
+  try { const r = await post("/push/test"); toast(r && r.sent != null ? `Test sent to ${r.sent} device${r.sent === 1 ? "" : "s"}.` : "Test sent."); }
+  catch (e) { toast("Test failed: " + (e && e.message ? e.message : e), true); }
+});
+renderPush();
 const CONN_GROUPS = [["merchant", "Merchants", "credit-card"], ["money", "Money", "wallet"], ["calendar", "Calendar & mail", "clock"], ["ai", "AI", "sparkles"], ["chat", "Chat", "send"], ["wallet", "Wallets", "lock"]];
 const connOpen = new Set();      // "How to" panels the user opened; kept across the 10 s re-render
 const connProbe = {};            // id -> { busy, ok, text }
@@ -1807,19 +2112,31 @@ renderTimeline = function (d) { baseRenderTimeline(d); applyTlFilter(); };
 const baseRender = render;
 render = function (d) { baseRender(d); try { renderExtras(d); } catch (e) { console.error("extras failed", e); } };
 
+/* phone bottom bar: "More" opens a small sheet with Privacy and Connections */
+const barMore = $("barMore"), moreSheet = $("moreSheet"), sheetBack = $("sheetBack");
+function setMore(open) {
+  moreSheet.hidden = !open; sheetBack.hidden = !open;
+  barMore.setAttribute("aria-expanded", String(open));
+}
+barMore.addEventListener("click", () => setMore(moreSheet.hidden));
+sheetBack.addEventListener("click", () => setMore(false));
+document.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && !moreSheet.hidden) { setMore(false); barMore.focus(); } });
+
 /* pages: /, /approvals, /rules, /wallets, /privacy, /connections all serve this file; the path picks the one view that is shown */
 const VIEW_PATHS = { timeline: "/", approvals: "/approvals", rules: "/rules", wallets: "/wallets", privacy: "/privacy", connections: "/connections" };
 const viewFromPath = (p) => {
   const seg = String(p || "/").replace(/\/+$/, "").split("/").pop().toLowerCase();
   return Object.prototype.hasOwnProperty.call(VIEW_PATHS, seg) ? seg : "timeline";
 };
-const tabLinks = Array.from(document.querySelectorAll(".logo-mark, #tabs .tab, #bell, #apprStat"));
+const tabLinks = Array.from(document.querySelectorAll(".logo-mark, #tabs .tab, #bell, #apprStat, #bar a[data-view], #moreSheet a[data-view]"));
 const views = Array.from(document.querySelectorAll(".view"));
 function showView(name, scroll) {
   views.forEach((v) => { v.hidden = v.dataset.view !== name; });
-  document.querySelectorAll("#tabs .tab").forEach((a) => {
+  document.querySelectorAll("#tabs .tab, #bar a[data-view], #moreSheet a[data-view]").forEach((a) => {
     if (a.dataset.view === name) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   });
+  barMore.classList.toggle("on", name === "privacy" || name === "connections");
+  setMore(false);
   const t = $("tab-" + name);
   if (t) t.scrollIntoView({ inline: "center", block: "nearest" });
   document.title = (name === "timeline" ? "" : t.firstChild.textContent + " · ") + "Munim purse";
@@ -1854,7 +2171,8 @@ setGreeting();
 /* ---------- boot ---------- */
 if (MOCK) $("mockFlag").hidden = false;
 load();
-setInterval(() => { if (!document.hidden) load(); }, 10000);
+probeSwiggy();
+if (MOCK) setTimeout(() => { mockStartPass(); load(); }, 3500); /* demo: one agent pass runs a few seconds after load */
 document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
 </script>
 <script type="module">
