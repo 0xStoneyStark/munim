@@ -10,7 +10,7 @@ import { budget, type Ledger } from "@munim/zcash-purse";
 import { approve, decline, loadProposals } from "./travel.js";
 import { proposeRule } from "./rule-builder.js";
 import { spawn } from "node:child_process";
-import { ruleSchema, saveRules, type Rule } from "./rules.js";
+import { RULE_SIGNAL_PREFIX, ruleSchema, saveRules, signalFileName, type Rule } from "./rules.js";
 import {
   EXPLORER,
   PRIVACY,
@@ -101,6 +101,7 @@ function overview(deps: ApiDeps): Record<string, unknown> {
     spends: ledger.spends.map(({ codeHash, ...s }) => ({ ...s, codeHash: codeHash ? codeHash.slice(0, CODE_HASH_SHOWN) + "…" : null })),
     rules: readJson<unknown[]>(deps.rulesFile, []),
     runs,
+    lastRun: readJson<{ lastRun?: Record<string, number> }>(path.join(deps.dataDir, "agent-state.json"), {}).lastRun ?? {},
     timeline: buildTimeline({ ledger, runs, proposals, redeems }),
     proposals: proposalCards(proposals),
     merchants: merchants(deps.dataDir, ledger),
@@ -121,6 +122,24 @@ function postSignal(deps: ApiDeps, name: string): unknown {
   return { ok: true, signal: name };
 }
 
+/** Drop the force-fire signal for rule `id` (`rule:<id>`, stored as `rule--<id>`). Returns the file written. */
+export function writeRuleSignal(dataDir: string, id: string): string {
+  if (!SIGNAL_NAME.test(id)) throw badRequest("bad rule id");
+  const dir = path.join(dataDir, "signals");
+  fs.mkdirSync(dir, { recursive: true });
+  const file = path.join(dir, signalFileName(RULE_SIGNAL_PREFIX + id));
+  fs.writeFileSync(file, new Date().toISOString());
+  return file;
+}
+
+/** Force rule `id` to run now: 404 for an unknown id, otherwise signal it and start an agent pass. */
+export function fireRule(deps: ApiDeps, id: string, runPass: (d: ApiDeps) => { started: boolean; reason: string } = runAgentPass): unknown {
+  if (!readRules(deps.rulesFile).some((r) => r.id === id)) throw notFound(`no rule ${id}`);
+  writeRuleSignal(deps.dataDir, id);
+  const { started, reason } = runPass(deps);
+  return { ok: true, started, reason };
+}
+
 function decideProposal(id: string, action: "approve" | "decline"): unknown {
   if (!loadProposals().some((p) => p.id === id)) throw notFound(`no proposal ${id}`);
   try {
@@ -133,6 +152,7 @@ function decideProposal(id: string, action: "approve" | "decline"): unknown {
 const proposeBody = z.object({ text: z.string().trim().min(1, "text is required") });
 const commitBody = z.object({ rule: ruleSchema });
 const deleteBody = z.object({ id: z.string().min(1) });
+const fireBody = z.object({ id: z.string().min(1) });
 
 async function postPropose(deps: ApiDeps, req: http.IncomingMessage): Promise<unknown> {
   const { text } = await readBody(req, proposeBody);
@@ -152,6 +172,11 @@ async function postCommit(deps: ApiDeps, req: http.IncomingMessage): Promise<unk
   const next = replaces ? current.map((r) => (r.id === rule.id ? rule : r)) : [...current, rule];
   saveRules(deps.rulesFile, next);
   return { ok: true, rules: next };
+}
+
+async function postFire(deps: ApiDeps, req: http.IncomingMessage): Promise<unknown> {
+  const { id } = await readBody(req, fireBody);
+  return fireRule(deps, id);
 }
 
 async function postDelete(deps: ApiDeps, req: http.IncomingMessage): Promise<unknown> {
@@ -221,6 +246,7 @@ async function route(req: http.IncomingMessage, url: URL, deps: ApiDeps): Promis
   if (p === "/rules/propose") return postPropose(deps, req);
   if (p === "/rules/commit") return postCommit(deps, req);
   if (p === "/rules/delete") return postDelete(deps, req);
+  if (p === "/rules/fire") return postFire(deps, req);
   return undefined;
 }
 

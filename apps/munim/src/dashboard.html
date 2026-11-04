@@ -361,6 +361,20 @@
   .fields { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
   .fields .wide { grid-column: 1 / -1; }
   @media (min-width: 640px) { .fields { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .fields .field { align-content: start; }
+  .fields .span2 { grid-column: 1 / -1; }
+  @media (min-width: 640px) { .fields .span2 { grid-column: span 2; } }
+  .trig-edit { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .trig-edit > .in { flex: 1 1 180px; width: auto; }
+  .trig-edit > input[type="time"] { flex: 0 0 140px; }
+  .days { display: flex; flex-wrap: wrap; gap: 6px; }
+  .daytog { font: inherit; font-size: 13px; font-weight: 600; min-height: 36px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+  .daytog:hover { border-color: var(--ink); }
+  .daytog[aria-pressed="true"] { background: var(--solid); border-color: var(--solid); color: var(--on-solid); }
+  .fhint { font-size: 12.5px; color: var(--muted); }
+  .trig-text { font-weight: 600; }
+  .sched { margin-top: 3px; font-size: 12.5px; color: var(--muted); }
+  .editing { margin: 6px 0 12px; font-size: 19px; font-weight: 600; letter-spacing: -.01em; padding-left: 14px; border-left: 4px solid var(--gold); }
 
   /* built with */
   .built-row + .built-row { margin-top: 20px; }
@@ -811,7 +825,88 @@ function resolveLink(link, mono) {
   if (safeHref(link)) return link;
   return txHref(link) || txHref(mono);
 }
-const trig = (t) => (t && t.every ? ["every", t.every] : t && t.signal ? ["signal", t.signal] : t && t.calendar ? ["calendar", t.calendar] : ["trigger", ""]);
+const trig = (t) => (t && t.every ? ["every", t.every] : t && t.at ? ["at", t.at] : t && t.signal ? ["signal", t.signal] : t && t.calendar ? ["calendar", t.calendar] : ["trigger", ""]);
+
+/* ---------- rule triggers: human text, last/next run ---------- */
+const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]; /* Monday first, for display and the day toggles */
+const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DURATION = /^[0-9]+(s|m|h)$/;
+const SIGNAL_NAME = /^[a-z0-9-]+$/;
+const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+function fmtDays(days) {
+  const on = DAY_KEYS.map((k, i) => (arr(days).includes(k) ? i : -1)).filter((i) => i >= 0);
+  if (!on.length || on.length === 7) return "daily";
+  const parts = [];
+  for (let i = 0; i < on.length;) {
+    let j = i;
+    while (j + 1 < on.length && on[j + 1] === on[j] + 1) j++;
+    if (j - i >= 2) parts.push(`${DAY_NAMES[on[i]]}–${DAY_NAMES[on[j]]}`);
+    else for (let k = i; k <= j; k++) parts.push(DAY_NAMES[on[k]]);
+    i = j + 1;
+  }
+  return parts.join(", ");
+}
+const EVERY_UNITS = { s: "s", m: "min", h: "h", d: "d" };
+function fmtEvery(v) {
+  const m = /^([0-9]+)(s|m|h|d)$/.exec(String(v));
+  return m ? `every ${m[1]} ${EVERY_UNITS[m[2]]}` : `every ${v}`;
+}
+function describeTrigger(t) {
+  if (t && t.every) return fmtEvery(t.every);
+  if (t && t.at) return `${fmtDays(t.days)} at ${t.at}${t.tz ? ` (${t.tz})` : ""}`;
+  if (t && t.signal) return `when I say ‘${t.signal}’`;
+  if (t && t.calendar) return `calendar: ${t.calendar}`;
+  return "";
+}
+const EVERY_MS = { s: 1e3, m: 6e4, h: 36e5, d: 864e5 };
+const everyMs = (v) => { const m = /^([0-9]+)(s|m|h|d)$/.exec(String(v)); return m ? Number(m[1]) * EVERY_MS[m[2]] : null; };
+function zoneParts(ms, tz) {
+  const p = {};
+  new Intl.DateTimeFormat("en-US", { timeZone: tz, hourCycle: "h23", year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" })
+    .formatToParts(ms).forEach((x) => { p[x.type] = Number(x.value); });
+  return { y: p.year, mo: p.month, d: p.day, h: p.hour % 24, mi: p.minute, s: p.second };
+}
+const zoneOffset = (ms, tz) => { const p = zoneParts(ms, tz); return Date.UTC(p.y, p.mo - 1, p.d, p.h, p.mi, p.s) - Math.floor(ms / 1000) * 1000; };
+/* first HH:MM on an allowed day strictly after `after` (epoch ms), in the rule's zone (the browser's own when none is set) */
+function nextAt(t, after) {
+  const tz = t.tz || LOCAL_TZ;
+  const [h, m] = t.at.split(":").map(Number);
+  const allowed = new Set(arr(t.days).length ? t.days : DAY_KEYS);
+  const base = zoneParts(after, tz);
+  for (let i = 0; i < 9; i++) {
+    const civil = Date.UTC(base.y, base.mo - 1, base.d + i);
+    if (!allowed.has(["sun", "mon", "tue", "wed", "thu", "fri", "sat"][new Date(civil).getUTCDay()])) continue;
+    const guess = civil + (h * 60 + m) * 60000;
+    const first = guess - zoneOffset(guess, tz);
+    const inst = guess - zoneOffset(first, tz);
+    if (inst > after) return inst;
+  }
+  return null;
+}
+function sinceLabel(ms) {
+  const mins = Math.round((Date.now() - ms) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  if (mins < 48 * 60) return `${Math.round(mins / 60)} h ago`;
+  return `${Math.round(mins / 1440)} d ago`;
+}
+/* a rule that has never run, or whose next moment has passed, is picked up by the next agent pass */
+function nextMoment(ms, tz) {
+  if (ms == null) return null;
+  if (ms <= Date.now()) return "due on the next pass";
+  const opts = { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" };
+  if (tz) opts.timeZone = tz;
+  return "next " + new Date(ms).toLocaleString([], opts);
+}
+function scheduleLine(t, lastMs) {
+  const last = num(lastMs) > 0 ? num(lastMs) : 0;
+  const ran = last ? `last ran ${sinceLabel(last)}` : "never run";
+  let next = null;
+  if (t && t.every) { const iv = everyMs(t.every); next = iv ? nextMoment(last ? last + iv : 0, t.tz) : null; }
+  else if (t && t.at) next = nextMoment(last ? nextAt(t, last) : 0, t.tz);
+  else return `${ran} · on demand`;
+  return next ? `${ran} · ${next}` : ran;
+}
 
 let toastTimer = null;
 function toast(msg, bad) {
@@ -985,14 +1080,16 @@ function renderPrivacy(d) {
 function renderRules(d) {
   const rs = arr(d.rules);
   $("rulesMeta").textContent = rs.length ? `${rs.length} rule${rs.length === 1 ? "" : "s"} · no prompt needed to fire` : "what starts a purchase, no prompt needed";
+  const lastRun = d.lastRun && typeof d.lastRun === "object" ? d.lastRun : {};
   $("rules").innerHTML = rs.map((r) => {
-    const [t, v] = trig(r.trigger);
+    const [, v] = trig(r.trigger);
     const isArmed = armed === r.id;
     return `<tr><td data-l="Rule"><div class="cv"><span class="mono idpill">${esc(r.id)}</span></div></td>`
-      + `<td data-l="Trigger"><div class="cv"><span class="ttype">${esc(t)}</span><span${t === "every" ? "" : ' class="mono"'}>${esc(v)}</span></div></td>`
+      + `<td data-l="Trigger"><div class="cv"><span class="trig-text">${esc(describeTrigger(r.trigger) || v)}</span><div class="sched">${esc(scheduleLine(r.trigger, lastRun[r.id]))}</div></div></td>`
       + `<td data-l="Max"><div class="cv money">${inr(r.maxInr)}</div></td>`
       + `<td data-l="Intent"><div class="cv">${esc(r.intent)}${r.productType ? `<span class="tag">${esc(r.productType)}</span>` : ""}</div></td>`
-      + `<td class="acts"><div class="cv acts-in">${r.trigger && r.trigger.signal ? `<button class="btn sm ghost" type="button" data-fire="${esc(r.trigger.signal)}">Fire now</button>` : ""}`
+      + `<td class="acts"><div class="cv acts-in"><button class="btn sm ghost" type="button" data-fire-rule="${esc(r.id)}">Fire now</button>`
+      + `<button class="btn sm ghost" type="button" data-edit="${esc(r.id)}">Edit</button>`
       + `<button class="btn sm danger${isArmed ? " armed" : ""}" type="button" data-del="${esc(r.id)}">${isArmed ? "Confirm delete" : "Delete"}</button></div></td></tr>`;
   }).join("") || `<tr><td colspan="5" class="empty" style="padding:16px 0">No rules yet. Describe one below.</td></tr>`;
 }
@@ -1046,6 +1143,22 @@ $("rules").addEventListener("click", (ev) => {
     guard(fire, async () => { await post("/signal/" + encodeURIComponent(name)); const r = await post("/agent/run"); await load(); if (r && r.started === false) throw new Error(r.reason || "agent busy"); }, `Signal "${name}" queued and the agent is running it now — watch the Timeline (30–90 s).`);
     return;
   }
+  const fireRule = ev.target.closest("button[data-fire-rule]");
+  if (fireRule) {
+    const id = fireRule.dataset.fireRule;
+    guard(fireRule, async () => {
+      const r = await post("/rules/fire", { id });
+      await load();
+      if (r && r.started === false) throw new Error(`${r.reason || "The agent is busy"} — "${id}" will run on the next pass.`);
+    }, `Running ${id} now — watch the Timeline (30–90 s)`);
+    return;
+  }
+  const edit = ev.target.closest("button[data-edit]");
+  if (edit) {
+    const rule = arr(data && data.rules).find((x) => x.id === edit.dataset.edit);
+    if (rule) openEditor({ rule, editing: true });
+    return;
+  }
   const del = ev.target.closest("button[data-del]");
   if (!del) return;
   const id = del.dataset.del;
@@ -1061,24 +1174,66 @@ $("rules").addEventListener("click", (ev) => {
 
 $("tlMore").addEventListener("click", () => { tlLimit += 30; if (data) renderTimeline(data); });
 
-/* rule proposal */
-function proposalHtml(r) {
-  const rule = r.rule || {};
-  const [t, v] = trig(rule.trigger);
-  const opts = ["every", "signal", "calendar"].map((o) => `<option value="${o}"${o === t ? " selected" : ""}>${o}</option>`).join("");
-  const warns = arr(r.warnings);
-  return `<div class="lbl">The agent understood</div><p class="readback">${esc(r.readback)}</p>`
+/* rule editor: one form for a proposed rule and for editing an existing one */
+const TRIGGER_TYPES = ["every", "at", "signal", "calendar"];
+function dayToggles(days) {
+  return DAY_KEYS.map((k, i) => `<button class="daytog" type="button" data-day="${k}" aria-pressed="${arr(days).includes(k)}">${DAY_NAMES[i]}</button>`).join("");
+}
+function editorHtml({ rule, readback, warnings, editing }) {
+  const tr = rule.trigger || {};
+  const [t] = trig(tr);
+  const type = TRIGGER_TYPES.includes(t) ? t : "every";
+  const opts = TRIGGER_TYPES.map((o) => `<option value="${o}"${o === type ? " selected" : ""}>${o}</option>`).join("");
+  const warns = arr(warnings);
+  const group = (name, inner) => `<div class="trig-edit" data-tg="${name}"${name === type ? "" : " hidden"}>${inner}</div>`;
+  return (editing ? `<p class="editing">Editing rule <span class="mono">${esc(rule.id)}</span></p>` : `<div class="lbl">The agent understood</div><p class="readback">${esc(readback)}</p>`)
     + (warns.length ? `<ul class="warns">${warns.map((w) => `<li>${esc(w)}</li>`).join("")}</ul>` : "")
     + `<div class="fields">`
-    + `<label class="field"><span class="lbl">Rule id</span><input class="in mono" data-f="id" value="${esc(rule.id)}"></label>`
-    + `<label class="field"><span class="lbl">Trigger type</span><select class="in" data-f="ttype">${opts}</select></label>`
-    + `<label class="field"><span class="lbl">Trigger value</span><input class="in mono" data-f="tval" value="${esc(v)}"></label>`
-    + `<label class="field"><span class="lbl">Max ₹</span><input class="in" type="number" min="1" data-f="maxInr" value="${esc(rule.maxInr)}"></label>`
+    + `<label class="field"><span class="lbl">Rule id</span><input class="in mono" data-f="id" value="${esc(rule.id)}"${editing ? " readonly" : ""}></label>`
     + `<label class="field"><span class="lbl">Product type</span><input class="in" data-f="productType" value="${esc(rule.productType)}"></label>`
+    + `<label class="field"><span class="lbl">Max ₹</span><input class="in" type="number" min="1" data-f="maxInr" value="${esc(rule.maxInr)}"></label>`
+    + `<label class="field"><span class="lbl">Trigger type</span><select class="in" data-f="ttype">${opts}</select></label>`
+    + `<div class="field span2"><span class="lbl">Trigger</span>`
+    + group("every", `<input class="in mono" data-f="every" placeholder="24h" aria-label="Repeat every (for example 30m, 24h)" value="${esc(tr.every)}"><span class="fhint">How long after the last run, like 30m, 24h or 90s.</span>`)
+    + group("at", `<input class="in" type="time" data-f="at" aria-label="Time of day" value="${esc(tr.at)}"><div class="days" role="group" aria-label="Days of the week">${dayToggles(tr.days)}</div><span class="fhint">No day selected means every day.</span>`)
+    + group("signal", `<input class="in mono" data-f="signal" placeholder="treat" aria-label="Signal name" value="${esc(tr.signal)}"><span class="fhint">Fires when you say this word.</span>`)
+    + group("calendar", `<input class="in mono" data-f="calendar" placeholder="default" aria-label="Calendar source" value="${esc(tr.calendar)}"><span class="fhint">An .ics URL, or “default”.</span>`)
+    + `</div>`
     + `<label class="field wide"><span class="lbl">Intent</span><textarea class="in" rows="2" data-f="intent">${esc(rule.intent)}</textarea></label></div>`
     + `<div class="add-row"><button class="btn" type="button" data-do="commit">Confirm &amp; save</button><button class="btn ghost" type="button" data-do="discard">Discard</button><span class="msg" data-msg role="alert"></span></div>`;
 }
+function openEditor(state) {
+  pendingRule = state;
+  const out = $("proposeOut");
+  out.innerHTML = editorHtml(state); out.hidden = false;
+  out.scrollIntoView({ block: "nearest" });
+}
 function closeProposal() { pendingRule = null; $("proposeOut").hidden = true; $("proposeOut").innerHTML = ""; }
+
+/* the trigger object the form describes, or { error } */
+function readTrigger(out, base) {
+  const f = (k) => out.querySelector(`[data-f="${k}"]`).value.trim();
+  const type = f("ttype");
+  if (type === "every") {
+    const v = f("every");
+    return DURATION.test(v) ? { trigger: { every: v } } : { error: "Repeat interval looks like 30m, 24h or 90s." };
+  }
+  if (type === "at") {
+    const at = f("at");
+    if (!at) return { error: "Pick a time of day for this rule." };
+    const days = DAY_KEYS.filter((k) => out.querySelector(`.daytog[data-day="${k}"]`).getAttribute("aria-pressed") === "true");
+    const trigger = { at };
+    if (days.length) trigger.days = days;
+    if (base && base.at && base.tz) trigger.tz = base.tz;
+    return { trigger };
+  }
+  if (type === "signal") {
+    const v = f("signal");
+    return SIGNAL_NAME.test(v) ? { trigger: { signal: v } } : { error: "Signal name: lowercase letters, digits and dashes only." };
+  }
+  const v = f("calendar");
+  return v ? { trigger: { calendar: v } } : { error: "Name a calendar source, or write default." };
+}
 
 $("proposeBtn").addEventListener("click", async () => {
   const btn = $("proposeBtn"); const text = $("ruleText").value.trim();
@@ -1087,26 +1242,39 @@ $("proposeBtn").addEventListener("click", async () => {
   btn.disabled = true; btn.textContent = "Reading…";
   try {
     const r = await post("/rules/propose", { text });
-    pendingRule = r; $("proposeOut").innerHTML = proposalHtml(r); $("proposeOut").hidden = false;
+    openEditor({ rule: r.rule || {}, readback: r.readback, warnings: r.warnings, editing: false });
   } catch (e) { $("proposeMsg").textContent = e.message || "Could not read that rule."; }
   finally { btn.disabled = false; btn.textContent = "Propose"; }
 });
 
+$("proposeOut").addEventListener("change", (ev) => {
+  const sel = ev.target.closest('select[data-f="ttype"]');
+  if (!sel) return;
+  $("proposeOut").querySelectorAll("[data-tg]").forEach((g) => { g.hidden = g.dataset.tg !== sel.value; });
+});
+
 $("proposeOut").addEventListener("click", async (ev) => {
+  const day = ev.target.closest("button.daytog");
+  if (day) { day.setAttribute("aria-pressed", String(day.getAttribute("aria-pressed") !== "true")); return; }
   const b = ev.target.closest("button[data-do]");
   if (!b) return;
   if (b.dataset.do === "discard") { closeProposal(); return; }
   const out = $("proposeOut"); const msg = out.querySelector("[data-msg]");
   const f = (k) => out.querySelector(`[data-f="${k}"]`).value.trim();
-  const rule = { id: f("id"), intent: f("intent"), maxInr: Number(f("maxInr")), trigger: { [f("ttype")]: f("tval") } };
-  if (f("productType")) rule.productType = f("productType");
+  const base = (pendingRule && pendingRule.rule) || {};
+  const rule = { ...base, id: f("id"), intent: f("intent"), maxInr: Number(f("maxInr")) };
+  if (f("productType")) rule.productType = f("productType"); else delete rule.productType;
   msg.textContent = "";
-  if (!rule.id || !rule.intent || !f("tval") || !(rule.maxInr > 0)) { msg.textContent = "Id, trigger value, intent and a positive max are required."; return; }
+  if (!rule.id || !rule.intent || !(rule.maxInr > 0)) { msg.textContent = "Id, intent and a positive max are required."; return; }
+  const t = readTrigger(out, base.trigger);
+  if (t.error) { msg.textContent = t.error; return; }
+  rule.trigger = t.trigger;
   b.disabled = true;
   try {
+    const wasEdit = !!(pendingRule && pendingRule.editing);
     const r = await post("/rules/commit", { rule });
     if (data && r && r.rules) { data.rules = r.rules; renderRules(data); }
-    closeProposal(); $("ruleText").value = ""; toast(`Rule "${rule.id}" saved.`); load();
+    closeProposal(); if (!wasEdit) $("ruleText").value = ""; toast(`Rule "${rule.id}" saved.`); load();
   } catch (e) { msg.textContent = e.message || "Could not save the rule."; }
   finally { b.disabled = false; }
 });
@@ -1146,10 +1314,14 @@ const MOCK_DATA = (() => {
       { id: "s3", at: ago(30), ruleId: "festival", productName: "Amazon Pay Gift Card ₹30", valueInr: 30, cost: 0.37, costCurrency: "USDC", invoiceId: "inv_77d1c4", status: "failed", receiptTxid: null },
     ],
     rules: [
-      { id: "weekly-airtel", intent: "Keep Mum's Airtel number topped up", maxInr: 50, productType: "topup", trigger: { every: "7d" } },
+      { id: "weekly-airtel", intent: "Keep Mum's Airtel number topped up", maxInr: 50, productType: "topup", trigger: { every: "168h" } },
       { id: "low-data", intent: "Buy a data pack when the data-low signal fires", maxInr: 100, productType: "topup", trigger: { signal: "data-low" } },
       { id: "diwali-gift", intent: "Send a gift card to the family group before Diwali", maxInr: 500, productType: "giftcard", trigger: { calendar: "diwali -3d" } },
+      { id: "weekday-chai", intent: "Order the usual chai and biscuits from Instamart", maxInr: 120, productType: "gift_card", trigger: { at: "07:30", days: ["mon", "tue", "wed", "thu", "fri"] } },
+      { id: "sunday-treat", intent: "Sunday breakfast treat for the family", maxInr: 250, productType: "gift_card", trigger: { at: "08:00", days: ["sun"] } },
+      { id: "daily-milk", intent: "Top up the Instamart wallet for the morning milk", maxInr: 60, productType: "gift_card", trigger: { at: "09:00" } },
     ],
+    lastRun: { "weekly-airtel": Date.now() - 150 * 60000, "low-data": Date.now() - 60 * 60000, "weekday-chai": Date.now() - 2 * 3600000, "sunday-treat": Date.now() - 3600000, "daily-milk": Date.now() - 3 * 3600000 },
     runs: [],
     timeline: [
       { at: ago(320), kind: "deposit", title: "Deposit received · 0.0500 TAZ", detail: "Cap ₹50, receipts go to the reply address", mono: tx("a1"), link: "https://explorer.example/tx/" + tx("a1") },
@@ -1219,9 +1391,15 @@ async function mockApi(path, opts) {
     const r = body.rule || {};
     if (!r.id) throw new Error("rule.id is required");
     if (!(r.maxInr > 0)) throw new Error("maxInr must be a positive number");
-    if (MOCK_DATA.rules.some((x) => x.id === r.id)) throw new Error(`a rule with id "${r.id}" already exists`);
-    MOCK_DATA.rules.push(r);
+    if (MOCK_DATA.rules.some((x) => x.id === r.id)) MOCK_DATA.rules = MOCK_DATA.rules.map((x) => (x.id === r.id ? r : x));
+    else MOCK_DATA.rules.push(r);
     return { ok: true, rules: JSON.parse(JSON.stringify(MOCK_DATA.rules)) };
+  }
+  if (path === "/rules/fire") {
+    if (!MOCK_DATA.rules.some((x) => x.id === body.id)) throw new Error(`no rule ${body.id}`);
+    MOCK_DATA.lastRun[body.id] = Date.now();
+    MOCK_DATA.timeline.push({ at: new Date().toISOString(), kind: "trigger", title: `Rule ${body.id} fired`, detail: "manual (mock)" });
+    return { ok: true, started: true, reason: "agent pass started; the timeline updates as it works" };
   }
   if (path === "/rules/delete") {
     MOCK_DATA.rules = MOCK_DATA.rules.filter((x) => x.id !== body.id);
