@@ -1022,7 +1022,7 @@ $("rules").addEventListener("click", (ev) => {
   const fire = ev.target.closest("button[data-fire]");
   if (fire) {
     const name = fire.dataset.fire;
-    guard(fire, async () => { await post("/signal/" + encodeURIComponent(name)); await load(); }, `Signal "${name}" queued. The agent picks it up on its next pass.`);
+    guard(fire, async () => { await post("/signal/" + encodeURIComponent(name)); const r = await post("/agent/run"); await load(); if (r && r.started === false) throw new Error(r.reason || "agent busy"); }, `Signal "${name}" queued and the agent is running it now — watch the Timeline (30–90 s).`);
     return;
   }
   const del = ev.target.closest("button[data-del]");

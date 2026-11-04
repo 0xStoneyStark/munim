@@ -9,6 +9,7 @@ import { z } from "zod";
 import { budget, type Ledger } from "@munim/zcash-purse";
 import { approve, decline, loadProposals } from "./travel.js";
 import { proposeRule } from "./rule-builder.js";
+import { spawn } from "node:child_process";
 import { ruleSchema, saveRules, type Rule } from "./rules.js";
 import {
   EXPLORER,
@@ -159,10 +160,49 @@ async function postDelete(deps: ApiDeps, req: http.IncomingMessage): Promise<unk
   return { ok: true, rules: next };
 }
 
+// ---------------------------------------------------------------- POST /agent/run
+// One agent pass (`run.ts --once`) spawned from the dashboard, so no terminal is
+// needed. A lock file keeps passes from overlapping; a stale lock (>15 min) is ignored.
+
+const AGENT_LOCK_MAX_AGE_MS = 15 * 60_000;
+
+function agentLockPath(deps: ApiDeps): string {
+  return path.join(deps.dataDir, "agent.lock");
+}
+
+export function agentRunning(deps: ApiDeps): boolean {
+  const lock = agentLockPath(deps);
+  if (!fs.existsSync(lock)) return false;
+  const age = Date.now() - fs.statSync(lock).mtimeMs;
+  if (age > AGENT_LOCK_MAX_AGE_MS) {
+    fs.unlinkSync(lock);
+    return false;
+  }
+  return true;
+}
+
+function runAgentPass(deps: ApiDeps): { started: boolean; reason: string } {
+  if (agentRunning(deps)) return { started: false, reason: "an agent pass is already running" };
+  const lock = agentLockPath(deps);
+  fs.writeFileSync(lock, new Date().toISOString());
+  const tsx = path.resolve("node_modules/tsx/dist/cli.mjs");
+  const child = spawn(process.execPath, [tsx, path.resolve("apps/munim/src/run.ts"), "--once"], {
+    cwd: process.cwd(),
+    env: process.env,
+    stdio: "ignore",
+    detached: false,
+    windowsHide: true,
+  });
+  child.on("exit", () => fs.rmSync(lock, { force: true }));
+  child.on("error", () => fs.rmSync(lock, { force: true }));
+  return { started: true, reason: "agent pass started; the timeline updates as it works" };
+}
+
 async function route(req: http.IncomingMessage, url: URL, deps: ApiDeps): Promise<unknown | undefined> {
   const p = url.pathname;
-  if (req.method === "GET" && p === "/api") return overview(deps);
+  if (req.method === "GET" && p === "/api") return { ...overview(deps), agentRunning: agentRunning(deps) };
   if (req.method !== "POST") return undefined;
+  if (p === "/agent/run") return runAgentPass(deps);
   if (p.startsWith("/signal/")) return postSignal(deps, p.slice("/signal/".length));
   const proposal = /^\/proposals\/([^/]+)\/(approve|decline)$/.exec(p);
   if (proposal) return decideProposal(decodeURIComponent(proposal[1]), proposal[2] as "approve" | "decline");
