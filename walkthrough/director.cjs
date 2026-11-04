@@ -28,7 +28,7 @@ const META = [
   { n: 10, kind: 'lap',   eyebrow: 'RECEIPTS',           head: 'ENCRYPTED MEMO → VERIFIED',     sub: 'a hash of the code, never the code' },
   { n: 11, kind: 'lap',   eyebrow: 'PRIVACY NOTE',       head: 'WHO SEES WHAT',                 sub: 'and what nobody can' },
   { n: 12, kind: 'phone', eyebrow: 'CALENDAR → PROPOSAL', head: 'DUBAI eSIM, BY ITSELF',        sub: 'buys only after approval, only inside the cap' },
-  { n: 13, kind: 'phone', eyebrow: 'WALLETS',            head: 'SWIGGY MONEY, AUTO-REDEEMED',   sub: 'the same balance paid last night’s Instamart order' },
+  { n: 13, kind: 'phone', eyebrow: 'WALLETS',            head: 'SWIGGY MONEY, AUTO-REDEEMED',   sub: 'the same balance paid this evening’s Instamart order' },
   { n: 14, kind: 'phone', eyebrow: 'CONNECTIONS',        head: 'EVERY LINK, LIVE',              sub: 'Swiggy MCP · Bitrefill · Calendar · wallets' },
   { n: 15, kind: 'phone', eyebrow: 'PUSH',               head: 'ALLOW ONCE',                    sub: '' },
   { n: 16, kind: 'phone', eyebrow: 'PUSH',               head: 'ONE TAP',                       sub: '' },
@@ -146,9 +146,10 @@ for (const m of META) if (m.kind === 'phone' || m.kind === 'wide') {
       const v = el.querySelector('video'); if (v) { v.currentTime = 0; v.play().catch(() => {}); }
       el.classList.add('on');
     }, m.n);
-    const hold = Math.max(1.2, m.dur - T);
+    const voDur = Number(execSync(`ffprobe -v error -show_entries format=duration -of csv=p=0 "${ROOT}/vo/s${String(m.n).padStart(2, '0')}.mp3"`).toString().trim()) || 0;
+    const hold = Math.max(1.2, m.dur - T, voDur + 0.35 + 0.5 - T);   // never shorter than the voice line
     await page.waitForTimeout(hold * 1000);
-    schedule.push({ scene: m.n, start, dur: m.dur });
+    schedule.push({ scene: m.n, start, dur: hold + T });
     console.log(`scene ${m.n} ${m.kind} @${start.toFixed(2)}s +${m.dur.toFixed(2)}s`);
   }
   await page.waitForTimeout(600);
