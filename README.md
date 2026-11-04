@@ -128,6 +128,12 @@ TypeScript on Node 24 · `@anthropic-ai/sdk` (Claude Sonnet 5.5, beta tool runne
 - **Hash, don't forward, the code.** The model and the memo get `sha256(code)`; the funder reads the real code in the Bitrefill order. No code ever sits in a log.
 - **Operator-settled Bitrefill.** ZEC isn't accepted by Bitrefill and the testnet has no swap path, so the operator's balance pays. This is a stated trust gap, not hidden — see [PRIVACY.md](PRIVACY.md).
 
+## Already continuing
+
+- Upstream, filed during the hack from what we hit: [zcash/zcash-devtool#272](https://github.com/zcash/zcash-devtool/issues/272) (memo decryption, `list-tx --json`, unsigned sends — PR offered) and [bitrefill/agents#19](https://github.com/bitrefill/agents/issues/19) (MCP auth docs, TOON output, voucher format).
+- Hosted and in daily use by the builder's own household: https://munim.heneryshop.com (installable PWA, password-protected; see [deploy/README-deploy.md](deploy/README-deploy.md)).
+- The purse is a standalone package with its own MCP server: [packages/zcash-purse/README-purse.md](packages/zcash-purse/README-purse.md).
+
 ## Privacy and trust note
 
 See [PRIVACY.md](PRIVACY.md). Next 30 days: [NEXT.md](NEXT.md). Friction notes: [FEEDBACK.md](FEEDBACK.md).

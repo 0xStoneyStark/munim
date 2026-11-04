@@ -45,7 +45,11 @@ Paste PRIVACY.md (sections 1–4 answer the four questions).
 
 ## Next step (30 days)
 
-Paste NEXT.md.
+Paste NEXT.md. Lead with what is already started: upstream issues [zcash/zcash-devtool#272](https://github.com/zcash/zcash-devtool/issues/272) and [bitrefill/agents#19](https://github.com/bitrefill/agents/issues/19), and the hosted, installable instance at https://munim.heneryshop.com running for the builder's household.
+
+## Public URL (update)
+
+https://munim.heneryshop.com — password-protected (purchases are real); judges who want to try it can ask in the mentor chat for the demo password. The read-only proof is in the video and README.
 
 ## Friction notes
 
