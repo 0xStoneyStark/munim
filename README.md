@@ -111,7 +111,10 @@ All on 4 Nov 2026, Zcash testnet (NU7) and the live Bitrefill API.
 | Signal `treat` again → `purse_check ₹50: ₹50 exceeds remaining cap ₹40` → **refused**, no invoice | agent log: "the purse refused it because only about ₹40 of the cap is left … I didn't try Zomato because a ₹50 Zomato card would hit the same limit" |
 | Earlier attempt, same rule: Jio *data add-on* ₹11 | invoice `efa3987e-ef86-45c7-83a7-f93a52442e22` — **refunded** by Bitrefill (data packs need an active base plan). Kept in the ledger as `refunded`, not counted against the cap. |
 
-Cap after the run: ₹100 authorised, ₹60 spent, ₹40 remaining — a third `treat` (₹50) is refused by `purse_check`.
+| **Works while you sleep:** two flight events on the funder's Google Calendar (`IndiGo 6E 1407 BOM → DXB`, 15 Nov; return 20 Nov), read through the Google Calendar MCP; Gmail booking mail read through the Gmail MCP | trip detected `Dubai (AE) 2026-11-15 → 11-20`, proposal `22ca92db`: `bitrefill-esim-united-arab-emirates · 1GB, 7 Days · 3.76 USD` — waiting in the dashboard's Approvals inbox; bought only after approval and only inside the cap |
+| **Agent-to-agent payment:** `purse_pay` from the purse MCP to the funder, 0.0001 TAZ with memo `munim pay purpose=mcp-pay-test inr=1 hello from munim` | [`e03a2b3ca20c85c20448e6a59d2e51c9fc54cfe3896ec13c43789b10b57dee22`](https://testnet.zcashexplorer.app/transactions/e03a2b3ca20c85c20448e6a59d2e51c9fc54cfe3896ec13c43789b10b57dee22) — counted against the cap (₹40 → ₹39) |
+
+Cap after the run: ₹100 authorised, ₹61 spent, ₹39 remaining — a third `treat` (₹50) is refused by `purse_check`.
 
 ## Technologies
 
