@@ -83,10 +83,19 @@ Tools: `purse_address`, `purse_refresh`, `purse_budget`, `purse_check`, `purse_r
 
 ## Evidence
 
-<!-- filled in at submission -->
-- Funding tx (shielded, testnet): `TBD`
-- Receipt tx (shielded, testnet): `TBD`
-- Bitrefill invoice: `TBD`
+All on 4 Nov 2026, Zcash testnet (NU7) and the live Bitrefill API.
+
+| Step | Evidence |
+|---|---|
+| Funder → purse, 0.1 TAZ, memo `fund cap=100 INR reply=utest1…` | [`0c7247b5c65fd308cad895f9c798583ca12ffe4a90fa7efe25d257319b7291c6`](https://testnet.zcashexplorer.app/transactions/0c7247b5c65fd308cad895f9c798583ca12ffe4a90fa7efe25d257319b7291c6) — mined 4581752, shielded (Ironwood) |
+| Rule `jio-recharge` fired on schedule → Sonnet picked the ₹10 Jio talktime pack → `purse_check` ✓ → bought | Bitrefill invoice `3bb79e4e-6d7a-4b56-a921-07e5cb060f89`, order `6aeb0da57073473b2edcb0fd`, **delivered**, $0.11 |
+| Purse → funder receipt, memo `munim receipt inv=3bb79e4e… item=Jio Bundles India inr=10 cost=0.11 USD rule=jio-recharge` | [`4377c5c7acdbd4239a87c574aee8f070b1dc84d963c09804a7376824e4042461`](https://testnet.zcashexplorer.app/transactions/4377c5c7acdbd4239a87c574aee8f070b1dc84d963c09804a7376824e4042461) — mined 4581796; decrypted in the funder's wallet with `zcash-devtool wallet list-tx` |
+| Signal `treat` → ₹50 Swiggy Money gift card → bought, code hashed | Bitrefill invoice `599b5c2f-aba9-4774-8d2d-676d2e64b373`, order `6aeb0e027073473b2edcb9d5`, **delivered**, $0.55 |
+| Purse → funder receipt for the Swiggy card (sent on the next pass, after the purse's change note confirmed) | [`3552ff34bbf513e269fc88bef1dc4cb7609aee68ad87fb5c043125de3966557b`](https://testnet.zcashexplorer.app/transactions/3552ff34bbf513e269fc88bef1dc4cb7609aee68ad87fb5c043125de3966557b) |
+| Signal `treat` again → `purse_check ₹50: ₹50 exceeds remaining cap ₹40` → **refused**, no invoice | agent log: "the purse refused it because only about ₹40 of the cap is left … I didn't try Zomato because a ₹50 Zomato card would hit the same limit" |
+| Earlier attempt, same rule: Jio *data add-on* ₹11 | invoice `efa3987e-ef86-45c7-83a7-f93a52442e22` — **refunded** by Bitrefill (data packs need an active base plan). Kept in the ledger as `refunded`, not counted against the cap. |
+
+Cap after the run: ₹100 authorised, ₹60 spent, ₹40 remaining — a third `treat` (₹50) is refused by `purse_check`.
 
 ## Technologies
 

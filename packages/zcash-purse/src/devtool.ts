@@ -132,8 +132,9 @@ export function parseListTx(text: string): TxOutput[] {
       cur.value = Math.round(parseFloat(amount[1]) * ZAT_PER_ZEC);
       cur.direction = cur.value < 0 ? "out" : "in";
     }
+    // `Amount` is unsigned for sends, so the note counts decide direction
     const sentRecv = line.match(/^Sent ([0-9]+) notes?, received ([0-9]+) notes?/);
-    if (sentRecv && parseInt(sentRecv[1], 10) > 0 && cur.value <= 0) cur.direction = "out";
+    if (sentRecv && parseInt(sentRecv[1], 10) > 0) cur.direction = "out";
     // after `enhance`: `Memo: Memo::Text("fund cap=100 INR ...")`
     const memo = line.match(/^Memo(?: \(text\))?:\s*(?:Memo::Text\()?"?(.*?)"?\)?\s*$/);
     if (memo && memo[1].trim() && !/^Memo::Empty/.test(memo[1])) cur.memo = memo[1].trim();

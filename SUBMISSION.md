@@ -18,11 +18,13 @@ None needed: Munim is an agent + CLI + MCP server (the brief says SDKs/CLIs/bots
 
 ## Testnet transaction ID (shielded)
 
-`TBD — funding tx from funder → purse` (Stadium checks it is a real shielded tx)
+`0c7247b5c65fd308cad895f9c798583ca12ffe4a90fa7efe25d257319b7291c6` — funder → purse, 0.1 TAZ, memo `fund cap=100 INR reply=…`, mined 4581752 (Ironwood, shielded).
+Second one if the form allows: `4377c5c7acdbd4239a87c574aee8f070b1dc84d963c09804a7376824e4042461` — purse → funder receipt memo, mined 4581796.
 
 ## Bitrefill invoice ID
 
-`TBD`
+`3bb79e4e-6d7a-4b56-a921-07e5cb060f89` — Jio ₹10 talktime, delivered, $0.11 (agent-initiated on schedule).
+Also: `599b5c2f-aba9-4774-8d2d-676d2e64b373` — Swiggy Money ₹50 gift card, delivered, $0.55 (agent-initiated on the `treat` signal).
 
 ## Which parts are for which track
 
