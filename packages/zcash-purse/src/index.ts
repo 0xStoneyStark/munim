@@ -132,6 +132,107 @@ export class Purse {
     await this.update({ ...spend, receiptTxid: txid });
     return txid;
   }
+
+  /**
+   * Pay another party in shielded TAZ with an encrypted memo, inside the cap.
+   * The INR value is the caller's declaration of what the payment is worth
+   * against the cap; the purse records it as such. A failed send is marked
+   * "failed" (not counted against the cap) and the error is rethrown.
+   */
+  async pay(req: PayRequest): Promise<{ txid: string; spend: Spend }> {
+    validatePayRequest(req);
+    const verdict = await this.check(req.valueInr);
+    if (!verdict.ok) throw new Error("cap refused: " + verdict.reason);
+    const spend = await this.reserve({
+      ruleId: req.ruleId ?? "agent-pay",
+      productId: PAY_PRODUCT_ID,
+      productName: req.purpose,
+      valueInr: req.valueInr,
+      cost: req.zatoshis / ZAT_PER_TAZ,
+      costCurrency: "TAZ",
+      invoiceId: "pending",
+      orderId: null,
+      status: "pending",
+    });
+    let txid: string;
+    try {
+      txid = await this.devtool.send(req.to, req.zatoshis, buildPayMemo(req.purpose, req.valueInr, req.memo));
+    } catch (e) {
+      await this.update({ ...spend, status: "failed" });
+      throw e;
+    }
+    const sent: Spend = { ...spend, invoiceId: "zec:" + txid, status: "sent" };
+    await this.update(sent);
+    return { txid, spend: sent };
+  }
+}
+
+export interface PayRequest {
+  /** shielded recipient: utest1… / u1… unified, or ztestsapling1… */
+  to: string;
+  zatoshis: number;
+  /** caller's memo, ≤ 512 UTF-8 bytes; prefixed with the munim pay header */
+  memo: string;
+  /** what this payment is worth against the INR cap (caller's declaration) */
+  valueInr: number;
+  ruleId?: string;
+  /** short label, ≤ 40 chars, e.g. "research-agent fee" */
+  purpose: string;
+}
+
+export const PAY_PRODUCT_ID = "zec-payment";
+/** smallest payment accepted: same dust floor as a receipt */
+export const MIN_PAY_ZATOSHIS = RECEIPT_ZATOSHIS;
+export const MEMO_MAX_BYTES = 512;
+export const PURPOSE_MAX_CHARS = 40;
+const ZAT_PER_TAZ = 100_000_000;
+
+const SHIELDED_RE = /^(utest1|u1|ztestsapling1)[02-9ac-hj-np-z]{40,}$/;
+const TRANSPARENT_RE = /^(t1|t3|tm|t2|tex1|textest1)/i;
+
+/** Throws with a clear reason unless `to` is a shielded address we can pay. */
+export function validatePayee(to: string): void {
+  const addr = to.trim();
+  if (TRANSPARENT_RE.test(addr)) {
+    throw new Error("refused: transparent address — paying a t-address leaks amount, memo and payer link on-chain; ask the payee for a shielded (utest1/u1/ztestsapling1) address");
+  }
+  if (!SHIELDED_RE.test(addr)) {
+    throw new Error("refused: not a shielded Zcash address (expected utest1…, u1… or ztestsapling1…)");
+  }
+}
+
+function validatePayRequest(req: PayRequest): void {
+  validatePayee(req.to);
+  if (!Number.isInteger(req.zatoshis) || req.zatoshis < MIN_PAY_ZATOSHIS) {
+    throw new Error(`refused: zatoshis must be an integer ≥ ${MIN_PAY_ZATOSHIS}`);
+  }
+  if (!(req.valueInr > 0)) throw new Error("refused: value_inr must be > 0");
+  const purpose = req.purpose.trim();
+  if (!purpose || purpose.length > PURPOSE_MAX_CHARS || /[\r\n]/.test(purpose)) {
+    throw new Error(`refused: purpose must be 1–${PURPOSE_MAX_CHARS} chars on one line`);
+  }
+  if (Buffer.byteLength(req.memo, "utf8") > MEMO_MAX_BYTES) {
+    throw new Error(`refused: memo is ${Buffer.byteLength(req.memo, "utf8")} bytes; the limit is ${MEMO_MAX_BYTES} UTF-8 bytes`);
+  }
+}
+
+/** `munim pay purpose=<purpose> inr=<valueInr> <memo>`, trimmed to 512 UTF-8 bytes. */
+export function buildPayMemo(purpose: string, valueInr: number, memo: string): string {
+  return truncateUtf8(`munim pay purpose=${purpose.trim()} inr=${valueInr} ${memo}`.trim(), MEMO_MAX_BYTES);
+}
+
+/** Cut to at most `max` bytes without splitting a multi-byte character. */
+function truncateUtf8(s: string, max: number): string {
+  if (Buffer.byteLength(s, "utf8") <= max) return s;
+  let out = "";
+  let bytes = 0;
+  for (const ch of s) {
+    const n = Buffer.byteLength(ch, "utf8");
+    if (bytes + n > max) break;
+    out += ch;
+    bytes += n;
+  }
+  return out;
 }
 
 export function receiptMemo(s: Spend): string {

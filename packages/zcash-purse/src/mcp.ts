@@ -1,14 +1,14 @@
 // MCP server exposing the capped purse to any agent (Claude Code, Cursor,
 // Claude Desktop...). The agent can read its budget, check a spend against the
-// cap, record a purchase and send a receipt memo — it never sees the funder's
-// keys, and it cannot raise its own cap.
+// cap, record a purchase, send a receipt memo and pay another party inside the
+// cap — it never sees the funder's keys, and it cannot raise its own cap.
 //
 //   npm run purse:mcp     (stdio)
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { Purse, budget, zatToZec } from "./index.js";
+import { MIN_PAY_ZATOSHIS, PURPOSE_MAX_CHARS, Purse, budget, zatToZec } from "./index.js";
 import { purseConfigFromEnv } from "./config.js";
 
 const purse = new Purse(purseConfigFromEnv());
@@ -92,6 +92,36 @@ server.registerTool(
     const dest = to ?? (await purse.replyAddress());
     if (!dest) throw new Error("no reply address: funder memo carried none and `to` not given");
     return text({ txid: await purse.sendReceipt(spend, dest) });
+  },
+);
+
+server.registerTool(
+  "purse_pay",
+  {
+    description:
+      "Pay another party (e.g. another agent) in shielded ZEC with a memo. This MOVES REAL FUNDS (testnet TAZ) out of the purse and cannot be undone. " +
+      "The INR cap applies: the payment is refused if value_inr exceeds the remaining budget. Transparent (t…/tm…/tex…) addresses are refused because paying them leaks amount, memo and payer link on-chain; only shielded utest1…/u1…/ztestsapling1… addresses are accepted. " +
+      "The memo is encrypted end-to-end to the recipient; it is sent as `munim pay purpose=<purpose> inr=<value_inr> <memo>`, max 512 bytes. Returns the txid, the ledger spend id and the remaining INR budget.",
+    inputSchema: {
+      to: z.string().describe("recipient shielded address: utest1… / u1… unified, or ztestsapling1…"),
+      zatoshis: z.number().int().min(MIN_PAY_ZATOSHIS).describe("amount to send in zatoshis (1 TAZ = 100,000,000); minimum 10000"),
+      memo: z.string().default("").describe("message for the recipient, ≤ 512 UTF-8 bytes, encrypted to them"),
+      value_inr: z.number().positive().describe("what this payment is worth against the INR cap — your declaration, recorded as such"),
+      purpose: z.string().min(1).max(PURPOSE_MAX_CHARS).describe('short label, ≤ 40 chars, e.g. "research-agent fee"'),
+    },
+  },
+  async (a) => {
+    const { txid, spend } = await purse.pay({ to: a.to, zatoshis: a.zatoshis, memo: a.memo, valueInr: a.value_inr, purpose: a.purpose });
+    return text({ txid, spend_id: spend.id, remaining_inr: budget(await purse.state()).remainingInr });
+  },
+);
+
+server.registerTool(
+  "purse_ledger",
+  { description: "Read-only: every recorded spend and payment (redemption-code hashes omitted) plus the INR budget. Spends nothing.", inputSchema: {} },
+  async () => {
+    const l = await purse.state();
+    return text({ budget: budget(l), spends: l.spends.map(({ codeHash: _c, ...s }) => s) });
   },
 );
 
