@@ -23,7 +23,8 @@ Second one if the form allows: `4377c5c7acdbd4239a87c574aee8f070b1dc84d963c09804
 
 ## Bitrefill invoice ID
 
-`3bb79e4e-6d7a-4b56-a921-07e5cb060f89` — Jio ₹10 talktime, delivered, $0.11 (agent-initiated on schedule).
+`7827bbf6-1825-4b00-8598-abbfaa1b92dd` — ₹250 Swiggy Money card, delivered, $2.75, bought by the `topup` rule, auto-redeemed into the household Swiggy balance (₹50 → ₹300), then spent by the `daily-diet-coke` rule at 19:05 IST through Swiggy's official Instamart MCP: **Instamart order 252768923926074, paid with Swiggy Money, no human step.**
+Also: `3bb79e4e-6d7a-4b56-a921-07e5cb060f89` — Jio ₹10 talktime, delivered, $0.11 (agent-initiated on schedule).
 Also: `599b5c2f-aba9-4774-8d2d-676d2e64b373` — Swiggy Money ₹50 gift card, delivered, $0.55 (agent-initiated on the `treat` signal).
 
 ## Which parts are for which track
