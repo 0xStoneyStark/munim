@@ -182,6 +182,7 @@ async function postFire(deps: ApiDeps, req: http.IncomingMessage): Promise<unkno
 }
 
 async function postDelete(deps: ApiDeps, req: http.IncomingMessage): Promise<unknown> {
+  if (process.env.OPEN_DEMO === "1") throw badRequest("deleting rules is disabled while the demo is open to judges; add your own instead");
   const { id } = await readBody(req, deleteBody);
   const current = readRules(deps.rulesFile);
   if (!current.some((r) => r.id === id)) throw notFound(`no rule ${id}`);
@@ -300,6 +301,7 @@ async function postAddress(req: http.IncomingMessage): Promise<unknown> {
 }
 
 async function deleteAddress(req: http.IncomingMessage): Promise<unknown> {
+  if (process.env.OPEN_DEMO === "1") throw badRequest("deleting a saved address is disabled while the demo is open to judges");
   const { addressId } = await readBody(req, addressDeleteBody);
   const text = await withSwiggy((m) => m.call("delete_address", { addressId }));
   return { ok: /success/i.test(text), raw: text.slice(0, 300) };

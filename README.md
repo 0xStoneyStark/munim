@@ -7,7 +7,7 @@
 | **Track** | Privacy, and Agentic Commerce (entered in both) |
 | **Privacy theme(s)** | 1. Private payment rails (capped agent wallet, MCP server) · 3. Privacy beyond the transaction (view-only export, receipts in encrypted memos) |
 | **What it is** | agent + installable web app (PWA) + library with an MCP server (`packages/zcash-purse`) |
-| **Live URL** | https://munim.heneryshop.com (password-protected because purchases are real; ask for the demo password in the mentor chat) |
+| **Live URL** | https://munim.heneryshop.com — **open for judging, no login.** Purchases are real and bounded by the purse cap (the guardrail is the product); rule and address deletion are disabled while it is open. |
 | **Demo video** | https://munim.heneryshop.com/demo.mp4 (2:45, phone + laptop, every step real) |
 | **Testnet txid** | `0c7247b5c65fd308cad895f9c798583ca12ffe4a90fa7efe25d257319b7291c6` · https://zexplorer.app/testnet/tx/0c7247b5c65fd308cad895f9c798583ca12ffe4a90fa7efe25d257319b7291c6 |
 | **Real purchase invoice ID** (Agentic Commerce) | `7827bbf6-1825-4b00-8598-abbfaa1b92dd` (₹250 Swiggy Money card, delivered) |
