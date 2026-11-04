@@ -17,6 +17,7 @@ import { buyApproved, loadProposals, saveProposals, scanAndPropose, type Proposa
 import { loadSwiggySession, saveSwiggySession, redeemBitrefillOrder } from "./swiggy-money.js";
 import { SwiggyMcp } from "./swiggy-mcp.js";
 import { orderOnInstamart } from "./instamart.js";
+import { inrFor, usdToInr } from "./fx.js";
 
 const DATA = path.resolve("data");
 const STATE_FILE = path.join(DATA, "agent-state.json");
@@ -48,8 +49,6 @@ function takeSignals(): Set<string> {
 
 type Deps = Parameters<typeof runRule>[0];
 
-// TODO: rough INR conversion, used only to size cap checks for USD-priced eSIMs; replace with a live rate.
-const USD_TO_INR_FOR_CAP = 90;
 const CALENDAR_ESIM_RULE_ID = "calendar-esim";
 
 /** Calendar rules never fire the shopping agent: they scan for trips and leave proposals for approval. */
@@ -71,22 +70,19 @@ async function scanCalendarRules(deps: Deps, rules: Rule[]) {
 }
 
 /** INR value used for the cap check; null when the proposal's currency cannot be sized. */
-function proposalValueInr(p: Proposal): number | null {
-  const { price, priceCurrency } = p.suggestion;
-  if (priceCurrency === "USD") return Math.ceil(price * USD_TO_INR_FOR_CAP);
-  if (priceCurrency === "INR") return Math.ceil(price);
-  return null;
+function proposalValueInr(p: Proposal, rate: number): number | null {
+  return inrFor(p.suggestion.price, p.suggestion.priceCurrency, rate);
 }
 
 /**
  * Cap-check every approved, not-yet-invoiced proposal (cumulatively). buyApproved buys all approved
  * proposals, so ones the cap refuses are held back as "proposed" for the call and re-approved after.
  */
-async function holdOutOverCap(deps: Deps): Promise<Set<string>> {
+async function holdOutOverCap(deps: Deps, rate: number): Promise<Set<string>> {
   const held = new Set<string>();
   let committedInr = 0;
   for (const p of loadProposals().filter((x) => x.status === "approved" && !x.invoiceId)) {
-    const valueInr = proposalValueInr(p);
+    const valueInr = proposalValueInr(p, rate);
     const verdict = valueInr === null ? null : await deps.purse.check(committedInr + valueInr);
     if (valueInr !== null && verdict?.ok) {
       committedInr += valueInr;
@@ -105,8 +101,8 @@ function restoreHeld(held: Set<string>): void {
   saveProposals(loadProposals().map((p) => (held.has(p.id) && p.status === "proposed" ? { ...p, status: "approved" } : p)));
 }
 
-async function recordEsimSpend(deps: Deps, p: Proposal, invoiceId: string): Promise<void> {
-  const valueInr = proposalValueInr(p) ?? 0;
+async function recordEsimSpend(deps: Deps, p: Proposal, invoiceId: string, rate: number): Promise<void> {
+  const valueInr = proposalValueInr(p, rate) ?? 0;
   const base = {
     ruleId: CALENDAR_ESIM_RULE_ID,
     productId: p.suggestion.productId,
@@ -128,7 +124,9 @@ async function recordEsimSpend(deps: Deps, p: Proposal, invoiceId: string): Prom
 }
 
 async function buyApprovedEsims(deps: Deps) {
-  const held = await holdOutOverCap(deps);
+  const fx = await usdToInr();
+  deps.log(`fx: 1 USD = ₹${fx.rate} (${fx.source})`);
+  const held = await holdOutOverCap(deps, fx.rate);
   let results;
   try {
     results = await buyApproved(deps.bitrefill, { maxPrice: undefined });
@@ -141,7 +139,7 @@ async function buyApprovedEsims(deps: Deps) {
       continue;
     }
     const bought = loadProposals().find((p) => p.id === r.id);
-    if (bought) await recordEsimSpend(deps, bought, r.invoiceId);
+    if (bought) await recordEsimSpend(deps, bought, r.invoiceId, fx.rate);
     deps.log(`eSIM proposal ${r.id} bought, invoice ${r.invoiceId}`);
   }
 }
