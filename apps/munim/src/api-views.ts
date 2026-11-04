@@ -166,7 +166,22 @@ export function buildTimeline(input: TimelineInput): TimelineItem[] {
 
 // ----------------------------------------------------------------- proposals
 
-export function proposalCards(proposals: Proposal[]): Array<Record<string, string>> {
+export interface ProposalCard {
+  id: string;
+  kind: "esim";
+  title: string;
+  subtitle: string;
+  price: string;
+  status: string;
+  createdAt: string;
+  invoiceId: string | null;
+  destination: string;
+  departs: string;
+  /** eSIM activation string, only once bought; the dashboard draws it as a QR. Never log it. */
+  lpa: string | null;
+}
+
+export function proposalCards(proposals: Proposal[]): ProposalCard[] {
   return proposals.map((p) => ({
     id: p.id,
     kind: "esim",
@@ -175,7 +190,85 @@ export function proposalCards(proposals: Proposal[]): Array<Record<string, strin
     price: `${p.suggestion.price} ${p.suggestion.priceCurrency}`,
     status: p.status,
     createdAt: p.createdAt,
+    invoiceId: p.invoiceId ?? null,
+    destination: p.trip.destinationName,
+    departs: p.trip.departs.toISOString(),
+    lpa: p.status === "bought" && p.lpa ? p.lpa : null,
   }));
+}
+
+// ------------------------------------------------------------------- funders
+
+export interface Funder {
+  /** the deposit memo's reply address, "anonymous" (capped, no reply) or "fuel" (no cap, no reply) */
+  id: string;
+  label: string;
+  capInr: number;
+  depositsTaz: number;
+  spentInr: number;
+  receipts: number;
+}
+
+type Deposit = Ledger["deposits"][number];
+
+const FUEL_ID = "fuel";
+const ANON_ID = "anonymous";
+const ADDR_TAIL = 4;
+const NOT_SPENT = new Set(["failed", "refunded"]); // same exclusions as budget()
+
+function funderId(d: Deposit): string {
+  if (d.replyTo) return d.replyTo;
+  return d.capInr === null ? FUEL_ID : ANON_ID;
+}
+
+function funderLabel(id: string): string {
+  if (id === FUEL_ID) return "Fuel (no cap)";
+  if (id === ANON_ID) return "Anonymous";
+  const head = id.startsWith("utest1") ? 6 : 2;
+  return `${id.slice(0, head)}…${id.slice(-ADDR_TAIL)}`;
+}
+
+/**
+ * One row per funder (deposits grouped by reply address).
+ *
+ * Spend allocation rule (FIFO): capped deposits are ordered by `seenAt`, spends by
+ * `at` (failed/refunded skipped, as in budget()). Each spend's valueInr is charged
+ * against the oldest deposit that still has cap left; a spend bigger than that
+ * remainder spills into the next deposit. Anything beyond every cap is not charged
+ * to anyone. The ledger does not store a receipt's destination, so a spend with a
+ * receiptTxid counts as a receipt for the funder whose deposit it was charged to
+ * first.
+ */
+export function funders(ledger: Ledger): Funder[] {
+  const byTime = <T>(key: (x: T) => string) => (a: T, b: T): number => Date.parse(key(a)) - Date.parse(key(b));
+  const deposits = [...ledger.deposits].sort(byTime<Deposit>((d) => d.seenAt));
+  const rows = new Map<string, Funder>();
+  for (const d of deposits) {
+    const id = funderId(d);
+    const row = rows.get(id) ?? { id, label: funderLabel(id), capInr: 0, depositsTaz: 0, spentInr: 0, receipts: 0 };
+    rows.set(id, { ...row, capInr: row.capInr + (d.capInr ?? 0), depositsTaz: Math.round((row.depositsTaz + d.zatoshis / ZATOSHIS_PER_ZEC) * ZATOSHIS_PER_ZEC) / ZATOSHIS_PER_ZEC });
+  }
+
+  const pots = deposits.filter((d) => (d.capInr ?? 0) > 0).map((d) => ({ id: funderId(d), left: d.capInr ?? 0 }));
+  const charge = (id: string, inr: number, receipt: boolean): void => {
+    const row = rows.get(id);
+    if (row) rows.set(id, { ...row, spentInr: row.spentInr + inr, receipts: row.receipts + (receipt ? 1 : 0) });
+  };
+  const spends = ledger.spends.filter((s) => !NOT_SPENT.has(s.status)).sort(byTime<Spend>((s) => s.at));
+  for (const s of spends) {
+    let owed = s.valueInr;
+    let first = true;
+    for (const pot of pots) {
+      if (owed <= 0) break;
+      if (pot.left <= 0) continue;
+      const take = Math.min(pot.left, owed);
+      pot.left -= take;
+      owed -= take;
+      charge(pot.id, take, first && Boolean(s.receiptTxid));
+      first = false;
+    }
+  }
+  return [...rows.values()];
 }
 
 // ----------------------------------------------------------------- merchants

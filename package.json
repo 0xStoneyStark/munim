@@ -15,7 +15,8 @@
     "typecheck": "tsc --noEmit",
     "check": "tsx apps/munim/src/check.ts",
     "swiggy:login": "tsx apps/munim/src/swiggy-mcp.ts login",
-    "swiggy:tools": "tsx apps/munim/src/swiggy-mcp.ts tools"
+    "swiggy:tools": "tsx apps/munim/src/swiggy-mcp.ts tools",
+    "telegram": "tsx apps/munim/src/telegram.ts"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

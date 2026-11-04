@@ -5,20 +5,26 @@
     "maxInr": 30,
     "productType": "phone_refill",
     "phone": "$TOPUP_PHONE",
-    "trigger": { "every": "24h" }
+    "trigger": {
+      "every": "24h"
+    }
   },
   {
     "id": "monthly-medicines",
     "intent": "Monthly medicine refill: buy a ₹500 Apollo Pharmacy India gift card (redeemed in the Apollo 24|7 app).",
     "maxInr": 500,
     "productType": "gift_card",
-    "trigger": { "every": "720h" }
+    "trigger": {
+      "every": "720h"
+    }
   },
   {
     "id": "treat-for-mom",
     "intent": "Send mom a small food treat: a ₹50 Swiggy Money (or Zomato if Swiggy is unavailable) gift card.",
     "maxInr": 60,
     "productType": "gift_card",
-    "trigger": { "signal": "treat" }
+    "trigger": {
+      "signal": "treat"
+    }
   }
 ]

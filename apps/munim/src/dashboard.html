@@ -234,6 +234,25 @@
   .resolved li { display: flex; justify-content: space-between; align-items: center; gap: 10px; color: var(--muted); font-size: 13.5px; padding: 6px 2px; border-top: 1px solid var(--line); }
   .resolved li span:first-child { min-width: 0; overflow-wrap: anywhere; }
 
+  /* eSIM install row (bought proposal with an LPA) */
+  .esim { display: flex; flex-wrap: wrap; gap: 14px 16px; align-items: center; background: var(--well); border: 1px solid var(--line); border-left: 4px solid var(--ok); border-radius: 18px; padding: 14px 16px; }
+  .qr { width: 180px; height: 180px; display: block; background: #FFFFFF; border-radius: 12px; border: 1px solid var(--line); }
+  .esim-cap { color: var(--muted); font-size: 13.5px; margin: 6px 0 12px; }
+  .esim-cap b { color: var(--ink); font-weight: 600; }
+  .esim-txt { flex: 1 1 190px; min-width: 0; }
+  .qr { flex: none; }
+
+  /* funders */
+  .flist { display: grid; }
+  .frow { padding: 13px 0; border-top: 1px solid var(--line); }
+  .frow:first-child { border-top: 0; padding-top: 2px; }
+  .f-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .f-top .mono { font-weight: 600; }
+  .f-nums { display: flex; flex-wrap: wrap; gap: 2px 14px; color: var(--muted); font-size: 13px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .f-nums b { color: var(--ink); font-weight: 700; }
+  .fbar { height: 8px; margin-top: 8px; background: var(--well); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+  .fbar i { display: block; height: 100%; background: var(--ink); border-radius: 999px; }
+
   /* receipts: the filled ink + gold card */
   .feature { background: var(--feature); color: var(--on-feature); border-color: color-mix(in srgb, var(--gold) 20%, var(--feature)); }
   .feature .card-h h2 { color: var(--gold); }
@@ -543,6 +562,11 @@
         </svg>
       </section>
 
+      <section class="card" id="fundersSec" aria-labelledby="h-fund">
+        <div class="card-h"><h2 id="h-fund">Funders</h2><span class="meta" id="fundersMeta">who authorised the cap</span></div>
+        <div class="flist" id="funders"></div>
+      </section>
+
       <section class="card" id="walletsSec" aria-labelledby="h-mw">
         <div class="card-h"><h2 id="h-mw">Merchant wallets</h2><span class="meta">where the codes get spent</span></div>
         <div class="mlist" id="merchants"></div>
@@ -790,13 +814,58 @@ function renderTimeline(d) {
 function renderInbox(d) {
   const ps = arr(d.proposals).slice().sort((a, b) => (when(b.createdAt) || 0) - (when(a.createdAt) || 0));
   const open = ps.filter((p) => p.status === "proposed");
-  const done = ps.filter((p) => p.status !== "proposed").slice(0, 5);
+  const installs = ps.filter((p) => p.status === "bought" && p.lpa);
+  const done = ps.filter((p) => p.status !== "proposed" && !installs.includes(p)).slice(0, 5);
   $("inboxMeta").textContent = open.length ? `${open.length} waiting` : "all clear";
   const cards = open.map((p) => `<article class="pcard"><div class="p-top"><div style="min-width:0"><div class="lbl">${esc(p.kind === "esim" ? "eSIM" : p.kind || "purchase")}</div><div class="p-title">${esc(p.title)}</div><div class="p-sub">${esc(p.subtitle)}</div></div><div class="price">${esc(p.price)}</div></div>`
     + `<div class="p-actions"><button class="btn" type="button" data-act="approve" data-id="${esc(p.id)}">Approve</button><button class="btn ghost" type="button" data-act="decline" data-id="${esc(p.id)}">Decline</button></div></article>`).join("");
   const resolved = done.length
     ? `<ul class="resolved" aria-label="Recently resolved">${done.map((p) => `<li><span>${esc(p.title)} · ${esc(p.price)}</span>${chip(p.status)}</li>`).join("")}</ul>` : "";
-  $("inbox").innerHTML = (cards || `<p class="empty">Nothing is waiting. Bigger buys, like eSIMs, land here for your yes or no.</p>`) + resolved;
+  const empty = installs.length ? "" : `<p class="empty">Nothing is waiting. Bigger buys, like eSIMs, land here for your yes or no.</p>`;
+  $("inbox").innerHTML = (cards || empty) + installs.map(esimHtml).join("") + resolved;
+}
+
+/* bought eSIM: the LPA string drawn as a QR, client-side. The LPA is never logged. */
+const qrCache = new Map();
+function qrSvg(text, label) {
+  if (!qrCache.has(text)) {
+    const m = qrEncode(text), q = 4, size = m.length + 2 * q;
+    let path = "";
+    m.forEach((row, y) => row.forEach((dark, x) => { if (dark) path += `M${x + q} ${y + q}h1v1h-1z`; }));
+    qrCache.set(text, { path, size });
+  }
+  const { path, size } = qrCache.get(text);
+  return `<svg class="qr" viewBox="0 0 ${size} ${size}" role="img" aria-label="${esc(label)}" shape-rendering="crispEdges"><rect width="${size}" height="${size}" fill="#FFFFFF"/><path d="${path}" fill="#111214"/></svg>`;
+}
+function esimHtml(p) {
+  let qr;
+  try { qr = qrSvg(p.lpa, `eSIM activation QR for ${p.destination || "the trip"}`); }
+  catch (e) { qr = `<p class="empty">This code is too long for a QR. Copy it instead.</p>`; }
+  const dep = when(p.departs);
+  const sub = [dep ? `departs ${dep.toLocaleDateString([], { day: "numeric", month: "short" })}` : "", p.invoiceId ? `invoice ${p.invoiceId}` : ""].filter(Boolean).join(" · ");
+  return `<article class="esim">${qr}<div class="esim-txt"><div class="lbl">Install eSIM</div>`
+    + `<div class="p-title">${esc(p.destination ? `eSIM · ${p.destination}` : p.title)}</div>`
+    + (sub ? `<div class="p-sub">${esc(sub)}</div>` : "")
+    + `<p class="esim-cap">Scan with your phone → <b>Settings</b> → <b>Mobile data</b> → <b>Add eSIM</b></p>`
+    + `<button class="btn ghost sm" type="button" data-lpa="${esc(p.id)}">Copy activation code</button></div></article>`;
+}
+
+function renderFunders(d) {
+  const list = arr(d.funders);
+  const people = list.filter((f) => f.id !== "fuel").length;
+  $("fundersMeta").textContent = people === 1 ? "household head" : people ? `${people} funders` : "who authorised the cap";
+  $("funders").innerHTML = list.map((f) => {
+    const cap = num(f.capInr), spent = num(f.spentInr), rest = Math.max(0, cap - spent), rc = num(f.receipts);
+    const taz = `${num(f.depositsTaz).toFixed(4)} TAZ`;
+    if (cap <= 0) {
+      return `<article class="frow"><div class="f-top"><span class="mono">${esc(f.label)}</span></div>`
+        + `<div class="f-nums"><span>no cap</span><span><b>${esc(taz)}</b> for network fees</span></div></article>`;
+    }
+    const pct = Math.max(0, Math.min(100, 100 * rest / cap)).toFixed(1);
+    return `<article class="frow"><div class="f-top"><span class="mono" title="${esc(f.id)}">${esc(f.label)}</span><span class="tag">${rc} receipt${rc === 1 ? "" : "s"}</span></div>`
+      + `<div class="f-nums"><span>cap <b>${inr(cap)}</b></span><span>spent <b>${inr(spent)}</b></span><span>left <b>${inr(rest)}</b></span><span>${esc(taz)}</span></div>`
+      + `<div class="fbar" role="img" aria-label="${esc(`${inr(rest)} of ${inr(cap)} left`)}"><i style="width:${pct}%"></i></div></article>`;
+  }).join("") || `<p class="empty">No funder yet. The first capped deposit names one.</p>`;
 }
 
 function renderMerchants(d) {
@@ -835,7 +904,7 @@ function renderRules(d) {
 function render(d) {
   explorer = typeof d.explorer === "string" ? d.explorer : "";
   $("address").textContent = d.address || "(agent not started yet)";
-  renderHero(d); renderTimeline(d); renderInbox(d); renderMerchants(d); renderPrivacy(d); renderRules(d);
+  renderHero(d); renderTimeline(d); renderInbox(d); renderFunders(d); renderMerchants(d); renderPrivacy(d); renderRules(d);
 }
 
 /* ---------- loading ---------- */
@@ -863,6 +932,15 @@ $("inbox").addEventListener("click", (ev) => {
   if (!b) return;
   const verb = b.dataset.act;
   guard(b, async () => { await post(`/proposals/${encodeURIComponent(b.dataset.id)}/${verb}`); await load(); }, verb === "approve" ? "Approved. The agent will buy it on its next pass." : "Declined.");
+});
+
+$("inbox").addEventListener("click", async (ev) => {
+  const b = ev.target.closest("button[data-lpa]");
+  if (!b) return;
+  const p = arr(data && data.proposals).find((x) => x.id === b.dataset.lpa);
+  if (!p || !p.lpa) { toast("No activation code for this eSIM.", true); return; }
+  try { await navigator.clipboard.writeText(p.lpa); toast("Activation code copied."); }
+  catch (e) { toast("Copy failed. Scan the QR code instead.", true); }
 });
 
 $("rules").addEventListener("click", (ev) => {
@@ -956,8 +1034,15 @@ const MOCK_DATA = (() => {
     explorer: "https://explorer.example/tx/",
     budget: { capInr: 150, spentInr: 70, remainingInr: 80 },
     deposits: [
-      { txid: tx("a1"), zatoshis: 5000000, capInr: 50, memo: "fund cap=50 INR reply=utest1funder", seenAt: ago(320) },
-      { txid: tx("b2"), zatoshis: 10000000, capInr: 100, memo: "fund cap=100 INR reply=utest1funder", seenAt: ago(200) },
+      { txid: tx("a1"), zatoshis: 5000000, capInr: 50, replyTo: "utest1mockheadq8r2v6x0z4c7n3k9w5j1m8a2f6d0s4h7l3e9p5k2", memo: "fund cap=50 INR reply=utest1mockheadq8r2v6x0z4c7n3k9w5j1m8a2f6d0s4h7l3e9p5k2", seenAt: ago(320) },
+      { txid: tx("b2"), zatoshis: 10000000, capInr: 100, replyTo: "utest1mocksonv3n7c1x5z9q2w6e0r4t8y3u7i1o5p9a3s7d1f5g9h", memo: "fund cap=100 INR reply=utest1mocksonv3n7c1x5z9q2w6e0r4t8y3u7i1o5p9a3s7d1f5g9h", seenAt: ago(200) },
+      { txid: tx("d4"), zatoshis: 30000000, capInr: null, replyTo: null, memo: null, seenAt: ago(190) },
+    ],
+    // FIFO against the caps: s1 (₹50, receipt) exhausts the head's ₹50, s2 (₹20) lands on the second funder; s3 failed
+    funders: [
+      { id: "utest1mockheadq8r2v6x0z4c7n3k9w5j1m8a2f6d0s4h7l3e9p5k2", label: "utest1…p5k2", capInr: 50, depositsTaz: 0.05, spentInr: 50, receipts: 1 },
+      { id: "utest1mocksonv3n7c1x5z9q2w6e0r4t8y3u7i1o5p9a3s7d1f5g9h", label: "utest1…5g9h", capInr: 100, depositsTaz: 0.1, spentInr: 20, receipts: 0 },
+      { id: "fuel", label: "Fuel (no cap)", capInr: 0, depositsTaz: 0.3, spentInr: 0, receipts: 0 },
     ],
     spends: [
       { id: "s1", at: ago(150), ruleId: "weekly-airtel", productName: "Airtel Prepaid ₹50", valueInr: 50, cost: 0.62, costCurrency: "USDC", invoiceId: "inv_8f3a21", status: "delivered", receiptTxid: tx("c3") },
@@ -983,6 +1068,7 @@ const MOCK_DATA = (() => {
     proposals: [
       { id: "p1", kind: "esim", title: "Airalo Singapore eSIM, 5 GB / 30 days", subtitle: "For the March trip, delivered as a QR code to the funder", price: "₹1,150", status: "proposed", createdAt: ago(40) },
       { id: "p2", kind: "other", title: "Amazon Pay Gift Card", subtitle: "Birthday gift for the family group", price: "₹500", status: "bought", createdAt: ago(900) },
+      { id: "p3", kind: "esim", title: "eSIM · Thailand", subtitle: "Airalo Thailand 3 GB / 8 days", price: "4.5 USDC", status: "bought", createdAt: ago(600), invoiceId: "inv_mock_esim01", destination: "Thailand", departs: new Date(Date.now() + 9 * 86400000).toISOString(), lpa: "LPA:1$smdp.example.org$MOCK-ESIM-7Q4X-9D2H-K3V8" },
     ],
     merchants: [
       { id: "bitrefill", label: "Bitrefill", status: "active", detail: "3 invoices this month, all paid from the purse." },
@@ -1035,6 +1121,143 @@ async function mockApi(path, opts) {
   }
   throw new Error("mock: no route for " + path);
 }
+
+/* ---------- QR encoder: byte mode, error correction M, versions 1-10 (no library) ---------- */
+// Follows ISO/IEC 18004 the way Nayuki's reference encoder does: RS over GF(256)/0x11D,
+// interleaved blocks, zigzag placement, best of 8 masks by the standard penalty score.
+const QR_ECC_M = [10, 16, 26, 18, 24, 16, 18, 22, 22, 26]; // EC codewords per block, v1-10
+const QR_BLOCKS_M = [1, 1, 1, 2, 2, 4, 4, 4, 5, 5];        // EC blocks, v1-10
+const QR_MAX_VER = 10;
+function qrRawModules(v) {
+  let n = (16 * v + 128) * v + 64;
+  if (v >= 2) { const a = Math.floor(v / 7) + 2; n -= (25 * a - 10) * a - 55; if (v >= 7) n -= 36; }
+  return n;
+}
+function qrMul(x, y) { let z = 0; for (let i = 7; i >= 0; i--) { z = (z << 1) ^ ((z >>> 7) * 0x11d); z ^= ((y >>> i) & 1) * x; } return z; }
+function qrDivisor(deg) {
+  const r = new Array(deg).fill(0); r[deg - 1] = 1; let root = 1;
+  for (let i = 0; i < deg; i++) {
+    for (let j = 0; j < deg; j++) { r[j] = qrMul(r[j], root); if (j + 1 < deg) r[j] ^= r[j + 1]; }
+    root = qrMul(root, 2);
+  }
+  return r;
+}
+function qrRemainder(data, div) {
+  const r = div.map(() => 0);
+  for (const b of data) { const f = b ^ r.shift(); r.push(0); div.forEach((c, i) => { r[i] ^= qrMul(c, f); }); }
+  return r;
+}
+function qrCodewords(bytes, v) {
+  const total = Math.floor(qrRawModules(v) / 8), nb = QR_BLOCKS_M[v - 1], ecc = QR_ECC_M[v - 1];
+  const dataLen = total - nb * ecc;
+  const bits = [];
+  const put = (val, len) => { for (let i = len - 1; i >= 0; i--) bits.push((val >>> i) & 1); };
+  put(4, 4); put(bytes.length, v < 10 ? 8 : 16); bytes.forEach((b) => put(b, 8));
+  put(0, Math.min(4, dataLen * 8 - bits.length)); put(0, (8 - bits.length % 8) % 8);
+  const data = [];
+  for (let i = 0; i < bits.length; i += 8) data.push(bits.slice(i, i + 8).reduce((a, b) => (a << 1) | b, 0));
+  for (let p = 0xec; data.length < dataLen; p ^= 0xec ^ 0x11) data.push(p);
+  const shortCount = nb - total % nb, shortLen = Math.floor(total / nb), div = qrDivisor(ecc), blocks = [];
+  for (let i = 0, k = 0; i < nb; i++) {
+    const d = data.slice(k, k + shortLen - ecc + (i < shortCount ? 0 : 1)); k += d.length;
+    const e = qrRemainder(d, div); if (i < shortCount) d.push(0);
+    blocks.push(d.concat(e));
+  }
+  const out = [];
+  for (let i = 0; i < blocks[0].length; i++) blocks.forEach((b, j) => { if (i !== shortLen - ecc || j >= shortCount) out.push(b[i]); });
+  return out;
+}
+const QR_MASKS = [
+  (x, y) => (x + y) % 2 === 0, (x, y) => y % 2 === 0, (x) => x % 3 === 0, (x, y) => (x + y) % 3 === 0,
+  (x, y) => (Math.floor(x / 3) + Math.floor(y / 2)) % 2 === 0, (x, y) => (x * y) % 2 + (x * y) % 3 === 0,
+  (x, y) => ((x * y) % 2 + (x * y) % 3) % 2 === 0, (x, y) => ((x + y) % 2 + (x * y) % 3) % 2 === 0,
+];
+function qrPenalty(m) {
+  const n = m.length; let p = 0, dark = 0;
+  const line = (get) => {
+    for (let i = 0; i < n; i++) {
+      let run = 1;
+      for (let j = 1; j <= n; j++) {
+        if (j < n && get(i, j) === get(i, j - 1)) { run++; continue; }
+        if (run >= 5) p += run - 2;
+        run = 1;
+      }
+      for (let j = 0; j + 11 <= n; j++) {
+        const s = Array.from({ length: 11 }, (_, k) => (get(i, j + k) ? 1 : 0)).join("");
+        if (s === "10111010000" || s === "00001011101") p += 40;
+      }
+    }
+  };
+  line((i, j) => m[i][j]); line((i, j) => m[j][i]);
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    if (m[y][x]) dark++;
+    if (x < n - 1 && y < n - 1 && m[y][x] === m[y][x + 1] && m[y][x] === m[y + 1][x] && m[y][x] === m[y + 1][x + 1]) p += 3;
+  }
+  return p + (Math.ceil(Math.abs(dark * 20 - n * n * 10) / (n * n)) - 1) * 10;
+}
+/** Returns a square boolean matrix (true = dark), or throws if the text is too long for version 10-M. */
+function qrEncode(text) {
+  const bytes = Array.from(new TextEncoder().encode(text));
+  let v = 1;
+  while (v <= QR_MAX_VER && 4 + (v < 10 ? 8 : 16) + 8 * bytes.length > (Math.floor(qrRawModules(v) / 8) - QR_BLOCKS_M[v - 1] * QR_ECC_M[v - 1]) * 8) v++;
+  if (v > QR_MAX_VER) throw new Error("text too long for a version 10 QR");
+  const n = 4 * v + 17;
+  const mod = Array.from({ length: n }, () => new Array(n).fill(false));
+  const fn = Array.from({ length: n }, () => new Array(n).fill(false));
+  const set = (x, y, d) => { mod[y][x] = d; fn[y][x] = true; };
+  for (let i = 0; i < n; i++) { set(6, i, i % 2 === 0); set(i, 6, i % 2 === 0); }
+  for (const [cx, cy] of [[3, 3], [n - 4, 3], [3, n - 4]]) {
+    for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) {
+      const x = cx + dx, y = cy + dy, d = Math.max(Math.abs(dx), Math.abs(dy));
+      if (x >= 0 && x < n && y >= 0 && y < n) set(x, y, d !== 2 && d !== 4);
+    }
+  }
+  if (v >= 2) {
+    const na = Math.floor(v / 7) + 2, step = Math.ceil((v * 4 + 4) / (na * 2 - 2)) * 2, pos = [6];
+    for (let p = n - 7; pos.length < na; p -= step) pos.splice(1, 0, p);
+    pos.forEach((ax, i) => pos.forEach((ay, j) => {
+      if ((i === 0 && j === 0) || (i === 0 && j === na - 1) || (i === na - 1 && j === 0)) return;
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) set(ax + dx, ay + dy, Math.max(Math.abs(dx), Math.abs(dy)) !== 1);
+    }));
+  }
+  const format = (mask) => {
+    const data = mask; // EC level M has format bits 00
+    let r = data; for (let i = 0; i < 10; i++) r = (r << 1) ^ ((r >>> 9) * 0x537);
+    const b = ((data << 10) | r) ^ 0x5412, bit = (i) => ((b >>> i) & 1) === 1;
+    for (let i = 0; i <= 5; i++) set(8, i, bit(i));
+    set(8, 7, bit(6)); set(8, 8, bit(7)); set(7, 8, bit(8));
+    for (let i = 9; i < 15; i++) set(14 - i, 8, bit(i));
+    for (let i = 0; i < 8; i++) set(n - 1 - i, 8, bit(i));
+    for (let i = 8; i < 15; i++) set(8, n - 15 + i, bit(i));
+    set(8, n - 8, true);
+  };
+  format(0);
+  if (v >= 7) {
+    let r = v; for (let i = 0; i < 12; i++) r = (r << 1) ^ ((r >>> 11) * 0x1f25);
+    const b = (v << 12) | r;
+    for (let i = 0; i < 18; i++) { const d = ((b >>> i) & 1) === 1, a = n - 11 + (i % 3), c = Math.floor(i / 3); set(a, c, d); set(c, a, d); }
+  }
+  const cw = qrCodewords(bytes, v);
+  let k = 0;
+  for (let right = n - 1; right >= 1; right -= 2) {
+    if (right === 6) right = 5;
+    for (let vert = 0; vert < n; vert++) for (let j = 0; j < 2; j++) {
+      const x = right - j, y = ((right + 1) & 2) === 0 ? n - 1 - vert : vert;
+      if (!fn[y][x] && k < cw.length * 8) { mod[y][x] = ((cw[k >>> 3] >>> (7 - (k & 7))) & 1) === 1; k++; }
+    }
+  }
+  const flip = (mask) => { for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (!fn[y][x] && QR_MASKS[mask](x, y)) mod[y][x] = !mod[y][x]; };
+  let best = 0, bestScore = Infinity;
+  for (let m = 0; m < 8; m++) {
+    flip(m); format(m);
+    const s = qrPenalty(mod);
+    if (s < bestScore) { best = m; bestScore = s; }
+    flip(m);
+  }
+  flip(best); format(best);
+  return mod;
+}
+/* ---------- end QR encoder ---------- */
 
 /* ---------- restyle layer: greeting, derived panels, search, tabs (additive; the code above is untouched) ---------- */
 const TAZ = (z) => (num(z) / 1e8).toFixed(4);

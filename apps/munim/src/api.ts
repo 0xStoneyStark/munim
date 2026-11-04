@@ -17,6 +17,7 @@ import {
   merchants,
   proposalCards,
   swiggyLinked,
+  funders,
   type AgentRun,
   type SwiggyRedeem,
 } from "./api-views.js";
@@ -100,6 +101,7 @@ function overview(deps: ApiDeps): Record<string, unknown> {
     timeline: buildTimeline({ ledger, runs, proposals, redeems }),
     proposals: proposalCards(proposals),
     merchants: merchants(deps.dataDir, ledger),
+    funders: funders(ledger),
     privacy: PRIVACY,
     swiggyLinked: swiggyLinked(deps.dataDir),
   };
