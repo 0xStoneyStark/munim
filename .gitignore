@@ -3,5 +3,5 @@ dist/
 .env
 wallets/
 tools/
-data/*.json
+data/
 *.log

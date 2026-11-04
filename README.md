@@ -22,6 +22,21 @@ funder ◀──shielded dust tx, memo "munim receipt inv=… item=… inr=… c
 - **Privacy beyond the transaction:** the dashboard and the accountant's CSV export run from a **view-only** wallet (viewing key, no spend key).
 - **No prompt required:** purchases start from a schedule or a signal, not from a person typing "buy".
 
+## Beyond the core loop
+
+| Piece | What it does | Where |
+|---|---|---|
+| **Close the loop on Swiggy** | A delivered Swiggy Money card is redeemed into the funder's Swiggy balance by the agent (private claim endpoint, user's own session), then spent on **Instamart through Swiggy's official MCP** (`/im`) with `paymentMethod: SwiggyPay` — no UPI, no human tap | `swiggy-money.ts`, `swiggy-mcp.ts`, `instamart.ts`, `mcp-bridge.ts` |
+| **Two Bitrefill surfaces** | Catalog discovery through Bitrefill's official MCP (`search-products`, `get-product-details`), money path through REST behind the cap | `bitrefill-mcp.ts`, `agent.ts` |
+| **Calendar → eSIM** | Reads Google Calendar + Gmail booking emails (community MCP servers over stdio) or any ICS feed, detects international trips, proposes the right Bitrefill eSIM for the destination and trip length; approve on the dashboard or Telegram; after purchase the LPA activation renders as a **QR** (encoder written in-page, verified against `qrcode`/`jsqr`) | `travel.ts`, `google-mcp.ts`, `dashboard.html` |
+| **Plain-language rules** | Type a sentence → structured rule + readback + warnings → confirm → saved | `rule-builder.ts`, `/rules/propose` |
+| **Shop from chat** | Telegram bot: `/status`, `/fire`, `/approve`, sentences become rules with Confirm/Edit/Discard buttons, push alerts for proposals and purchases | `telegram.ts` |
+| **Verifiable receipt** | Paste a decrypted receipt memo → checks the Bitrefill invoice, delivery, face value, code-hash and the ledger's receipt txid | `/verify`, `verify.ts` |
+| **Agent-to-agent payment** | `purse_pay` on the purse MCP: shielded ZEC + encrypted memo to another agent, inside the cap, transparent addresses refused | `packages/zcash-purse` ([README](packages/zcash-purse/README-purse.md)) |
+| **Household funders** | Every funder (by `reply=` address) gets a cap, FIFO allocation of spends, and their own receipts | `api-views.ts` |
+| **Network privacy** | `PURSE_CONNECTION=tor` routes light-wallet traffic through devtool's built-in Tor client (tested) | `packages/zcash-purse/src/devtool.ts` |
+| **Noir Wallet** | "Fund with Noir Wallet" on the dashboard uses the Noir SDK (`sendTransaction` with the cap memo) against the testnet extension build | `dashboard.html`, `noir-sdk.bundle.js` |
+
 ## Which track gets what
 
 | | Privacy (Zcash) | Agentic Commerce (Bitrefill) |
