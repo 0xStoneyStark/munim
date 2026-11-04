@@ -4,14 +4,16 @@
 //   npm run agent -- --signal treat -- fire the rule listening for `treat`, then exit
 
 import "dotenv/config";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import Anthropic from "@anthropic-ai/sdk";
 import { Purse, budget } from "@munim/zcash-purse";
 import { purseConfigFromEnv } from "@munim/zcash-purse/src/config.js";
 import { Bitrefill } from "./bitrefill.js";
-import { loadRules, due } from "./rules.js";
+import { loadRules, due, type Rule } from "./rules.js";
 import { runRule } from "./agent.js";
+import { buyApproved, loadProposals, saveProposals, scanAndPropose, type Proposal } from "./travel.js";
 
 const DATA = path.resolve("data");
 const STATE_FILE = path.join(DATA, "agent-state.json");
@@ -41,7 +43,107 @@ function takeSignals(): Set<string> {
   return new Set(names);
 }
 
-async function pass(deps: Parameters<typeof runRule>[0], rulesFile: string, extraSignals: Set<string>) {
+type Deps = Parameters<typeof runRule>[0];
+
+// TODO: rough INR conversion, used only to size cap checks for USD-priced eSIMs; replace with a live rate.
+const USD_TO_INR_FOR_CAP = 90;
+const CALENDAR_ESIM_RULE_ID = "calendar-esim";
+
+/** Calendar rules never fire the shopping agent: they scan for trips and leave proposals for approval. */
+async function scanCalendarRules(deps: Deps, rules: Rule[]) {
+  for (const rule of rules) {
+    if (!("calendar" in rule.trigger)) continue;
+    const source = rule.trigger.calendar === "default" ? (process.env.CALENDAR_ICS ?? "") : rule.trigger.calendar;
+    if (!source) {
+      deps.log(`calendar rule ${rule.id}: no calendar source (set CALENDAR_ICS), skipping`);
+      continue;
+    }
+    try {
+      const added = await scanAndPropose({ calendarSource: source, bitrefill: deps.bitrefill });
+      for (const p of added) deps.log(`calendar rule ${rule.id}: proposal ${p.id} eSIM for ${p.trip.destinationName} (${p.suggestion.price} ${p.suggestion.priceCurrency})`);
+    } catch (e) {
+      deps.log(`calendar rule ${rule.id}: scan failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+}
+
+/** INR value used for the cap check; null when the proposal's currency cannot be sized. */
+function proposalValueInr(p: Proposal): number | null {
+  const { price, priceCurrency } = p.suggestion;
+  if (priceCurrency === "USD") return Math.ceil(price * USD_TO_INR_FOR_CAP);
+  if (priceCurrency === "INR") return Math.ceil(price);
+  return null;
+}
+
+/**
+ * Cap-check every approved, not-yet-invoiced proposal (cumulatively). buyApproved buys all approved
+ * proposals, so ones the cap refuses are held back as "proposed" for the call and re-approved after.
+ */
+async function holdOutOverCap(deps: Deps): Promise<Set<string>> {
+  const held = new Set<string>();
+  let committedInr = 0;
+  for (const p of loadProposals().filter((x) => x.status === "approved" && !x.invoiceId)) {
+    const valueInr = proposalValueInr(p);
+    const verdict = valueInr === null ? null : await deps.purse.check(committedInr + valueInr);
+    if (valueInr !== null && verdict?.ok) {
+      committedInr += valueInr;
+      continue;
+    }
+    held.add(p.id);
+    deps.log(`eSIM ${p.id} not bought: ${verdict ? verdict.reason : `cannot size ${p.suggestion.priceCurrency} price against the cap`}`);
+  }
+  if (held.size > 0) saveProposals(loadProposals().map((p) => (held.has(p.id) ? { ...p, status: "proposed" } : p)));
+  return held;
+}
+
+function restoreHeld(held: Set<string>): void {
+  if (held.size === 0) return;
+  // only undo our own hold-out: a decline made on the dashboard meanwhile must stay declined
+  saveProposals(loadProposals().map((p) => (held.has(p.id) && p.status === "proposed" ? { ...p, status: "approved" } : p)));
+}
+
+async function recordEsimSpend(deps: Deps, p: Proposal, invoiceId: string): Promise<void> {
+  const valueInr = proposalValueInr(p) ?? 0;
+  const base = {
+    ruleId: CALENDAR_ESIM_RULE_ID,
+    productId: p.suggestion.productId,
+    productName: p.suggestion.productName,
+    valueInr,
+    cost: p.suggestion.price,
+    costCurrency: p.suggestion.priceCurrency,
+    invoiceId,
+    orderId: p.orderId ?? null,
+  };
+  try {
+    const reserved = await deps.purse.reserve(base);
+    await deps.purse.update({ ...reserved, status: "delivered" });
+  } catch (e) {
+    // the money is already spent: the ledger must show it even if the cap moved since the check
+    deps.log(`eSIM ${p.id}: reserve failed (${e instanceof Error ? e.message : String(e)}); recording spend anyway`);
+    await deps.purse.update({ ...base, id: crypto.randomUUID(), at: new Date().toISOString(), status: "delivered", receiptTxid: null, codeHash: null });
+  }
+}
+
+async function buyApprovedEsims(deps: Deps) {
+  const held = await holdOutOverCap(deps);
+  let results;
+  try {
+    results = await buyApproved(deps.bitrefill, { maxPrice: undefined });
+  } finally {
+    restoreHeld(held);
+  }
+  for (const r of results) {
+    if (r.status !== "bought" || !r.invoiceId) {
+      deps.log(`eSIM proposal ${r.id}: ${r.status}`);
+      continue;
+    }
+    const bought = loadProposals().find((p) => p.id === r.id);
+    if (bought) await recordEsimSpend(deps, bought, r.invoiceId);
+    deps.log(`eSIM proposal ${r.id} bought, invoice ${r.invoiceId}`);
+  }
+}
+
+async function pass(deps: Deps, rulesFile: string, extraSignals: Set<string>) {
   const rules = loadRules(rulesFile);
   const { newDeposits, ledger } = await deps.purse.refresh();
   const b = budget(ledger);
@@ -59,6 +161,9 @@ async function pass(deps: Parameters<typeof runRule>[0], rulesFile: string, extr
       break;
     }
   }
+
+  await scanCalendarRules(deps, rules);
+  await buyApprovedEsims(deps);
 
   let state = loadState();
   const signals = new Set([...takeSignals(), ...extraSignals]);

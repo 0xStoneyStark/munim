@@ -1,7 +1,7 @@
 // Read-only dashboard for the funder/accountant. Reads the ledger JSON and the
 // VIEW-ONLY wallet (viewing key, no spend key) so it can be hosted anywhere.
 //   npm run dashboard   -> http://localhost:8788
-// POST /signal/<name> drops a signal file that fires the matching rule.
+// JSON API (GET /api, POST /signal, /proposals, /rules) lives in api.ts.
 
 import "dotenv/config";
 import fs from "node:fs";
@@ -9,20 +9,25 @@ import path from "node:path";
 import http from "node:http";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { budget, type Ledger } from "@munim/zcash-purse";
-import { loginUrl, exchangeCode, isLoggedIn } from "./swiggy-oauth.js";
+import Anthropic from "@anthropic-ai/sdk";
+import { loginUrl, exchangeCode } from "./swiggy-oauth.js";
+import { handleApi, type ApiDeps } from "./api.js";
 
 const execFileP = promisify(execFile);
 const PORT = parseInt(process.env.DASHBOARD_PORT ?? "8788", 10);
 const DATA = path.resolve("data");
-const LEDGER = path.join(DATA, "ledger.json");
-const STATE = path.join(DATA, "agent-state.json");
-const SIGNALS = path.join(DATA, "signals");
-const EXPLORER = "https://testnet.zcashexplorer.app/transactions/";
 
-function readJson<T>(file: string, fallback: T): T {
-  return fs.existsSync(file) ? (JSON.parse(fs.readFileSync(file, "utf8")) as T) : fallback;
-}
+let anthropic: Anthropic | undefined;
+const apiDeps: ApiDeps = {
+  // built on first use so the dashboard runs without ANTHROPIC_API_KEY until /rules/propose is called
+  get client(): Anthropic {
+    if (!process.env.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not configured");
+    anthropic ??= new Anthropic();
+    return anthropic;
+  },
+  rulesFile: path.resolve(process.env.RULES_FILE ?? "apps/munim/rules.json"),
+  dataDir: DATA,
+};
 
 /** CSV of every transaction the viewing key can see — the accountant's export. */
 async function viewExport(): Promise<string> {
@@ -34,33 +39,10 @@ async function viewExport(): Promise<string> {
   return stdout;
 }
 
-function api() {
-  const ledger = readJson<Ledger>(LEDGER, { address: "", deposits: [], spends: [] });
-  const state = readJson<{ runs: unknown[] }>(STATE, { runs: [] });
-  const rules = readJson<unknown[]>(path.resolve(process.env.RULES_FILE ?? "apps/munim/rules.json"), []);
-  return {
-    address: ledger.address,
-    budget: budget(ledger),
-    deposits: ledger.deposits,
-    spends: ledger.spends.map(({ codeHash, ...s }) => ({ ...s, codeHash: codeHash ? codeHash.slice(0, 16) + "…" : null })),
-    runs: state.runs,
-    rules,
-    explorer: EXPLORER,
-    swiggyLinked: isLoggedIn(),
-  };
-}
-
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url ?? "/", "http://x");
   try {
-    if (req.method === "POST" && url.pathname.startsWith("/signal/")) {
-      const name = url.pathname.slice("/signal/".length);
-      if (!/^[a-z0-9-]+$/.test(name)) throw new Error("bad signal name");
-      fs.mkdirSync(SIGNALS, { recursive: true });
-      fs.writeFileSync(path.join(SIGNALS, name), new Date().toISOString());
-      res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ ok: true, signal: name }));
-      return;
-    }
+    if (await handleApi(req, res, url, apiDeps)) return;
     if (url.pathname === "/swiggy/login") {
       res.writeHead(302, { location: await loginUrl() }).end();
       return;
@@ -71,10 +53,6 @@ const server = http.createServer(async (req, res) => {
       if (!code || !state) throw new Error("missing code/state: " + (url.searchParams.get("error_description") ?? ""));
       await exchangeCode(code, state);
       res.writeHead(200, { "content-type": "text/html; charset=utf-8" }).end("<p style='font:16px system-ui;padding:24px'>Swiggy linked to Munim. You can close this tab.</p>");
-      return;
-    }
-    if (url.pathname === "/api") {
-      res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify(api()));
       return;
     }
     if (url.pathname === "/noir-sdk.js") {
