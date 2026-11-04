@@ -77,7 +77,7 @@ Tools: `purse_address`, `purse_refresh`, `purse_budget`, `purse_check`, `purse_r
 
 ## Bitrefill touchpoints used, built vs reused
 
-**Used:** REST API v2 (`/ping`, `/accounts/balance`, `/products/search`, `/products/{id}`, `/invoices` with `payment_method: balance, auto_pay: true`, `/orders/{id}` polled until `delivered`). Docs read through `docs.bitrefill.com/llms.txt`.
+**Used:** two surfaces. (1) The **official Bitrefill MCP server** (`https://api.bitrefill.com/mcp`, Bearer API key) — the agent's catalog discovery runs through its `search-products` / `get-product-details` tools, bridged into the Anthropic tool runner by `apps/munim/src/mcp-bridge.ts`; `buy-products` is deliberately *not* exposed to the model. (2) **REST API v2** for the money path (`/accounts/balance`, `/products/{id}` for exact package ids and prices, `/invoices` with `payment_method: balance, auto_pay: true`, `/orders/{id}` polled until `delivered`) so every purchase passes the purse's cap check first. Docs read through `docs.bitrefill.com/llms.txt`.
 **Built:** the rules engine, the capped purse and its MCP server, the Sonnet 5.5 agent with tool-enforced guardrails, the memo receipt format, the view-only dashboard.
 **Reused:** Bitrefill's catalog, pricing and fulfilment; `zcash-devtool` for all wallet operations; the Anthropic SDK tool runner.
 
