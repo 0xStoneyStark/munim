@@ -69,6 +69,13 @@
   .pill.big { padding: 13px 22px; font-size: 15px; }
   .pill.sm, .btn.sm { padding: 6px 13px; font-size: 13px; }
   .pill svg, .rbtn svg, .search svg { flex: none; }
+  /* monochrome icon set: one sprite at the top of the page body, used as <svg class="ico"><use href="#i-name"/></svg> */
+  .ico { width: 18px; height: 18px; flex: none; display: inline-block; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; }
+  .btn .ico, .pill .ico { width: 16px; height: 16px; }
+  .lbl .ico { width: 14px; height: 14px; margin-right: 5px; vertical-align: -2px; }
+  .card-h h2 .ico { width: 20px; height: 20px; color: var(--muted); }
+  .idpill .ico, a.mono .ico { width: 12px; height: 12px; margin-left: 3px; vertical-align: -1px; }
+  .past .ico { width: 14px; height: 14px; vertical-align: -3px; }
   .btn[disabled] { opacity: .5; cursor: not-allowed; transform: none; }
   .btn.ghost { background: var(--card); color: var(--ink); border-color: var(--line); }
   .btn.ghost:hover { background: var(--card); color: var(--ink); border-color: var(--ink); }
@@ -94,9 +101,10 @@
   .logo-mark { display: flex; align-items: center; gap: 9px; color: var(--ink); text-decoration: none; font-weight: 700; letter-spacing: -.01em; font-size: 16px; padding-right: 6px; }
   .logo-mark svg { display: block; width: 38px; height: 38px; border-radius: 50%; }
   .tabs { flex: 1; display: flex; justify-content: center; gap: 6px; min-width: 0; }
-  .tab { padding: 8px 17px; border-radius: 999px; background: var(--well); color: var(--ink); font-weight: 600; font-size: 14px; text-decoration: none; white-space: nowrap; border: 1px solid transparent; transition: background .15s, border-color .15s; }
+  .tab { font-weight: 600; font-size: 14px; line-height: 1.2; display: inline-flex; align-items: center; gap: 7px; padding: 8px 17px; border-radius: 999px; background: var(--well); color: var(--ink); text-decoration: none; white-space: nowrap; flex: none; border: 1px solid transparent; transition: background .15s, border-color .15s, color .15s; }
   .tab:hover { border-color: var(--ink); text-decoration: none; }
-  .tab[aria-current="true"] { background: var(--solid); color: var(--on-solid); }
+  .tab[aria-current="page"] { background: var(--solid); color: var(--on-solid); }
+  .tcount { min-width: 19px; height: 19px; padding: 0 6px; border-radius: 999px; display: inline-grid; place-items: center; background: var(--gold); color: #111214; font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0; }
   .nav-r { display: flex; align-items: center; gap: 8px; flex: none; }
   .live { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-right: 6px; white-space: nowrap; }
   .live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
@@ -117,24 +125,33 @@
   .search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; font-size: 14px; color: var(--ink); height: 100%; }
   .search input::placeholder { color: var(--muted); }
 
-  /* card grid */
-  .grid { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); }
-  .rcol { display: grid; gap: 20px; align-content: start; min-width: 0; grid-template-columns: minmax(0, 1fr); }
+  /* pages: the active view is shown, the others stay hidden */
+  .vgrid { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .stat { display: block; text-align: left; color: var(--ink); background: var(--well); border: 1px solid var(--line); border-radius: 20px; padding: 14px 16px; min-width: 0; position: relative; }
+  .stat .v { font-size: clamp(22px, 6.4vw, 32px); font-weight: 700; line-height: 1.1; letter-spacing: -.03em; margin-top: 3px; font-variant-numeric: tabular-nums; font-variation-settings: "wdth" 92; overflow-wrap: anywhere; }
+  .stat .v .cur { font-weight: 400; color: var(--muted); margin-right: 2px; }
+  .stat .sub { margin-top: 2px; font-size: 12px; }
+  a.stat { text-decoration: none; transition: border-color .15s, background .15s, transform .1s; }
+  a.stat:hover { border-color: var(--ink); text-decoration: none; }
+  a.stat:active { transform: translateY(1px); }
+  a.stat .go { position: absolute; top: 12px; right: 12px; width: 16px; height: 16px; color: var(--muted); }
+  .stat.has { background: var(--gold); border-color: var(--gold); color: #111214; }
+  .stat.has .lbl, .stat.has .sub, .stat.has .go { color: rgba(17, 18, 20, .72); }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 24px; padding: 24px; min-width: 0; scroll-margin-top: 92px; }
   .card-h { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; margin: 0 0 16px; min-height: 30px; }
   .card-h h2 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -.015em; line-height: 1.2; display: flex; align-items: center; gap: 10px; }
   .meta { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
   @media (min-width: 720px) {
-    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .c-remain, .c-tl, .rcol, .c-rules, .c-built { grid-column: 1 / -1; }
-    .rcol { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .g-wallets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .g-wallets .c-remain { grid-column: 1 / -1; }
   }
   @media (min-width: 1080px) {
-    .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .c-remain { grid-column: auto; }
-    .c-tl { grid-column: span 2; align-self: start; }
-    .rcol { grid-column: span 1; grid-template-columns: minmax(0, 1fr); }
-    .c-rules, .c-built { grid-column: 1 / -1; }
+    .g-tl { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+    .g-wallets { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .g-wallets > * { grid-column: span 2; }
+    .g-wallets .c-remain { grid-column: span 2; }
+    .g-wallets .c-funders, .g-wallets .c-merch { grid-column: span 3; }
   }
 
   /* numerals */
@@ -158,8 +175,8 @@
   .xlist details { border-bottom: 1px solid var(--line); }
   .xlist summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 2px; font-weight: 600; border-radius: 8px; }
   .xlist summary::-webkit-details-marker { display: none; }
-  .xlist summary > span:first-child::after { content: "⌄"; display: inline-block; margin-left: 8px; color: var(--muted); transition: transform .15s; }
-  .xlist details[open] summary > span:first-child::after { transform: rotate(180deg); }
+  .xlist summary .chev { width: 16px; height: 16px; margin-left: 6px; color: var(--muted); transition: transform .15s; }
+  .xlist details[open] summary .chev { transform: rotate(180deg); }
   .x-meta { color: var(--muted); font-weight: 600; font-size: 14px; font-variant-numeric: tabular-nums; }
   .drows { list-style: none; margin: 0; padding: 0 0 10px; display: grid; gap: 4px; }
   .drows li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; font-size: 13px; padding: 5px 2px; }
@@ -209,10 +226,10 @@
   .tl.is-empty::before { display: none; }
   .tl .empty { padding: 10px 0; }
   .day { padding: 14px 0 4px 50px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-  .ev { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 14px; padding: 8px 0; position: relative; --k: var(--muted); }
-  .ev .glyph { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; line-height: 1; border: 1.5px solid var(--k); background: color-mix(in srgb, var(--k) 12%, var(--card)); position: relative; z-index: 1; }
-  .k-deposit { --k: var(--ok); } .k-trigger { --k: var(--warn); } .k-decision { --k: var(--muted); } .k-purchase { --k: var(--gold-deep); }
-  .k-receipt { --k: var(--teal); } .k-refusal { --k: var(--bad); } .k-proposal { --k: var(--warn); } .k-redeem { --k: var(--gold-deep); }
+  .ev { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 14px; padding: 8px 0; position: relative; }
+  .ev .glyph { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--line); background: var(--card); color: var(--ink); position: relative; z-index: 1; }
+  .ev .glyph .ico { width: 20px; height: 20px; }
+  .k-refusal .glyph { color: var(--bad); } .k-proposal .glyph { color: var(--warn); } .k-purchase.st-ok .glyph { color: var(--ok); }
   .ev-body { min-width: 0; padding-top: 1px; }
   .ev-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
   .ev-title { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
@@ -234,6 +251,17 @@
   .price { font-size: 24px; font-weight: 700; line-height: 1.1; white-space: nowrap; letter-spacing: -.02em; font-variant-numeric: tabular-nums; font-variation-settings: "wdth" 92; }
   .p-actions { display: flex; gap: 8px; margin-top: 12px; }
   .p-actions .btn { flex: 1; }
+  /* Approvals page: full width, bigger cards, prominent Approve / Decline */
+  #inbox { grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: 14px; align-items: start; }
+  #inbox > .empty, #inbox > .resolved, #inbox > .lbl { grid-column: 1 / -1; }
+  #inbox .pcard { padding: 18px 20px; border-radius: 20px; }
+  #inbox .p-title { font-size: 17px; }
+  #inbox .p-sub { font-size: 14px; }
+  #inbox .price { font-size: 28px; }
+  #inbox .p-actions { gap: 10px; margin-top: 16px; }
+  #inbox .p-actions .btn { min-height: 52px; font-size: 16px; }
+  #inbox .p-actions .btn .ico { width: 20px; height: 20px; }
+  #inbox .esim { padding: 18px 20px; }
   .resolved { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
   .resolved li { display: flex; justify-content: space-between; align-items: center; gap: 10px; color: var(--muted); font-size: 13.5px; padding: 6px 2px; border-top: 1px solid var(--line); }
   .resolved li span:first-child { min-width: 0; overflow-wrap: anywhere; }
@@ -366,14 +394,19 @@
   /* phones: container goes edge to edge, 16px gutters */
   @media (max-width: 860px) {
     .nav { flex-wrap: wrap; border-radius: 28px; }
-    .tabs { order: 3; flex-basis: 100%; justify-content: flex-start; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+    .tabs { order: 3; flex-basis: 100%; justify-content: flex-start; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .tabs::-webkit-scrollbar { display: none; }
     .nav-r { margin-left: auto; }
   }
   @media (max-width: 640px) {
     body { padding: 0; }
     .shell { border-radius: 0; padding: 16px; }
     .card { padding: 20px; border-radius: 22px; }
-    .hello { margin-top: 26px; }
+    .nav { top: 8px; }
+    .hello { margin: 16px 0 14px; gap: 10px 16px; }
+    .hello h1 { font-size: 30px; }
+    .stat { padding: 12px; border-radius: 18px; }
+    .stat .sub { display: none; }
     .search { width: 100%; }
     .tb-r { width: 100%; flex-wrap: nowrap; }
     .logo-mark .wordmark { display: none; }
@@ -390,10 +423,37 @@
 </style>
 </head>
 <body>
+<svg style="display:none" aria-hidden="true" focusable="false">
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3.5" y="11" width="17" height="10.5" rx="2.5"/><path d="M7.5 11V7.5a4.5 4.5 0 0 1 9 0V11"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 6.5V12l3.5 2"/></symbol>
+  <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M11 3C11.8 8.2 14.8 11.2 20 12c-5.2.8-8.2 3.8-9 9-.8-5.2-3.8-8.2-9-9 5.2-.8 8.2-3.8 9-9z"/><path d="M19 3v4M17 5h4"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M5 2.5v19l2.3-1.5 2.4 1.5 2.3-1.5 2.3 1.5 2.4-1.5L19 21.5v-19l-2.3 1.5-2.4-1.5L12 4 9.7 2.5 7.3 4z"/><path d="M8.5 9h7M8.5 13h7M8.5 17h4"/></symbol>
+  <symbol id="i-corner-up-left" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></symbol>
+  <symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="m5.3 5.3 13.4 13.4"/></symbol>
+  <symbol id="i-plane" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></symbol>
+  <symbol id="i-credit-card" viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6.5 15h4"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M21.5 2.5 10.5 13.5"/><path d="M21.5 2.5 14.5 21.5l-4-8-8-4z"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 8V6a2 2 0 0 0-2-2H5.5A2.5 2.5 0 0 0 3 6.5v11A2.5 2.5 0 0 0 5.5 20H19a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2H5.5A2.5 2.5 0 0 1 3 6.5"/><path d="M16.5 14.5h.01"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 21.5s8-3.8 8-10V5.5l-8-3-8 3v6c0 6.2 8 10 8 10z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m4.5 12.5 5 5 10-11"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5.5 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v.5"/></symbol>
+  <symbol id="i-external-link" viewBox="0 0 24 24"><path d="M18 13.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5.5"/><path d="M15 3h6v6M10 14 21 3"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7.5"/><path d="m20.5 20.5-4.3-4.3"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 4.5h18l-7 8.6V19l-4 2v-7.9z"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8.5a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.5"/></symbol>
+</svg>
 <div class="shell">
 
   <nav class="nav" aria-label="Primary">
-    <a class="logo-mark" href="#top" aria-label="Munim, back to top">
+    <a class="logo-mark" href="/" aria-label="Munim, Timeline">
       <svg viewBox="0 0 38 38" aria-hidden="true">
         <defs><clipPath id="munimRingTop"><rect x="0" y="0" width="38" height="19"/></clipPath></defs>
         <circle cx="19" cy="19" r="19" fill="#111214"/>
@@ -406,20 +466,17 @@
       <span class="wordmark">Munim</span>
     </a>
     <div class="tabs" id="tabs">
-      <a class="tab" href="#tlSec" aria-current="true">Timeline</a>
-      <a class="tab" href="#rulesSec">Rules</a>
-      <a class="tab" href="#walletsSec">Wallets</a>
-      <a class="tab" href="#privSec">Privacy</a>
+      <a class="tab" id="tab-timeline" href="/" data-view="timeline">Timeline</a>
+      <a class="tab" id="tab-approvals" href="/approvals" data-view="approvals">Approvals<span class="tcount" id="tabBadge" hidden>0</span></a>
+      <a class="tab" id="tab-rules" href="/rules" data-view="rules">Rules</a>
+      <a class="tab" id="tab-wallets" href="/wallets" data-view="wallets">Wallets</a>
+      <a class="tab" id="tab-privacy" href="/privacy" data-view="privacy">Privacy</a>
     </div>
     <div class="nav-r">
       <span id="mockFlag" class="mockflag" hidden>mock data</span>
       <span id="live" class="live" role="status">connecting</span>
-      <button class="rbtn" type="button" aria-label="Settings" title="Settings">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
-      </button>
-      <a class="rbtn bell" id="bell" href="#inboxSec" aria-label="Approvals inbox" title="Approvals">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
-      </a>
+      <button class="rbtn" type="button" aria-label="Settings" title="Settings"><svg class="ico" aria-hidden="true"><use href="#i-gear"/></svg></button>
+      <a class="rbtn bell" id="bell" href="/approvals" aria-label="Approvals inbox" title="Approvals"><svg class="ico" aria-hidden="true"><use href="#i-bell"/></svg></a>
       <span class="rbtn avatar" role="img" aria-label="Signed in as W">W</span>
     </div>
   </nav>
@@ -432,33 +489,103 @@
     <button id="fundBtn" class="pill solid big" type="button"><span aria-hidden="true">+</span> Fund the purse</button>
   </header>
 
-  <div class="toolbar">
-    <div class="tb-l">
-      <button class="pill" type="button">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
-        Filter
-      </button>
-      <button class="pill" type="button">
-        Last 30 days
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-      </button>
-      <a class="pill" href="/export.csv">Export CSV</a>
-    </div>
-    <div class="tb-r">
-      <label class="search">
-        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <span class="sr">Search the timeline</span>
-        <input id="tlSearch" type="search" placeholder="Search the timeline" autocomplete="off">
-      </label>
-      <button class="rbtn" type="button" aria-label="More options">⋮</button>
-    </div>
-  </div>
+  <main id="views">
 
-  <main class="grid">
+    <!-- Timeline: stat strip, toolbar, timeline + receipts -->
+    <div class="view" id="view-timeline" data-view="timeline" role="region" aria-label="Timeline">
+      <div class="stats">
+        <div class="stat"><div class="lbl">Available</div><div class="v" id="stAvail">—</div></div>
+        <div class="stat"><div class="lbl">Spent</div><div class="v" id="stSpent">—</div></div>
+        <a class="stat" id="apprStat" href="/approvals" aria-label="Approvals"><svg class="ico go" aria-hidden="true"><use href="#i-chevron-right"/></svg><div class="lbl">Approvals</div><div class="v" id="stAppr">0</div><div class="sub" id="stApprNote">none waiting</div></a>
+      </div>
+      <div class="toolbar">
+        <div class="tb-l">
+          <button class="pill" type="button"><svg class="ico" aria-hidden="true"><use href="#i-filter"/></svg>Filter</button>
+          <button class="pill" type="button">Last 30 days<svg class="ico" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+          <a class="pill" href="/export.csv"><svg class="ico" aria-hidden="true"><use href="#i-download"/></svg>Export CSV</a>
+        </div>
+        <div class="tb-r">
+          <label class="search">
+            <svg class="ico" aria-hidden="true"><use href="#i-search"/></svg>
+            <span class="sr">Search the timeline</span>
+            <input id="tlSearch" type="search" placeholder="Search the timeline" autocomplete="off">
+          </label>
+          <button class="rbtn" type="button" aria-label="More options"><svg class="ico" aria-hidden="true"><use href="#i-more"/></svg></button>
+        </div>
+      </div>
+      <div class="vgrid g-tl">
+    <section class="card c-tl" id="tlSec" aria-labelledby="h-tl">
+      <div class="card-h"><h2 id="h-tl">Timeline</h2><span class="meta">newest first</span></div>
+      <div class="tl-scroll"><ol class="tl is-empty" id="timeline"></ol></div>
+      <button id="tlMore" class="btn ghost sm more" type="button" hidden>Show older</button>
+    </section>
 
-    <!-- Row 1 -->
+      <section class="card feature" aria-labelledby="h-rcpt">
+        <div class="card-h"><h2 id="h-rcpt">Receipts sent</h2><span class="past">Past 30 days <svg class="ico" aria-hidden="true"><use href="#i-chevron-down"/></svg></span></div>
+        <div class="rc-top">
+          <div>
+            <div class="num" id="rcptNum">0</div>
+            <div class="lbl" id="rcptNote">encrypted memos to the funder</div>
+          </div>
+        </div>
+        <svg class="spark" id="spark" viewBox="0 0 240 72" role="img" aria-label="Receipts sent per day over the past 30 days">
+          <defs>
+            <linearGradient id="sparkFade" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#F4B728" stop-opacity=".32"/>
+              <stop offset="1" stop-color="#F4B728" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path id="sparkArea" d="" fill="url(#sparkFade)" stroke="none"/>
+          <path id="sparkLine" d="" fill="none" stroke="#F4B728" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle id="sparkDot" cx="240" cy="64" r="3.5" fill="#F4B728"/>
+        </svg>
+      </section>
+      </div>
+    </div>
+
+    <!-- Approvals: its own page, full width -->
+    <div class="view" id="view-approvals" data-view="approvals" role="region" aria-label="Approvals" hidden>
+      <section class="card c-inbox" id="inboxSec" aria-labelledby="h-inbox">
+        <div class="card-h" id="apprTile">
+          <h2 id="h-inbox"><svg class="ico" aria-hidden="true"><use href="#i-bell"/></svg>Approvals <span class="badge" id="apprBadge">0</span></h2>
+          <span class="meta" id="inboxMeta"></span>
+          <span class="sr" id="apprNote">none waiting</span>
+        </div>
+        <div class="plist" id="inbox"></div>
+      </section>
+    </div>
+
+    <!-- Rules -->
+    <div class="view" id="view-rules" data-view="rules" role="region" aria-label="Rules" hidden>
+    <section class="card c-rules" id="rulesSec" aria-labelledby="h-rules">
+      <div class="card-h"><h2 id="h-rules">Rules</h2><span class="meta" id="rulesMeta">what starts a purchase, no prompt needed</span></div>
+      <div class="rt-wrap">
+        <table class="rt">
+          <thead><tr><th>Rule</th><th>Trigger</th><th>Max</th><th>Intent</th><th><span class="sr">Actions</span></th></tr></thead>
+          <tbody id="rules"></tbody>
+        </table>
+      </div>
+
+      <div class="add">
+        <h3>Add a rule in plain words</h3>
+        <p class="hint">Say what should be bought and when. You review the exact rule before anything is saved.</p>
+        <label class="field">
+          <span class="lbl">Describe the rule</span>
+          <textarea id="ruleText" class="in" rows="3" placeholder="Every month on the 1st, top up Mum's Airtel number with ₹299, never more than ₹300."></textarea>
+        </label>
+        <div class="add-row">
+          <button id="proposeBtn" class="btn" type="button">Propose</button>
+          <span id="proposeMsg" class="msg" role="alert"></span>
+        </div>
+        <div id="proposeOut" class="prop" hidden></div>
+      </div>
+    </section>
+    </div>
+
+    <!-- Wallets -->
+    <div class="view vgrid g-wallets" id="view-wallets" data-view="wallets" role="region" aria-label="Wallets" hidden>
     <section class="card c-purse" aria-labelledby="h-purse">
-      <div class="card-h"><h2 id="h-purse">Purse</h2><span class="meta">shielded · capped</span></div>
+      <div class="card-h"><h2 id="h-purse"><svg class="ico" aria-hidden="true"><use href="#i-wallet"/></svg>Purse</h2><span class="meta">shielded · capped</span></div>
       <div class="vcard">
         <div class="vc-gold">
           <span class="vc-brand">ZEC · testnet</span>
@@ -477,15 +604,15 @@
       <div class="sub" id="capNote">&nbsp;</div>
       <div class="xlist">
         <details>
-          <summary><span>Deposits</span><span class="x-meta" id="depMeta">—</span></summary>
+          <summary><span>Deposits<svg class="ico chev" aria-hidden="true"><use href="#i-chevron-down"/></svg></span><span class="x-meta" id="depMeta">—</span></summary>
           <ul class="drows" id="depRows"></ul>
         </details>
         <details>
-          <summary><span>Spent</span><span class="x-meta" id="pcSpent">—</span></summary>
+          <summary><span>Spent<svg class="ico chev" aria-hidden="true"><use href="#i-chevron-down"/></svg></span><span class="x-meta" id="pcSpent">—</span></summary>
           <ul class="drows" id="spRows"></ul>
         </details>
         <details>
-          <summary><span>Remaining</span><span class="x-meta" id="pcRem">—</span></summary>
+          <summary><span>Remaining<svg class="ico chev" aria-hidden="true"><use href="#i-chevron-down"/></svg></span><span class="x-meta" id="pcRem">—</span></summary>
           <ul class="drows" id="remRows"></ul>
         </details>
       </div>
@@ -501,7 +628,7 @@
       <div class="sub" id="gaugeNote">&nbsp;</div>
       <div class="spend-foot">
         <span><b class="cnt" id="count">—</b> purchases <span class="sub" id="countNote"></span></span>
-        <a class="pill sm" href="/export.csv">View ledger <span aria-hidden="true">›</span></a>
+        <a class="pill sm" href="/export.csv">View ledger <svg class="ico" aria-hidden="true"><use href="#i-chevron-right"/></svg></a>
       </div>
     </section>
 
@@ -528,87 +655,26 @@
       </ul>
     </section>
 
-    <!-- Row 2 -->
-    <section class="card c-tl" id="tlSec" aria-labelledby="h-tl">
-      <div class="card-h"><h2 id="h-tl">Timeline</h2><span class="meta">newest first</span></div>
-      <div class="tl-scroll"><ol class="tl is-empty" id="timeline"></ol></div>
-      <button id="tlMore" class="btn ghost sm more" type="button" hidden>Show older</button>
-    </section>
-
-    <div class="rcol">
-      <section class="card" id="inboxSec" aria-labelledby="h-inbox">
-        <div class="card-h" id="apprTile">
-          <h2 id="h-inbox">Approvals <span class="badge" id="apprBadge">0</span></h2>
-          <span class="meta" id="inboxMeta"></span>
-          <span class="sr" id="apprNote">none waiting</span>
-        </div>
-        <div class="plist" id="inbox"></div>
-      </section>
-
-      <section class="card feature" aria-labelledby="h-rcpt">
-        <div class="card-h"><h2 id="h-rcpt">Receipts sent</h2><span class="past">Past 30 days <span aria-hidden="true">⌄</span></span></div>
-        <div class="rc-top">
-          <div>
-            <div class="num" id="rcptNum">0</div>
-            <div class="lbl" id="rcptNote">encrypted memos to the funder</div>
-          </div>
-        </div>
-        <svg class="spark" id="spark" viewBox="0 0 240 72" role="img" aria-label="Receipts sent per day over the past 30 days">
-          <defs>
-            <linearGradient id="sparkFade" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#F4B728" stop-opacity=".32"/>
-              <stop offset="1" stop-color="#F4B728" stop-opacity="0"/>
-            </linearGradient>
-          </defs>
-          <path id="sparkArea" d="" fill="url(#sparkFade)" stroke="none"/>
-          <path id="sparkLine" d="" fill="none" stroke="#F4B728" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle id="sparkDot" cx="240" cy="64" r="3.5" fill="#F4B728"/>
-        </svg>
-      </section>
-
-      <section class="card" id="fundersSec" aria-labelledby="h-fund">
-        <div class="card-h"><h2 id="h-fund">Funders</h2><span class="meta" id="fundersMeta">who authorised the cap</span></div>
+      <section class="card c-funders" id="fundersSec" aria-labelledby="h-fund">
+        <div class="card-h"><h2 id="h-fund"><svg class="ico" aria-hidden="true"><use href="#i-lock"/></svg>Funders</h2><span class="meta" id="fundersMeta">who authorised the cap</span></div>
         <div class="flist" id="funders"></div>
       </section>
 
-      <section class="card" id="walletsSec" aria-labelledby="h-mw">
-        <div class="card-h"><h2 id="h-mw">Merchant wallets</h2><span class="meta">where the codes get spent</span></div>
+      <section class="card c-merch" id="walletsSec" aria-labelledby="h-mw">
+        <div class="card-h"><h2 id="h-mw"><svg class="ico" aria-hidden="true"><use href="#i-credit-card"/></svg>Merchant wallets</h2><span class="meta">where the codes get spent</span></div>
         <div class="mlist" id="merchants"></div>
-      </section>
-
-      <section class="card" id="privSec" aria-labelledby="h-priv">
-        <div class="card-h"><h2 id="h-priv">Privacy</h2><span class="meta">who sees what</span></div>
-        <dl class="priv" id="privacy"></dl>
-        <p class="priv-note">This page is read-only: built from the viewing key, no spend key on this server.</p>
       </section>
     </div>
 
-    <!-- Row 3 -->
-    <section class="card c-rules" id="rulesSec" aria-labelledby="h-rules">
-      <div class="card-h"><h2 id="h-rules">Rules</h2><span class="meta" id="rulesMeta">what starts a purchase, no prompt needed</span></div>
-      <div class="rt-wrap">
-        <table class="rt">
-          <thead><tr><th>Rule</th><th>Trigger</th><th>Max</th><th>Intent</th><th><span class="sr">Actions</span></th></tr></thead>
-          <tbody id="rules"></tbody>
-        </table>
-      </div>
+    <!-- Privacy: privacy card, integrations & stack, footer -->
+    <div class="view" id="view-privacy" data-view="privacy" role="region" aria-label="Privacy" hidden>
+      <div class="vgrid">
+      <section class="card" id="privSec" aria-labelledby="h-priv">
+        <div class="card-h"><h2 id="h-priv"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg>Privacy</h2><span class="meta">who sees what</span></div>
+        <dl class="priv" id="privacy"></dl>
+        <p class="priv-note">This page is read-only: built from the viewing key, no spend key on this server.</p>
+      </section>
 
-      <div class="add">
-        <h3>Add a rule in plain words</h3>
-        <p class="hint">Say what should be bought and when. You review the exact rule before anything is saved.</p>
-        <label class="field">
-          <span class="lbl">Describe the rule</span>
-          <textarea id="ruleText" class="in" rows="3" placeholder="Every month on the 1st, top up Mum's Airtel number with ₹299, never more than ₹300."></textarea>
-        </label>
-        <div class="add-row">
-          <button id="proposeBtn" class="btn" type="button">Propose</button>
-          <span id="proposeMsg" class="msg" role="alert"></span>
-        </div>
-        <div id="proposeOut" class="prop" hidden></div>
-      </div>
-    </section>
-
-    <!-- Row 4: built with -->
     <section class="card c-built" id="builtSec" aria-labelledby="h-built">
       <div class="card-h"><h2 id="h-built">Integrations &amp; stack</h2><span class="meta">what Munim is built with</span></div>
       <div class="built-row">
@@ -634,23 +700,24 @@
         </ul>
       </div>
     </section>
-
-  </main>
-
+      </div>
   <footer class="foot">
     Munim · Free Society Hackathon, Mumbai, 4 Nov 2026 · <a href="https://github.com/0xStoneyStark/munim" target="_blank" rel="noopener noreferrer">github.com/0xStoneyStark/munim</a>
   </footer>
+    </div>
+
+  </main>
 </div>
 
 <dialog id="fundDlg" aria-labelledby="fundTitle">
   <div class="dlg-h">
     <h2 id="fundTitle">Fund the purse</h2>
-    <button id="fundClose" class="btn ghost sm" type="button" aria-label="Close">Close</button>
+    <button id="fundClose" class="btn ghost sm" type="button" aria-label="Close"><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg>Close</button>
   </div>
   <div class="dlg-b">
     <div>
       <div class="lbl">Purse address (shielded)</div>
-      <div class="addr" style="margin-top:6px"><code id="address">—</code><button id="copyAddr" class="btn ghost sm" type="button">Copy</button></div>
+      <div class="addr" style="margin-top:6px"><code id="address">—</code><button id="copyAddr" class="btn ghost sm" type="button"><svg class="ico" aria-hidden="true"><use href="#i-copy"/></svg>Copy</button></div>
     </div>
     <div>
       <div class="lbl">Memo recipe</div>
@@ -681,7 +748,8 @@ const HEX64 = /^[0-9a-f]{64}$/i;
 const short = (h) => (h && String(h).length > 18 ? String(h).slice(0, 8) + "…" + String(h).slice(-6) : h || "");
 const MOCK = new URLSearchParams(location.search).get("mock") === "1";
 
-const GLYPH = { deposit: "🔒", trigger: "⏰", decision: "🧠", purchase: "🧾", receipt: "↩", refusal: "⛔", proposal: "✈", redeem: "💳" };
+const ico = (name, cls) => `<svg class="ico${cls ? " " + cls : ""}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+const KIND_ICON = { deposit: "lock", trigger: "clock", decision: "sparkles", purchase: "receipt", receipt: "corner-up-left", refusal: "ban", proposal: "plane", redeem: "credit-card" };
 const TONE_OK = new Set(["delivered", "complete", "completed", "paid", "linked", "active", "approved", "bought", "sent", "confirmed", "ok", "alive"]);
 const TONE_WARN = new Set(["pending", "reserved", "unpaid", "proposed", "processing", "queued"]);
 const TONE_BAD = new Set(["failed", "refused", "error", "expired", "rejected"]);
@@ -777,22 +845,25 @@ function renderHero(d) {
 function buildTimeline(d) {
   return [
     ...arr(d.deposits).map((x) => ({ at: x.seenAt, kind: "deposit", title: `Deposit · ${(num(x.zatoshis) / 1e8).toFixed(4)} TAZ`, detail: x.capInr != null ? `Cap ${inr(x.capInr)}` : "No cap in the memo", mono: x.txid })),
-    ...arr(d.spends).map((s) => ({ at: s.at, kind: "purchase", title: `${s.productName} · ${inr(s.valueInr)}`, detail: `Rule ${s.ruleId}`, status: s.status, mono: s.invoiceId })),
+    ...arr(d.spends).map((s) => ({ at: s.at, kind: "purchase", title: `${s.productName} · ${inr(s.valueInr)}`, detail: `Rule ${s.ruleId}`, status: s.status, mono: s.invoiceId, productId: s.productId })),
     ...arr(d.spends).filter((s) => s.receiptTxid).map((s) => ({ at: s.at, kind: "receipt", title: "Receipt sent to funder", mono: s.receiptTxid })),
     ...arr(d.runs).map((r) => ({ at: r.at, kind: "decision", title: r.summary, detail: `${r.ruleId} (${r.reason})` })),
   ];
 }
 
 function eventHtml(x) {
-  const kind = GLYPH[x.kind] ? x.kind : "other";
+  const kind = KIND_ICON[x.kind] ? x.kind : "other";
+  const isPayment = x.kind === "purchase" && (x.productId === "zec-payment" || /invoice zec:/.test(x.detail || ""));
+  const iconName = isPayment ? "send" : KIND_ICON[x.kind] || "dot";
+  const okBuy = x.kind === "purchase" && tone(x.status) === "ok" ? " st-ok" : "";
   const href = resolveLink(x.link, x.mono);
   const monoTxt = x.mono ? (HEX64.test(x.mono) ? short(x.mono) : String(x.mono)) : "";
   const monoHtml = monoTxt
-    ? (href ? aTag(href, esc(monoTxt) + " ↗", "mono idpill") : `<span class="mono idpill">${esc(monoTxt)}</span>`)
-    : (href ? aTag(href, "open ↗", "mono") : "");
+    ? (href ? aTag(href, esc(monoTxt) + ico("external-link"), "mono idpill") : `<span class="mono idpill">${esc(monoTxt)}</span>`)
+    : (href ? aTag(href, "open" + ico("external-link"), "mono") : "");
   const meta = [chip(x.status), monoHtml].filter(Boolean).join("");
   const iso = x._d ? x._d.toISOString() : "";
-  return `<li class="ev k-${kind}"><span class="glyph" aria-hidden="true">${GLYPH[x.kind] || "•"}</span>`
+  return `<li class="ev k-${kind}${okBuy}"><span class="glyph" aria-hidden="true">${ico(iconName)}</span>`
     + `<div class="ev-body"><div class="ev-head"><span class="ev-title"><span class="sr">${esc(x.kind)}: </span>${esc(x.title)}</span>`
     + `<time datetime="${esc(iso)}" title="${esc(x._d ? x._d.toLocaleString() : "")}">${x._d ? fmtTime(x._d) : "—"}</time></div>`
     + (x.detail ? `<div class="ev-detail">${esc(x.detail)}</div>` : "")
@@ -821,10 +892,10 @@ function renderInbox(d) {
   const installs = ps.filter((p) => p.status === "bought" && p.lpa);
   const done = ps.filter((p) => p.status !== "proposed" && !installs.includes(p)).slice(0, 5);
   $("inboxMeta").textContent = open.length ? `${open.length} waiting` : "all clear";
-  const cards = open.map((p) => `<article class="pcard"><div class="p-top"><div style="min-width:0"><div class="lbl">${esc(p.kind === "esim" ? "eSIM" : p.kind || "purchase")}</div><div class="p-title">${esc(p.title)}</div><div class="p-sub">${esc(p.subtitle)}</div></div><div class="price">${esc(p.price)}</div></div>`
-    + `<div class="p-actions"><button class="btn" type="button" data-act="approve" data-id="${esc(p.id)}">Approve</button><button class="btn ghost" type="button" data-act="decline" data-id="${esc(p.id)}">Decline</button></div></article>`).join("");
+  const cards = open.map((p) => `<article class="pcard"><div class="p-top"><div style="min-width:0"><div class="lbl">${ico(p.kind === "esim" ? "plane" : "credit-card")}${esc(p.kind === "esim" ? "eSIM" : p.kind || "purchase")}</div><div class="p-title">${esc(p.title)}</div><div class="p-sub">${esc(p.subtitle)}</div></div><div class="price">${esc(p.price)}</div></div>`
+    + `<div class="p-actions"><button class="btn" type="button" data-act="approve" data-id="${esc(p.id)}">${ico("check")}Approve</button><button class="btn ghost" type="button" data-act="decline" data-id="${esc(p.id)}">${ico("x")}Decline</button></div></article>`).join("");
   const resolved = done.length
-    ? `<ul class="resolved" aria-label="Recently resolved">${done.map((p) => `<li><span>${esc(p.title)} · ${esc(p.price)}</span>${chip(p.status)}</li>`).join("")}</ul>` : "";
+    ? `<div class="lbl" style="margin-top:6px">Recently resolved</div><ul class="resolved" aria-label="Recently resolved">${done.map((p) => `<li><span>${esc(p.title)} · ${esc(p.price)}</span>${chip(p.status)}</li>`).join("")}</ul>` : "";
   const empty = installs.length ? "" : `<p class="empty">Nothing is waiting. Bigger buys, like eSIMs, land here for your yes or no.</p>`;
   $("inbox").innerHTML = (cards || empty) + installs.map(esimHtml).join("") + resolved;
 }
@@ -847,11 +918,11 @@ function esimHtml(p) {
   catch (e) { qr = `<p class="empty">This code is too long for a QR. Copy it instead.</p>`; }
   const dep = when(p.departs);
   const sub = [dep ? `departs ${dep.toLocaleDateString([], { day: "numeric", month: "short" })}` : "", p.invoiceId ? `invoice ${p.invoiceId}` : ""].filter(Boolean).join(" · ");
-  return `<article class="esim">${qr}<div class="esim-txt"><div class="lbl">Install eSIM</div>`
+  return `<article class="esim">${qr}<div class="esim-txt"><div class="lbl">${ico("download")}Install eSIM</div>`
     + `<div class="p-title">${esc(p.destination ? `eSIM · ${p.destination}` : p.title)}</div>`
     + (sub ? `<div class="p-sub">${esc(sub)}</div>` : "")
     + `<p class="esim-cap">Scan with your phone → <b>Settings</b> → <b>Mobile data</b> → <b>Add eSIM</b></p>`
-    + `<button class="btn ghost sm" type="button" data-lpa="${esc(p.id)}">Copy activation code</button></div></article>`;
+    + `<button class="btn ghost sm" type="button" data-lpa="${esc(p.id)}">${ico("copy")}Copy activation code</button></div></article>`;
 }
 
 function renderFunders(d) {
@@ -1292,7 +1363,7 @@ function depositSplit(d) {
 }
 
 const xrow = (a, b, c) => `<li><span>${a}</span><span class="xr-b">${b}</span><span class="xr-c">${c}</span></li>`;
-const txPill = (txid) => { const h = txHref(txid); const t = esc(short(txid)); return h ? aTag(h, t + " ↗", "mono idpill") : `<span class="mono idpill">${t}</span>`; };
+const txPill = (txid) => { const h = txHref(txid); const t = esc(short(txid)); return h ? aTag(h, t + ico("external-link"), "mono idpill") : `<span class="mono idpill">${t}</span>`; };
 const rowsOrEmpty = (rows, msg) => (rows.length ? rows.slice(0, ROW_LIMIT).join("") + (rows.length > ROW_LIMIT ? `<li class="more-rows">and ${rows.length - ROW_LIMIT} more, see the timeline</li>` : "") : `<li class="empty">${esc(msg)}</li>`);
 
 function renderChrome(d) {
@@ -1303,6 +1374,21 @@ function renderChrome(d) {
   $("vcAddr").textContent = sa || "(agent not started yet)";
   $("bell").classList.toggle("has", num($("apprBadge").textContent) > 0);
   ["cap", "spent", "remaining"].forEach(curify);
+  syncStats(d);
+}
+
+/* hero stat strip + Approvals pill badge: same count as apprBadge, links to /approvals */
+function syncStats(d) {
+  const b = d.budget || {};
+  $("stAvail").innerHTML = `<span class="cur">₹</span>${esc(num(b.remainingInr).toLocaleString("en-IN"))}`;
+  $("stSpent").innerHTML = `<span class="cur">₹</span>${esc(num(b.spentInr).toLocaleString("en-IN"))}`;
+  const n = num($("apprBadge").textContent);
+  $("stAppr").textContent = String(n);
+  $("stApprNote").textContent = $("apprNote").textContent;
+  $("apprStat").classList.toggle("has", n > 0);
+  $("tabBadge").textContent = String(n);
+  $("tabBadge").hidden = n === 0;
+  $("tab-approvals").setAttribute("aria-label", n ? `Approvals, ${n} waiting` : "Approvals");
 }
 
 function renderPurse(d) {
@@ -1426,14 +1512,37 @@ renderTimeline = function (d) { baseRenderTimeline(d); applyTlFilter(); };
 const baseRender = render;
 render = function (d) { baseRender(d); try { renderExtras(d); } catch (e) { console.error("extras failed", e); } };
 
-/* nav tabs: active pill follows the section in view */
-const tabLinks = Array.from(document.querySelectorAll(".tab"));
-const setTab = (id) => tabLinks.forEach((a) => { if (a.getAttribute("href") === "#" + id) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current"); });
-tabLinks.forEach((a) => a.addEventListener("click", () => setTab(a.getAttribute("href").slice(1))));
-if ("IntersectionObserver" in window) {
-  const io = new IntersectionObserver((ents) => { for (const e of ents) if (e.isIntersecting) setTab(e.target.id); }, { rootMargin: "-35% 0px -55% 0px" });
-  tabLinks.forEach((a) => { const t = document.getElementById(a.getAttribute("href").slice(1)); if (t) io.observe(t); });
+/* pages: /, /approvals, /rules, /wallets, /privacy all serve this file; the path picks the one view that is shown */
+const VIEW_PATHS = { timeline: "/", approvals: "/approvals", rules: "/rules", wallets: "/wallets", privacy: "/privacy" };
+const viewFromPath = (p) => {
+  const seg = String(p || "/").replace(/\/+$/, "").split("/").pop().toLowerCase();
+  return Object.prototype.hasOwnProperty.call(VIEW_PATHS, seg) ? seg : "timeline";
+};
+const tabLinks = Array.from(document.querySelectorAll(".logo-mark, #tabs .tab, #bell, #apprStat"));
+const views = Array.from(document.querySelectorAll(".view"));
+function showView(name, scroll) {
+  views.forEach((v) => { v.hidden = v.dataset.view !== name; });
+  document.querySelectorAll("#tabs .tab").forEach((a) => {
+    if (a.dataset.view === name) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+  });
+  const t = $("tab-" + name);
+  if (t) t.scrollIntoView({ inline: "center", block: "nearest" });
+  document.title = (name === "timeline" ? "" : t.firstChild.textContent + " · ") + "Munim purse";
+  if (scroll) window.scrollTo({ top: 0, behavior: "instant" });
 }
+/* links keep ?mock=1; a plain click switches view in place (pushState), modified clicks fall through to a real navigation */
+tabLinks.forEach((a) => {
+  const path = a.getAttribute("href");
+  a.href = path + location.search;
+  a.addEventListener("click", (ev) => {
+    if (ev.defaultPrevented || ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+    ev.preventDefault();
+    if (location.pathname !== path) history.pushState(null, "", path + location.search);
+    showView(viewFromPath(path), true);
+  });
+});
+window.addEventListener("popstate", () => showView(viewFromPath(location.pathname), false));
+showView(viewFromPath(location.pathname), false);
 
 /* logo chips: a failed image swaps to a gold-on-ink lettermark */
 document.querySelectorAll("img.logo").forEach((img) => {
