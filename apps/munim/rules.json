@@ -1,7 +1,7 @@
 [
   {
     "id": "jio-recharge",
-    "intent": "Keep the household Jio prepaid alive: buy the cheapest Jio India recharge pack available (data pack or talktime, whichever is cheapest).",
+    "intent": "Keep the household Jio prepaid topped up: buy the cheapest Jio India TALKTIME top-up (not a data add-on — data packs need an active base plan and get refunded).",
     "maxInr": 30,
     "productType": "phone_refill",
     "phone": "$TOPUP_PHONE",

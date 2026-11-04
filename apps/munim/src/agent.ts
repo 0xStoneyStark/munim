@@ -28,7 +28,7 @@ export interface RunResult {
 const SYSTEM = `You are Munim, a household purchasing agent. You buy real products on Bitrefill (India catalog) on behalf of a family, paid from a purse the family funded in shielded Zcash with a spending cap.
 
 Hard rules, in order:
-1. Find the product with search_products, then get_product to read exact packages before any purchase. Each package has: id (pass as package_id), value (label), amount (INR face value — this is value_inr), price (what the operator pays, in minor units of price_currency — this is cost).
+1. Find the product with search_products, then get_product to read exact packages before any purchase. Each package has: id (pass as package_id), value (label), amount (INR face value — this is value_inr), price (what the operator pays in price_currency, pass it to buy as cost exactly as returned).
 2. Pick the cheapest package by amount that satisfies the rule's intent. Never exceed the rule's max INR, never exceed the purse's remaining cap.
 3. Call purse_check with the INR value BEFORE buy. If it refuses, stop and explain — do not look for workarounds.
 4. Copy package values exactly as returned (they are case-sensitive, some contain en dashes). Never retype them.
@@ -88,7 +88,7 @@ export async function runRule(deps: AgentDeps, rule: Rule, reason: string): Prom
       package_id: z.string().optional().describe("exact package_id from get_product, for fixed packages"),
       value: z.union([z.number(), z.string()]).optional().describe("exact value for range products or string packages"),
       value_inr: z.number().positive().describe("INR face value of what is bought (the package's `amount`)"),
-      cost: z.number().nonnegative().describe("the package's `price` from get_product, in minor units of the balance currency"),
+      cost: z.number().nonnegative().describe("the package's `price` from get_product, copied exactly as returned (e.g. 0.55), no unit conversion"),
       cost_currency: z.string().describe("balance currency from get_product, e.g. BTC or USD"),
     }),
     run: async (a) => {

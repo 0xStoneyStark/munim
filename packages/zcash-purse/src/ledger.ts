@@ -24,7 +24,7 @@ export interface Spend {
   productId: string;
   productName: string;
   valueInr: number;
-  /** what the operator paid, in minor units of their Bitrefill balance currency (sats for BTC, cents for USD) */
+  /** what the operator paid, as Bitrefill reports `price` for the primary balance currency (0.13 for USD, satoshis for BTC) */
   cost: number;
   costCurrency: string;
   invoiceId: string;

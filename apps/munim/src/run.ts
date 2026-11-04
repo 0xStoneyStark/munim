@@ -47,6 +47,19 @@ async function pass(deps: Parameters<typeof runRule>[0], rulesFile: string, extr
   const b = budget(ledger);
   log(`purse: ${newDeposits} new deposit(s); cap ₹${b.capInr}, spent ₹${b.spentInr}, remaining ₹${b.remainingInr}`);
 
+  // receipts that could not be sent earlier (e.g. purse notes still unconfirmed) go out as soon as funds free up
+  const replyTo = await deps.purse.replyAddress();
+  for (const s of ledger.spends.filter((x) => x.status === "delivered" && !x.receiptTxid)) {
+    if (!replyTo) break;
+    try {
+      const txid = await deps.purse.sendReceipt(s, replyTo);
+      log(`receipt (retry) for ${s.invoiceId}: ${txid}`);
+    } catch (e) {
+      log(`receipt (retry) for ${s.invoiceId} still failing: ${e instanceof Error ? e.message.split("\n").pop() : String(e)}`);
+      break;
+    }
+  }
+
   let state = loadState();
   const signals = new Set([...takeSignals(), ...extraSignals]);
   const firings = due(rules, state.lastRun, signals);
