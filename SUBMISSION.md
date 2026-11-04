@@ -14,7 +14,7 @@ https://github.com/0xStoneyStark/munim
 
 ## Public URL
 
-None needed: Munim is an agent + CLI + MCP server (the brief says SDKs/CLIs/bots/agents skip it and show Zcash working in the video/README). The read-only dashboard runs locally (`npm run dashboard`, http://localhost:8788) and is shown in the video.
+https://munim.heneryshop.com — hosted, installable PWA; password-protected because purchases are real (demo password on request in the mentor chat). Pages: /, /approvals, /rules, /wallets, /privacy, /connections. The agent loop runs on the same server (pm2).
 
 ## Testnet transaction ID (shielded)
 

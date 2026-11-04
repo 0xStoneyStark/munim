@@ -35,5 +35,23 @@
     "trigger": {
       "signal": "treat"
     }
+  },
+  {
+    "id": "daily-diet-coke",
+    "intent": "Order 2 cans of Diet Coke on Swiggy Instamart for delivery to the BKC Bloom hotel address. Pick the cheapest in-stock option, add nothing else to the order, and skip the order if the total would go over the ceiling. Deliver to my Bloom BKC address.",
+    "maxInr": 250,
+    "trigger": {
+      "at": "19:05"
+    },
+    "spend": "instamart"
+  },
+  {
+    "id": "topup",
+    "intent": "Buy a ₹250 Swiggy Money India gift card (it is auto-redeemed into the household Swiggy balance).",
+    "maxInr": 250,
+    "productType": "gift_card",
+    "trigger": {
+      "signal": "topup"
+    }
   }
 ]
