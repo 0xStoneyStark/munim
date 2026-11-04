@@ -20,8 +20,11 @@ import {
   type AgentRun,
   type SwiggyRedeem,
 } from "./api-views.js";
+import { handleVerify } from "./verify.js";
+import type { Bitrefill } from "./bitrefill.js";
 
 export interface ApiDeps {
+  readonly bitrefill: Bitrefill;
   /** constructed lazily by the caller: only /rules/propose touches it */
   readonly client: Anthropic;
   rulesFile: string;
@@ -168,6 +171,7 @@ async function route(req: http.IncomingMessage, url: URL, deps: ApiDeps): Promis
 }
 
 export async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, url: URL, deps: ApiDeps): Promise<boolean> {
+  if (url.pathname === "/verify" || url.pathname === "/api/verify") return handleVerify(req, res, url, { bitrefill: deps.bitrefill });
   try {
     const body = await route(req, url, deps);
     if (body === undefined) return false;

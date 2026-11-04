@@ -12,13 +12,19 @@ import { promisify } from "node:util";
 import Anthropic from "@anthropic-ai/sdk";
 import { loginUrl, exchangeCode } from "./swiggy-oauth.js";
 import { handleApi, type ApiDeps } from "./api.js";
+import { Bitrefill } from "./bitrefill.js";
 
 const execFileP = promisify(execFile);
 const PORT = parseInt(process.env.DASHBOARD_PORT ?? "8788", 10);
 const DATA = path.resolve("data");
 
 let anthropic: Anthropic | undefined;
+let bitrefill: Bitrefill | undefined;
 const apiDeps: ApiDeps = {
+  // lazy: the Bitrefill constructor throws on an empty key, which must not stop the dashboard starting
+  get bitrefill(): Bitrefill {
+    return (bitrefill ??= new Bitrefill(process.env.BITREFILL_API_KEY ?? ""));
+  },
   // built on first use so the dashboard runs without ANTHROPIC_API_KEY until /rules/propose is called
   get client(): Anthropic {
     if (!process.env.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not configured");
@@ -34,7 +40,7 @@ async function viewExport(): Promise<string> {
   const bin = process.env.ZCASH_DEVTOOL;
   const dir = process.env.PURSE_VIEW_WALLET_DIR ?? "./wallets/agent-view";
   if (!bin) return "ZCASH_DEVTOOL not configured";
-  await execFileP(bin, ["wallet", "-w", path.resolve(dir), "sync", "-s", "zecrocks"], { timeout: 300_000 }).catch(() => undefined);
+  await execFileP(bin, ["wallet", "-w", path.resolve(dir), "sync", "-s", "zecrocks", ...(process.env.PURSE_CONNECTION && process.env.PURSE_CONNECTION !== "direct" ? ["--connection", process.env.PURSE_CONNECTION] : [])], { timeout: 300_000 }).catch(() => undefined);
   const { stdout } = await execFileP(bin, ["wallet", "-w", path.resolve(dir), "list-tx", "-m", "csv"], { timeout: 60_000, maxBuffer: 16 * 1024 * 1024 });
   return stdout;
 }

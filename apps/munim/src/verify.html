@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Munim receipt check</title>
+<style>
+  :root {
+    --page: #EEF0F3; --card: #FFFFFF; --well: #F5F6F8; --line: #E6E8EC;
+    --ink: #111214; --muted: #6B7280;
+    --gold: #F4B728; --gold-deep: #D99A0B; --teal: #0E7C7B;
+    --ok: #16A34A; --bad: #DC2626;
+    --solid: #111214; --on-solid: #FFFFFF; --focus: #D99A0B;
+    --font: "Bahnschrift", "Segoe UI", system-ui, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --page: #0F1012; --card: #17181B; --well: #1E2024; --line: #26282D;
+      --ink: #F3F4F6; --muted: #9CA3AF; --teal: #34C3C0;
+      --ok: #4ADE80; --bad: #F87171; --solid: #F3F4F6; --on-solid: #111214;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.5 var(--font); padding: 24px 16px; -webkit-font-smoothing: antialiased; }
+  main { max-width: 720px; margin: 0 auto; display: grid; gap: 16px; }
+  a { color: var(--teal); text-underline-offset: 3px; }
+  :where(a, button, textarea):focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .card { background: var(--card); border-radius: 24px; padding: 24px; }
+  h1 { margin: 0 0 4px; font-size: 26px; letter-spacing: -.01em; }
+  h1 span { color: var(--gold-deep); }
+  .lbl { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .sub { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+  label { display: block; margin-bottom: 8px; }
+  textarea { font: 13px/1.5 var(--mono); color: var(--ink); background: var(--well); border: 1px solid var(--line); border-radius: 14px; padding: 12px; width: 100%; min-height: 110px; resize: vertical; }
+  textarea:hover { border-color: var(--muted); }
+  .row { display: flex; gap: 12px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+  button { font: inherit; font-weight: 600; font-size: 14px; padding: 11px 22px; border-radius: 999px; border: 1px solid var(--solid); background: var(--solid); color: var(--on-solid); cursor: pointer; transition: background .15s, border-color .15s, color .15s, transform .1s; }
+  button:hover { background: var(--gold); border-color: var(--gold); color: #111214; }
+  button:active { transform: translateY(1px); background: var(--gold-deep); border-color: var(--gold-deep); }
+  button[disabled] { opacity: .5; cursor: not-allowed; }
+  .verdict { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .badge { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; font-weight: 700; color: #fff; flex: none; }
+  .badge.ok { background: var(--ok); } .badge.bad { background: var(--bad); }
+  .verdict b { font-size: 20px; display: block; line-height: 1.2; }
+  ul.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  ul.checks li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; background: var(--well); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; }
+  .mark { font-weight: 700; font-size: 18px; text-align: center; line-height: 1.3; }
+  .mark.ok { color: var(--ok); } .mark.bad { color: var(--bad); } .mark.na { color: var(--muted); }
+  .cname { font-weight: 600; }
+  .cdetail { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 12px 0 0; }
+  dt { color: var(--muted); font-size: 13px; }
+  dd { margin: 0; overflow-wrap: anywhere; }
+  .mono { font-family: var(--mono); font-size: 12.5px; }
+  .err { color: var(--bad); margin: 12px 0 0; }
+  @media (max-width: 480px) { .card { padding: 18px; border-radius: 20px; } dl { grid-template-columns: 1fr; gap: 0; } dd { margin-bottom: 8px; } }
+</style>
+</head>
+<body>
+<main>
+  <section class="card">
+    <h1>Munim <span>receipt check</span></h1>
+    <p class="sub">Your wallet decrypted a memo from the Munim agent. Paste it here and it is checked against Bitrefill and the agent's ledger. Nothing is stored, and no redemption code is ever shown.</p>
+    <form id="f">
+      <label class="lbl" for="memo">Paste the decrypted receipt memo from your wallet</label>
+      <textarea id="memo" spellcheck="false" placeholder="munim receipt inv=… item=… inr=… cost=… rule=…" required></textarea>
+      <div class="row"><button id="go" type="submit">Verify</button><span id="busy" class="sub" hidden>Checking with Bitrefill…</span></div>
+    </form>
+    <p id="err" class="err" role="alert" hidden></p>
+  </section>
+
+  <section id="out" class="card" aria-live="polite" hidden>
+    <div class="verdict"><div id="badge" class="badge"></div><div><b id="vtitle"></b><span id="vsub" class="sub"></span></div></div>
+    <ul id="checks" class="checks"></ul>
+    <div id="inv" hidden>
+      <div class="lbl" style="margin-top:20px">Bitrefill invoice</div>
+      <dl id="invdl"></dl>
+    </div>
+    <div id="rcpt" hidden>
+      <div class="lbl" style="margin-top:20px">Receipt transaction</div>
+      <dl id="rcptdl"></dl>
+    </div>
+  </section>
+</main>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function safeHref(u) { return /^https:\/\/[^\s"'<>]+$/.test(String(u || "")) ? u : null; }
+
+  function row(dt, ddHtml) { return "<dt>" + esc(dt) + "</dt><dd>" + ddHtml + "</dd>"; }
+
+  function render(r) {
+    $("out").hidden = false;
+    var bad = r.checks.filter(function (c) { return !c.ok; }).length;
+    $("badge").className = "badge " + (r.ok ? "ok" : "bad");
+    $("badge").textContent = r.ok ? "✓" : "✗";
+    $("vtitle").textContent = r.ok ? "Receipt verified" : "Receipt did not verify";
+    $("vsub").textContent = r.ok ? "Every applicable check passed." : bad + " check" + (bad === 1 ? "" : "s") + " failed.";
+    $("checks").innerHTML = r.checks.map(function (c) {
+      var na = c.ok && /^n\/a/.test(c.detail);
+      var cls = !c.ok ? "bad" : na ? "na" : "ok";
+      var sym = !c.ok ? "✗" : na ? "–" : "✓";
+      return '<li><span class="mark ' + cls + '" aria-label="' + (!c.ok ? "failed" : na ? "not applicable" : "passed") + '">' + sym +
+        '</span><div><div class="cname">' + esc(c.name) + '</div><div class="cdetail">' + esc(c.detail) + "</div></div></li>";
+    }).join("");
+
+    var inv = r.invoice;
+    $("inv").hidden = !inv;
+    if (inv) {
+      var h = row("Invoice", '<span class="mono">' + esc(inv.id) + "</span>") + row("Status", esc(inv.status));
+      if (inv.created_time) h += row("Created", esc(inv.created_time));
+      inv.orders.forEach(function (o, i) {
+        h += row("Order " + (i + 1), esc(o.product) + " · " + esc(o.status) + '<br><span class="mono">' + esc(o.id) + "</span>");
+      });
+      $("invdl").innerHTML = h;
+    }
+    var l = r.ledger;
+    $("rcpt").hidden = !(l && l.receiptTxid);
+    if (l && l.receiptTxid) {
+      var href = safeHref(l.explorer);
+      var tx = href ? '<a href="' + esc(href) + '" target="_blank" rel="noopener noreferrer" class="mono">' + esc(l.receiptTxidShort || l.receiptTxid) + "</a>" : '<span class="mono">' + esc(l.receiptTxid) + "</span>";
+      $("rcptdl").innerHTML = row("Txid", tx) + row("Ledger status", esc(l.status));
+    }
+  }
+
+  function fail(msg) {
+    $("err").textContent = msg;
+    $("err").hidden = false;
+    $("out").hidden = true;
+  }
+
+  $("f").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var memo = $("memo").value.trim();
+    if (!memo) return;
+    $("err").hidden = true;
+    $("go").disabled = true;
+    $("busy").hidden = false;
+    fetch("/api/verify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ memo: memo }) })
+      .then(function (res) { return res.json().then(function (j) { return { res: res, j: j }; }); })
+      .then(function (x) { if (!x.res.ok) fail(x.j.error || "request failed"); else render(x.j); })
+      .catch(function (e) { fail("Could not reach the verifier: " + e.message); })
+      .then(function () { $("go").disabled = false; $("busy").hidden = true; });
+  });
+})();
+</script>
+</body>
+</html>
