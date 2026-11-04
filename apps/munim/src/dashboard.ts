@@ -10,6 +10,7 @@ import http from "node:http";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { budget, type Ledger } from "@munim/zcash-purse";
+import { loginUrl, exchangeCode, isLoggedIn } from "./swiggy-oauth.js";
 
 const execFileP = promisify(execFile);
 const PORT = parseInt(process.env.DASHBOARD_PORT ?? "8788", 10);
@@ -45,6 +46,7 @@ function api() {
     runs: state.runs,
     rules,
     explorer: EXPLORER,
+    swiggyLinked: isLoggedIn(),
   };
 }
 
@@ -57,6 +59,18 @@ const server = http.createServer(async (req, res) => {
       fs.mkdirSync(SIGNALS, { recursive: true });
       fs.writeFileSync(path.join(SIGNALS, name), new Date().toISOString());
       res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ ok: true, signal: name }));
+      return;
+    }
+    if (url.pathname === "/swiggy/login") {
+      res.writeHead(302, { location: await loginUrl() }).end();
+      return;
+    }
+    if (url.pathname === "/oauth/swiggy/callback") {
+      const code = url.searchParams.get("code");
+      const state = url.searchParams.get("state");
+      if (!code || !state) throw new Error("missing code/state: " + (url.searchParams.get("error_description") ?? ""));
+      await exchangeCode(code, state);
+      res.writeHead(200, { "content-type": "text/html; charset=utf-8" }).end("<p style='font:16px system-ui;padding:24px'>Swiggy linked to Munim. You can close this tab.</p>");
       return;
     }
     if (url.pathname === "/api") {

@@ -13,7 +13,9 @@
     "purse": "tsx packages/zcash-purse/src/cli.ts",
     "purse:mcp": "tsx packages/zcash-purse/src/mcp.ts",
     "typecheck": "tsc --noEmit",
-    "check": "tsx apps/munim/src/check.ts"
+    "check": "tsx apps/munim/src/check.ts",
+    "swiggy:login": "tsx apps/munim/src/swiggy-mcp.ts login",
+    "swiggy:tools": "tsx apps/munim/src/swiggy-mcp.ts tools"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
@@ -23,6 +25,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "latest",
     "@modelcontextprotocol/sdk": "latest",
+    "@noir-wallet/sdk": "^0.1.9",
     "dotenv": "^16.4.0",
     "zod": "^4.6.7"
   }
