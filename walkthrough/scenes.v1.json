@@ -1,0 +1,74 @@
+[
+  {
+    "n": 1,
+    "text": "This is Munim: a household shopping agent you fund privately, in shielded Zcash."
+  },
+  {
+    "n": 2,
+    "text": "A funder sends TAZ to the purse. The spending cap rides inside the encrypted memo: three hundred rupees."
+  },
+  {
+    "n": 3,
+    "text": "On the public explorer the transaction is shielded. No amount, no memo, nothing to read."
+  },
+  {
+    "n": 4,
+    "text": "Munim is an installable web app. On the phone, Chrome installs it like any other app."
+  },
+  {
+    "n": 5,
+    "text": "No app store, no terminal. The household runs it from the home screen."
+  },
+  {
+    "n": 6,
+    "text": "The deposit is already on the timeline, decrypted by the purse. Cap three hundred, with three eighty-nine rupees available."
+  },
+  {
+    "n": 7,
+    "text": "Rules say what to buy, and when."
+  },
+  {
+    "n": 8,
+    "text": "This one buys a two-fifty Swiggy Money card when I say top-up. Fire now, and the agent goes to work."
+  },
+  {
+    "n": 9,
+    "text": "Thirty seconds later the card is bought on Bitrefill and delivered. Available drops to one thirty-nine."
+  },
+  {
+    "n": 10,
+    "text": "A Dubai trip in my calendar became an eSIM proposal by itself. It buys only after I approve."
+  },
+  {
+    "n": 11,
+    "text": "The purse page shows the cap, the spend and every deposit. And the Swiggy Money card: the top-up was redeemed into the household balance automatically, the same balance that paid for last night's Instamart order."
+  },
+  {
+    "n": 12,
+    "text": "Every purchase sends a receipt back to the funder as an encrypted memo, with a hash of the gift-card code, never the code itself. Paste a receipt into the verifier and it checks the invoice against Bitrefill."
+  },
+  {
+    "n": 13,
+    "text": "Connections shows every link Munim has: Swiggy's official MCP, Bitrefill, Google Calendar, the wallets. And push notifications, straight to the phone."
+  },
+  {
+    "n": 14,
+    "text": "Allow it once."
+  },
+  {
+    "n": 15,
+    "text": "One tap sends a test."
+  },
+  {
+    "n": 16,
+    "text": "There it is, right next to Swiggy's own message confirming the two-fifty credit."
+  },
+  {
+    "n": 17,
+    "text": "The privacy page says what each party can see, and what they cannot."
+  },
+  {
+    "n": 18,
+    "text": "Munim is open source under MIT, built for the Free Society Hack. Fund it privately. It shops while you sleep."
+  }
+]

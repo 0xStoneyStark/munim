@@ -23,6 +23,8 @@ const phoneScenes = [
   { scene: 16, start: P('shade_open', 2.0),         end: P('shade_closed', -0.8),         caption: 'Delivered — next to Swiggy’s own credit message.' },
 ];
 const scenes = [...lap.scenes.map(s => ({ ...s, scene: LAP_MAP[s.scene] })), ...phoneScenes.map(s => ({ ...s, ctx: 'phone' }))].sort((a, b) => a.scene - b.scene);
+const NEW_ID = {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "12": 10, "17": 11, "10": 12, "11": 13, "13": 14, "14": 15, "15": 16, "16": 17, "18": 18};
+scenes.forEach(s => { s.scene = NEW_ID[String(s.scene)]; }); scenes.sort((a, b) => a.scene - b.scene);
 fs.writeFileSync(ROOT + '/timeline.json', JSON.stringify({ videos: { lap: lap.videos.lap, phone: PHONE }, scenes }, null, 2));
 fs.mkdirSync(ROOT + '/verify', { recursive: true });
 for (const s of scenes) {
