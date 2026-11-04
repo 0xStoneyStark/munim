@@ -32,7 +32,7 @@ Hard rules, in order:
 2. Pick the cheapest package by amount that satisfies the rule's intent. Never exceed the rule's max INR, never exceed the purse's remaining cap.
 3. Call purse_check with the INR value BEFORE buy. If it refuses, stop and explain — do not look for workarounds.
 4. Copy package values exactly as returned (they are case-sensitive, some contain en dashes). Never retype them.
-5. buy exactly once per run. If buy fails, do not retry a different product.
+5. One invoice per run. If buy fails before an invoice exists (a 400 about arguments), you may retry once with corrected arguments for the same product; never switch products. For fixed packages pass package_id only, never value as well.
 6. You never see redemption codes; buy returns only a hash. Never ask for them.
 7. Finish with 2-3 plain sentences: what was bought, for how much, the invoice id, and the receipt txid if one was sent. If nothing was bought, say why.`;
 
@@ -92,7 +92,8 @@ export async function runRule(deps: AgentDeps, rule: Rule, reason: string): Prom
       cost_currency: z.string().describe("balance currency from get_product, e.g. BTC or USD"),
     }),
     run: async (a) => {
-      if (spend) return JSON.stringify({ ok: false, reason: "already bought once this run" });
+      // one *invoice* per run; an attempt that failed before Bitrefill created an invoice may be retried
+      if (spend && spend.invoiceId !== "pending") return JSON.stringify({ ok: false, reason: "already bought once this run" });
       if (a.value_inr > rule.maxInr) return JSON.stringify({ ok: false, reason: "exceeds rule max" });
       const needsPhone = (rule.productType ?? "") === "phone_refill" || /refill|top.?up/i.test(a.product_name);
       if (needsPhone && !rule.phone) return JSON.stringify({ ok: false, reason: "rule has no phone number for a top-up" });
@@ -115,8 +116,9 @@ export async function runRule(deps: AgentDeps, rule: Rule, reason: string): Prom
       try {
         invoice = await bitrefill.buy({ productId: a.product_id, packageId: a.package_id, value: a.value, phoneNumber: needsPhone ? rule.phone : undefined });
       } catch (e) {
-        spend = { ...spend, status: "failed" };
-        await purse.update(spend);
+        // release the reservation: the failed attempt stays in the ledger as "failed" (not counted against the cap)
+        await purse.update({ ...spend, status: "failed" });
+        spend = null;
         throw e;
       }
       spend = { ...spend, invoiceId: invoice.id, orderId: invoice.orders[0]?.id ?? null, status: invoice.status };

@@ -89,9 +89,10 @@ export class Bitrefill {
 
   /** Create and pay an invoice from balance. */
   buy(opts: { productId: string; packageId?: string; value?: number | string; phoneNumber?: string }) {
+    // Bitrefill rejects a line that carries both package_id and value; package_id wins
     const line: Record<string, unknown> = { product_id: opts.productId, quantity: 1 };
     if (opts.packageId) line.package_id = opts.packageId;
-    if (opts.value !== undefined) line.value = opts.value;
+    else if (opts.value !== undefined) line.value = opts.value;
     if (opts.phoneNumber) line.phone_number = opts.phoneNumber;
     return this.call<Invoice>("POST", "/invoices", { products: [line], payment_method: "balance", auto_pay: true });
   }
