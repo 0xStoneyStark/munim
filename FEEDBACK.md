@@ -1,5 +1,7 @@
 # FEEDBACK.md — what broke, confused us, or slowed us down
 
+> **From Harsh (the human half of the team):** One human, one Claude. The build was fast but the slow parts were all at the edges: finding out Bitrefill only pays from the primary store credit (my bad, I must have missed it), learning that devtool needs `enhance` before memos appear, and Swiggy's OAuth refusing a public redirect (they only accept whitelisted accounts, so I used my session id for it). Every purchase in this repo is real and the loop ran unattended at 19:05 tonight. What would have saved the most time is one page per vendor saying: here is what the live API actually returns.
+
 Team of one human + Claude (Fable 5.1 driving the build, Sonnet 5.5 inside the agent). Hacking remotely from a hotel after check-in. Timestamps are IST, 4 Nov 2026.
 
 ## Zcash side
