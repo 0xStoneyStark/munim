@@ -19,6 +19,13 @@
     }
   },
   {
+    "id": "travel-esim",
+    "intent": "When an international trip shows up in my Google Calendar or a booking email, propose an eSIM for the destination; buy only after I approve.",
+    "maxInr": 1000,
+    "productType": "esim",
+    "trigger": { "calendar": "gcal+gmail" }
+  },
+  {
     "id": "treat-for-mom",
     "intent": "Send mom a small food treat: a ₹50 Swiggy Money (or Zomato if Swiggy is unavailable) gift card.",
     "maxInr": 60,
