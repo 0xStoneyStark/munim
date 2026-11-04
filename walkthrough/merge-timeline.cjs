@@ -20,7 +20,7 @@ const phoneScenes = [
   { scene: 13, start: P('s_connections', -0.3),     end: P('enable_push', 5),             caption: 'Every connection, and push notifications.' },
   { scene: 14, start: P('enable_push', 16.5), end: P('enable_push', 23), caption: 'Allow it once.' },
   { scene: 15, start: P('send_test', -1),           end: P('send_test', 6),               caption: 'Send a test.' },
-  { scene: 16, start: P('shade_open', 2.0),         end: P('shade_closed', -0.8),         caption: 'Delivered — next to Swiggy’s own credit message.' },
+  { scene: 16, start: P('shade_open', 2.0),         end: P('shade_open', 4.1),         caption: 'Delivered — next to Swiggy’s own credit message.' },
 ];
 const scenes = [...lap.scenes.map(s => ({ ...s, scene: LAP_MAP[s.scene] })), ...phoneScenes.map(s => ({ ...s, ctx: 'phone' }))].sort((a, b) => a.scene - b.scene);
 const NEW_ID = {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "12": 10, "17": 11, "10": 12, "11": 13, "13": 14, "14": 15, "15": 16, "16": 17, "18": 18};

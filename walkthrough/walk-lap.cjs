@@ -61,7 +61,7 @@ html,body{margin:0;height:100%;background:#0b0b0d;color:#e6e6e6;font:22px/1.5 "C
   // 2 · the deposit (real send output, replayed)
   await scene(2, 'A shielded deposit with the cap in the memo.', async () => {
     await page.goto(fileUrl(termFile)); await L.injectOverlay(page);
-    await L.caption(page, 'Funder wallet', 'A shielded deposit with the cap in the memo.');
+    await (async()=>{})(0, 'Funder wallet', 'A shielded deposit with the cap in the memo.');
     await line(`<span class="d"># funder wallet (testnet): send TAZ to the purse with the cap in the encrypted memo</span>`);
     await L.hold(page, 1000);
     await line([
@@ -86,7 +86,7 @@ html,body{margin:0;height:100%;background:#0b0b0d;color:#e6e6e6;font:22px/1.5 "C
     await page.goto(`https://testnet.zcashexplorer.app/transactions/${TXID}`, { waitUntil: 'domcontentloaded', timeout: 25000 }).catch(() => {});
     await L.hold(page, 1500);
     await L.injectOverlay(page);
-    await L.caption(page, 'Public explorer', 'Shielded: the amount and the memo are not visible.');
+    await (async()=>{})(0, 'Public explorer', 'Shielded: the amount and the memo are not visible.');
     await L.hold(page, 3000);
     await page.mouse.wheel(0, 500); await L.hold(page, 3500);
   });
@@ -98,7 +98,7 @@ html,body{margin:0;height:100%;background:#0b0b0d;color:#e6e6e6;font:22px/1.5 "C
     await page.waitForLoadState('networkidle').catch(() => {});
     await page.goto(L.FRONTEND + '/verify', { waitUntil: 'networkidle' }).catch(() => {});
     await L.injectOverlay(page);
-    await L.caption(page, 'Receipt memo', 'Decrypted in the funder wallet, checked against Bitrefill.');
+    await (async()=>{})(0, 'Receipt memo', 'Decrypted in the funder wallet, checked against Bitrefill.');
     await L.hold(page, 800);
     await L.typeInto(page, '#memo', RECEIPT);
     await L.hold(page, 400);
@@ -111,7 +111,7 @@ html,body{margin:0;height:100%;background:#0b0b0d;color:#e6e6e6;font:22px/1.5 "C
   await scene(17, 'What it reveals, to whom.', async () => {
     await page.goto(L.FRONTEND + '/privacy', { waitUntil: 'networkidle' }).catch(() => {});
     await L.injectOverlay(page);
-    await L.caption(page, 'Privacy', 'What each party can see.');
+    await (async()=>{})(0, 'Privacy', 'What each party can see.');
     await L.hold(page, 2500);
     await page.mouse.wheel(0, 450); await L.hold(page, 3000);
   });
@@ -121,7 +121,7 @@ html,body{margin:0;height:100%;background:#0b0b0d;color:#e6e6e6;font:22px/1.5 "C
     await page.goto('https://github.com/0xStoneyStark/munim', { waitUntil: 'domcontentloaded', timeout: 25000 }).catch(() => {});
     await L.hold(page, 1500);
     await L.injectOverlay(page);
-    await L.caption(page, 'Open source · MIT', 'github.com/0xStoneyStark/munim');
+    await (async()=>{})(0, 'Open source · MIT', 'github.com/0xStoneyStark/munim');
     await L.hold(page, 2500);
     await page.mouse.wheel(0, 700); await L.hold(page, 3500);
   });
