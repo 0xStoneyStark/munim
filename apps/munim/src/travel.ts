@@ -8,6 +8,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { Bitrefill, type Order, type Product } from "./bitrefill.js";
+import { listBookingEmails, listCalendarEvents } from "./google-mcp.js";
 
 const DAY_MS = 86_400_000;
 const MERGE_WINDOW_DAYS = 30;
@@ -143,7 +144,22 @@ function buildEvent(props: Map<string, IcsProp>): CalendarEvent | null {
   };
 }
 
+/** Merge event lists, keeping the first event seen for each uid. */
+function dedupeByUid(events: CalendarEvent[]): CalendarEvent[] {
+  const seen = new Set<string>();
+  return events.filter((e) => !seen.has(e.uid) && seen.add(e.uid));
+}
+
+/** `source`: "gcal" | "gmail" | "gcal+gmail" | "all" (Google MCP servers), else an ICS URL or file path. */
 export async function fetchCalendar(source: string): Promise<CalendarEvent[]> {
+  const kind = source.trim().toLowerCase();
+  if (kind === "gcal") return listCalendarEvents();
+  if (kind === "gmail") return listBookingEmails();
+  if (kind === "gcal+gmail" || kind === "all") {
+    // sequential: two concurrent first-run `npx` installs can trip over each other's cache
+    const calendar = await listCalendarEvents();
+    return dedupeByUid([...calendar, ...(await listBookingEmails())]);
+  }
   if (/^(https?|webcal):\/\//i.test(source)) {
     const res = await fetch(source.replace(/^webcal:/i, "https:"));
     if (!res.ok) throw new Error(`calendar fetch failed: HTTP ${res.status}`);
